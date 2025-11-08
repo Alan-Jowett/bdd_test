@@ -4,9 +4,9 @@
 
 ### Build Errors
 
-**C++17 not supported**
-- **Problem**: Compiler doesn't support C++17 features
-- **Solution**: Use a newer compiler (GCC 9+, Clang 10+, MSVC 19.14+)
+**C++20 not supported**
+- **Problem**: Compiler doesn't support C++20 features
+- **Solution**: Use a newer compiler (GCC 10+, Clang 12+, MSVC 19.28+)
 
 **CMake version too old**
 - **Problem**: CMake version is below 3.20
@@ -151,5 +151,5 @@ ls test_expressions/default_ordering/
 
 ### Platform-Specific Notes
 - **Windows**: PowerShell recommended over Command Prompt
-- **Linux**: Requires recent GCC for C++17 support
+- **Linux**: Requires recent GCC for C++20 support
 - **macOS**: May need Xcode command line tools for compilation

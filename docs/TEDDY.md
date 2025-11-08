@@ -40,7 +40,8 @@ TeDDy is a C++ library for creation and manipulation of decision diagrams develo
 ## TeDDy vs Other BDD Libraries
 
 ### Advantages of TeDDy
-- **Modern C++**: Uses C++17 features and STL containers
+- **Modern C++**: TeDDy uses C++17 features and STL containers  
+  **Note:** This BDD Expression Converter project uses C++20 features (see CMakeLists.txt).
 - **Template-Based**: Flexible and type-safe implementation
 - **Educational**: Well-documented with clear examples
 - **Lightweight**: Minimal external dependencies

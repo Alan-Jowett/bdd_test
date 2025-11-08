@@ -55,7 +55,7 @@ clang-format --dry-run --Werror *.cpp *.h
 ### Style Requirements
 
 - Follow the established clang-format configuration (Google style with customizations)
-- Use C++17 features appropriately
+- Use C++20 features appropriately
 - Maintain clear variable naming with descriptive names
 - Add comments for complex BDD operations
 - Remove all trailing whitespace from files
@@ -136,7 +136,7 @@ clang-format --dry-run --Werror *.cpp *.h
 - Optimize for common use cases
 
 ### Compatibility
-- Maintain C++17 compatibility
+- Maintain C++20 compatibility
 - Test on multiple platforms when possible
 - Preserve backward compatibility for existing expression files
 - Document any breaking changes clearly
