@@ -744,6 +744,7 @@ int main(int argc, const char* argv[]) {
     bool enable_auto_reordering = false;
     bool force_reorder_after_build = false;
     bool show_help = false;
+    bool help_due_to_error = false;
 
     // Parse command line arguments
     for (int i = 1; i < argc; ++i) {
@@ -761,12 +762,14 @@ int main(int argc, const char* argv[]) {
         } else if (arg.starts_with("--")) {
             std::cerr << "Unknown option: " << arg << "\n";
             show_help = true;
+            help_due_to_error = true;
             break;
         } else if (input_file.empty()) {
             input_file = arg;
         } else {
             std::cerr << "Multiple input files specified. Only one file is allowed.\n";
             show_help = true;
+            help_due_to_error = true;
             break;
         }
     }
@@ -791,7 +794,7 @@ int main(int argc, const char* argv[]) {
         std::cout << "Use parentheses for grouping\n\n";
         std::cout << "Generated DOT files can be visualized using Graphviz tools:\n";
         std::cout << "  dot -Tpng input.dot -o output.png\n";
-        return 0;
+        return help_due_to_error ? 1 : 0;
     }
 
     // Use default file if none specified
