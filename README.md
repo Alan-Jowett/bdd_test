@@ -32,7 +32,7 @@ For detailed documentation, see the [docs/](docs/) directory:
 - **PNG Generation**: Automated visualization creation with **meaningful variable names**
 - **Node Tables**: Clean, structured table output displaying **actual variable names** for analysis
 
-## Quick Start
+## Building
 
 ### Prerequisites
 
@@ -41,7 +41,7 @@ For detailed documentation, see the [docs/](docs/) directory:
 - Git (for fetching dependencies)
 - Optional: Graphviz (for PNG visualization generation)
 
-### Build and Run
+### Build Instructions
 
 ```powershell
 # Build the project
@@ -57,7 +57,7 @@ cd build && ctest -C Release
 
 For detailed build instructions, see [docs/BUILDING.md](docs/BUILDING.md).
 
-## Basic Usage
+## Usage
 
 Run the BDD converter with an expression file:
 ```powershell
