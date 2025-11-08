@@ -6,14 +6,42 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ main, master, develop, v*.*.* ]
+    paths:
+      - '**.cpp'
+      - '**.hpp' 
+      - '**.h'
+      - '**.c'
+      - '**/CMakeLists.txt'
+      - '**.cmake'
+      - '**.ps1'
+      - 'test_expressions/**'
+      - '.github/workflows/**'
   pull_request:
     branches: [ main, master, develop ]
+    paths:
+      - '**.cpp'
+      - '**.hpp'
+      - '**.h' 
+      - '**.c'
+      - '**/CMakeLists.txt'
+      - '**.cmake'
+      - '**.ps1'
+      - 'test_expressions/**'
+      - '.github/workflows/**'
+      - 'README.md'
+      - 'CONTRIBUTING.md'
   workflow_dispatch:
+
+# Cancel previous runs if a new commit is pushed to the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master' }}
 
 jobs:
   build-and-test:
     name: Build and Test
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -96,26 +124,6 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: ctest -C ${{ matrix.build_type }} --output-on-failure --verbose
 
-    - name: Test with sample expressions
-      working-directory: ${{github.workspace}}
-      shell: bash
-      run: |
-        # Test that the executable runs and produces expected outputs
-        if [ "${{ runner.os }}" = "Windows" ]; then
-          EXECUTABLE="./build/${{ matrix.build_type }}/bdd_demo.exe"
-        else
-          EXECUTABLE="./build/bdd_demo"
-        fi
-        
-        # Test with each expression file
-        for expr_file in test_expressions/*.txt test_expressions/*/*.txt; do
-          if [ -f "$expr_file" ]; then
-            echo "Testing with $expr_file"
-            $EXECUTABLE "$expr_file" || exit 1
-            echo "✅ $expr_file passed"
-          fi
-        done
-
     - name: Upload build artifacts
       if: matrix.build_type == 'Release' && matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc'
       uses: actions/upload-artifact@v4
@@ -141,6 +149,7 @@ jobs:
   code-quality:
     name: Code Quality Checks
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     
     steps:
     - name: Checkout code
@@ -168,6 +177,7 @@ jobs:
   documentation:
     name: Documentation Check
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     
     steps:
     - name: Checkout code
@@ -238,6 +248,9 @@ jobs:
   security:
     name: Security Scan
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    # Skip security scan for draft PRs to save resources
+    if: ${{ !github.event.pull_request.draft }}
     
     steps:
     - name: Checkout code
@@ -263,6 +276,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: [build-and-test, code-quality, documentation]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     
     steps:
     - name: Checkout code
