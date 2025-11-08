@@ -179,6 +179,7 @@ ctest
 3. **Build successfully**: Ensure `cmake --build build` completes without errors
 4. **Pass all tests**: Run `ctest` and verify all tests pass
 5. **Check formatting**: Use `clang-format --dry-run --Werror` to verify compliance
+6. **Include signed-off-by**: Always use `git commit -s` or `git commit -sm` to include the "Signed-off-by" line in commit messages
 
 ### For New Features
 1. Add appropriate test cases
