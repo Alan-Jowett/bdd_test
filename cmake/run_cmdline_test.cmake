@@ -50,7 +50,7 @@ endif()
 if(DEFINED OUTPUT_CONTAINS AND OUTPUT_CONTAINS)
     string(REPLACE ";" "\\;" OUTPUT_CONTAINS_ESCAPED "${OUTPUT_CONTAINS}")
     string(REPLACE "\\;" ";" OUTPUT_CONTAINS_LIST "${OUTPUT_CONTAINS_ESCAPED}")
-    
+
     foreach(EXPECTED_STRING ${OUTPUT_CONTAINS_LIST})
         string(FIND "${EXEC_OUTPUT}" "${EXPECTED_STRING}" FOUND_POS)
         if(FOUND_POS EQUAL -1)
@@ -62,11 +62,11 @@ if(DEFINED OUTPUT_CONTAINS AND OUTPUT_CONTAINS)
     message(STATUS "✓ Output contains all expected strings")
 endif()
 
-# Check error output contains expected strings  
+# Check error output contains expected strings
 if(DEFINED ERROR_CONTAINS AND ERROR_CONTAINS)
     string(REPLACE ";" "\\;" ERROR_CONTAINS_ESCAPED "${ERROR_CONTAINS}")
     string(REPLACE "\\;" ";" ERROR_CONTAINS_LIST "${ERROR_CONTAINS_ESCAPED}")
-    
+
     foreach(EXPECTED_STRING ${ERROR_CONTAINS_LIST})
         string(FIND "${EXEC_ERROR}" "${EXPECTED_STRING}" FOUND_POS)
         if(FOUND_POS EQUAL -1)

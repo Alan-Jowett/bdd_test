@@ -32,7 +32,7 @@ function(add_cmdline_test TEST_NAME)
     set(oneValueArgs EXPECTED_EXIT_CODE)
     set(multiValueArgs ARGS OUTPUT_CONTAINS ERROR_CONTAINS)
     cmake_parse_arguments(CMDLINE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-    
+
     # Set default exit code
     if(NOT DEFINED CMDLINE_EXPECTED_EXIT_CODE)
         if(CMDLINE_SHOULD_FAIL)
@@ -41,7 +41,7 @@ function(add_cmdline_test TEST_NAME)
             set(CMDLINE_EXPECTED_EXIT_CODE 0)
         endif()
     endif()
-    
+
     add_test(
         NAME ${TEST_NAME}
         COMMAND ${CMAKE_COMMAND}
@@ -53,7 +53,7 @@ function(add_cmdline_test TEST_NAME)
             "-DERROR_CONTAINS=${CMDLINE_ERROR_CONTAINS}"
             -P ${CMAKE_SOURCE_DIR}/cmake/run_cmdline_test.cmake
     )
-    
+
     set_tests_properties(${TEST_NAME} PROPERTIES
         TIMEOUT 10
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
