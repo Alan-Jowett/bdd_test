@@ -41,7 +41,7 @@
 #include <vector>
 
 // Template system headers for DOT generation
-#include "write_expression_to_dot.hpp"
+#include "expression_iterator.hpp"
 #include <vector>
 
 /**
