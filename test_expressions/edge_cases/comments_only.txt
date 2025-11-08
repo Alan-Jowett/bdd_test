@@ -1,0 +1,1 @@
+# File with only comments - should trigger "No expression found" error

@@ -1,0 +1,2 @@
+# Complex XOR chains
+a XOR b XOR c XOR d XOR e
