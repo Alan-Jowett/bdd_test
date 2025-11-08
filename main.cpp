@@ -190,7 +190,7 @@ void write_bdd_nodes_to_file(teddy::bdd_manager& manager, teddy::bdd_manager::di
  * @param variable_names Vector of variable names for node labeling
  * @param out Output stream to write the DOT representation to
  *
- * @note The function performs two passes: first to assign deterministic node IDs and identify 
+ * @note The function performs two passes: first to assign deterministic node IDs and identify
  *       terminal nodes for styling, second to generate node definitions and edges
  */
 void write_bdd_to_dot(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram,
@@ -208,7 +208,7 @@ void write_bdd_to_dot(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t
 
     std::unordered_set<node_t*> terminal_nodes;
     std::vector<int> terminal_node_ids;
-    
+
     while (!stack.empty()) {
         node_t* node = stack.top();
         stack.pop();
@@ -218,7 +218,7 @@ void write_bdd_to_dot(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t
         }
 
         visited.insert(node);
-        
+
         // Assign deterministic node ID
         node_to_id[node] = next_node_id++;
 
@@ -257,8 +257,8 @@ void write_bdd_to_dot(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t
         int node_id = node_to_id[node];
 
         if (node->is_terminal()) {
-            out << "    node" << node_id << " [label = \"" << node->get_value() << "\", tooltip = \""
-                << node->get_value() << "\"];\n";
+            out << "    node" << node_id << " [label = \"" << node->get_value()
+                << "\", tooltip = \"" << node->get_value() << "\"];\n";
         } else {
             int var_index = node->get_index();
             std::string var_name = (var_index < variable_names.size())
