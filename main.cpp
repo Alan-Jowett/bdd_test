@@ -748,7 +748,7 @@ int main(int argc, const char* argv[]) {
     // Parse command line arguments
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
-        
+
         if (arg == "--enable-reordering") {
             enable_auto_reordering = true;
         } else if (arg == "--disable-reordering") {
@@ -776,9 +776,11 @@ int main(int argc, const char* argv[]) {
         std::cout << "==================================================\n\n";
         std::cout << "Usage: bdd_demo [filename] [options]\n\n";
         std::cout << "Arguments:\n";
-        std::cout << "  filename              Input expression file (optional, defaults to test_expressions/filter_expression.txt)\n\n";
+        std::cout << "  filename              Input expression file (optional, defaults to "
+                     "test_expressions/filter_expression.txt)\n\n";
         std::cout << "Options:\n";
-        std::cout << "  --enable-reordering   Enable automatic variable reordering for BDD optimization\n";
+        std::cout << "  --enable-reordering   Enable automatic variable reordering for BDD "
+                     "optimization\n";
         std::cout << "  --disable-reordering  Disable variable reordering (default)\n";
         std::cout << "  --force-reorder       Force immediate reordering after BDD construction\n";
         std::cout << "  --help, -h            Show this help message\n\n";
@@ -824,7 +826,7 @@ int main(int argc, const char* argv[]) {
 
     // Create a BDD manager with the appropriate number of variables
     teddy::bdd_manager manager(static_cast<int>(variable_names.size()), 1'000);
-    
+
     // Configure variable reordering based on command line options
     if (enable_auto_reordering) {
         manager.set_auto_reorder(true);
@@ -841,7 +843,7 @@ int main(int argc, const char* argv[]) {
 
     // Convert the expression tree to BDD (variable map built dynamically)
     bdd_t f = convert_to_bdd(*expr, manager);
-    
+
     // Force variable reordering if requested
     if (force_reorder_after_build) {
         std::cout << "Forcing variable reordering after BDD construction...\n";
