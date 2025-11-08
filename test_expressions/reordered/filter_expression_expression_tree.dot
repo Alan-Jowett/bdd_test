@@ -1,0 +1,35 @@
+digraph ExpressionTree {
+    rankdir=TB;
+    node [fontname="Arial"];
+    edge [fontname="Arial"];
+
+    node0 [label="XOR", shape=box, style=filled, fillcolor=lightpink];
+    node1 [label="OR", shape=box, style=filled, fillcolor=lightcoral];
+    node2 [label="AND", shape=box, style=filled, fillcolor=lightgreen];
+    node3 [label="x0", shape=ellipse, style=filled, fillcolor=lightblue];
+    node2 -> node3 [label="L"];
+    node4 [label="x1", shape=ellipse, style=filled, fillcolor=lightblue];
+    node2 -> node4 [label="R"];
+    node1 -> node2 [label="L"];
+    node5 [label="NOT", shape=box, style=filled, fillcolor=yellow];
+    node6 [label="x2", shape=ellipse, style=filled, fillcolor=lightblue];
+    node5 -> node6;
+    node1 -> node5 [label="R"];
+    node0 -> node1 [label="L"];
+    node7 [label="OR", shape=box, style=filled, fillcolor=lightcoral];
+    node8 [label="AND", shape=box, style=filled, fillcolor=lightgreen];
+    node9 [label="x3", shape=ellipse, style=filled, fillcolor=lightblue];
+    node8 -> node9 [label="L"];
+    node10 [label="NOT", shape=box, style=filled, fillcolor=yellow];
+    node11 [label="x4", shape=ellipse, style=filled, fillcolor=lightblue];
+    node10 -> node11;
+    node8 -> node10 [label="R"];
+    node7 -> node8 [label="L"];
+    node12 [label="XOR", shape=box, style=filled, fillcolor=lightpink];
+    node13 [label="x5", shape=ellipse, style=filled, fillcolor=lightblue];
+    node12 -> node13 [label="L"];
+    node14 [label="x6", shape=ellipse, style=filled, fillcolor=lightblue];
+    node12 -> node14 [label="R"];
+    node7 -> node12 [label="R"];
+    node0 -> node7 [label="R"];
+}

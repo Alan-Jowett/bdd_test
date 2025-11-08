@@ -1,0 +1,9 @@
+Index | Variable | False Child | True Child | Type
+------|----------|-------------|------------|----------
+    0 |        b |           2 |          1 | Variable
+    1 |        a |           3 |          5 | Variable
+    2 |        a |           3 |          3 | Variable
+    3 |        c |           6 |          4 | Variable
+    4 |        d |           6 |          5 | Variable
+    5 |        - |           - |          - | Terminal(1)
+    6 |        - |           - |          - | Terminal(0)
