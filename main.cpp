@@ -486,7 +486,7 @@ teddy::bdd_manager::diagram_t convert_to_bdd(
     return convert_recursive(expr);
 }
 
-int main(int argc, char* argv[])
+int main(int argc, const char* argv[])
 {
     std::filesystem::path input_file = "";
     

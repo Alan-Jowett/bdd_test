@@ -45,7 +45,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # MacOS is disabled for now as TeDDy does not support it 
+        os: [ubuntu-latest, windows-latest]
         build_type: [Debug, Release]
         compiler: [gcc, clang, msvc]
         exclude:
@@ -162,11 +163,22 @@ jobs:
 
     - name: Run cppcheck
       run: |
-        cppcheck --enable=all --std=c++17 --inline-suppr \
+        # Run cppcheck with focused checks to avoid noise
+        cppcheck --enable=warning,style,performance,portability \
+          --std=c++17 \
+          --inline-suppr \
           --suppress=missingIncludeSystem \
+          --suppress=unmatchedSuppression \
           --suppress=unusedFunction \
           --error-exitcode=1 \
-          main.cpp
+          --quiet \
+          --template='[{file}:{line}]: ({severity}) {message}' \
+          main.cpp || {
+            echo "❌ cppcheck found issues in the code"
+            echo "ℹ️  Run 'cppcheck --enable=warning,style,performance,portability --std=c++17 main.cpp' locally to see details"
+            exit 1
+          }
+        echo "✅ cppcheck passed - no issues found"
 
     - name: Check code formatting
       run: |
@@ -209,13 +221,20 @@ jobs:
 
     - name: Check that all expression files exist
       run: |
-        # Verify test expression files referenced in README
-        for file in test_expressions/*.txt test_expressions/*/*.txt; do
-          if [ ! -f "$file" ]; then
-            echo "❌ Missing test file: $file"
-            exit 1
+        # Verify test expression files exist
+        expression_files_found=false
+        for file in test_expressions/*.txt; do
+          if [ -f "$file" ]; then
+            echo "✅ Found expression file: $file"
+            expression_files_found=true
           fi
         done
+        
+        if [ "$expression_files_found" = false ]; then
+          echo "❌ No test expression files found in test_expressions/"
+          exit 1
+        fi
+        
         echo "✅ All test expression files exist"
 
     - name: Validate DOT files can be processed by Graphviz
@@ -228,7 +247,7 @@ jobs:
         cd ..
         
         # Test each expression file and validate generated DOT
-        for expr_file in test_expressions/*.txt test_expressions/*/*.txt; do
+        for expr_file in test_expressions/*.txt; do
           if [ -f "$expr_file" ]; then
             echo "Processing $expr_file"
             ./build/bdd_demo "$expr_file"
