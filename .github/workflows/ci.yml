@@ -32,6 +32,13 @@ on:
       - 'CONTRIBUTING.md'
   workflow_dispatch:
 
+# Permissions required for security scanning and artifact upload
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  pull-requests: read
+
 # Cancel previous runs if a new commit is pushed to the same branch
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -275,11 +282,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Run CodeQL Analysis
+    - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
         languages: cpp
-
+        
     - name: Build for analysis
       run: |
         mkdir build
@@ -289,6 +296,8 @@ jobs:
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:cpp"
 
   release:
     name: Create Release
