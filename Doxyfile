@@ -185,7 +185,7 @@ EXCLUDE_PATTERNS       = */build/* \
                          */CMakeFiles/* \
                          */_deps/*
 EXCLUDE_SYMBOLS        = 
-EXAMPLE_PATH           = test_expressions/
+EXAMPLE_PATH           = test_expressions/ test_expressions/default_ordering/
 EXAMPLE_PATTERNS       = *.txt
 EXAMPLE_RECURSIVE      = YES
 IMAGE_PATH             = 

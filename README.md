@@ -174,7 +174,7 @@ Index | Variable | False Child | True Child | Type
 Total nodes: 6
 Note: True post-order + reverse ordering.
 
-BDD node table saved to "test_expressions\simple_expression_bdd_nodes.txt"
+BDD node table saved to "test_expressions\default_ordering\simple_expression_bdd_nodes.txt"
 Demo completed successfully!
 ```
 
@@ -197,10 +197,10 @@ The tool generates both expression tree and BDD visualizations. Here are example
 ### Simple Expression: `(a AND b) OR (c AND d)`
 
 **Expression Tree:**
-![Simple Expression Tree](test_expressions/simple_expression_expression_tree.png)
+![Simple Expression Tree](test_expressions/default_ordering/simple_expression_expression_tree.png)
 
 **Resulting BDD:**
-![Simple Expression BDD](test_expressions/simple_expression_bdd.png)
+![Simple Expression BDD](test_expressions/default_ordering/simple_expression_bdd.png)
 
 This basic expression shows how AND/OR operations are structured in the BDD with 4 variables (a, b, c, d) displayed with their actual names.
 
@@ -209,10 +209,10 @@ This basic expression shows how AND/OR operations are structured in the BDD with
 ### Complex Expression: `((x0 AND x1) OR (NOT x2)) XOR ((x3 AND (NOT x4)) OR (x5 XOR x6))`
 
 **Expression Tree:**
-![Complex Expression Tree](test_expressions/filter_expression_expression_tree.png)
+![Complex Expression Tree](test_expressions/default_ordering/filter_expression_expression_tree.png)
 
 **Resulting BDD:**
-![Complex Expression BDD](test_expressions/filter_expression_bdd.png)
+![Complex Expression BDD](test_expressions/default_ordering/filter_expression_bdd.png)
 
 This complex expression demonstrates all supported operators (AND, OR, NOT, XOR) with 7 variables (x0 through x6), showing how the BDD optimization reduces the structure while preserving logical equivalence.
 
@@ -221,10 +221,10 @@ This complex expression demonstrates all supported operators (AND, OR, NOT, XOR)
 ### Negated Expression: `NOT (a OR b) AND c`
 
 **Expression Tree:**
-![Negated Expression Tree](test_expressions/my_test_expression_expression_tree.png)
+![Negated Expression Tree](test_expressions/default_ordering/my_test_expression_expression_tree.png)
 
 **Resulting BDD:**
-![Negated Expression BDD](test_expressions/my_test_expression_bdd.png)
+![Negated Expression BDD](test_expressions/default_ordering/my_test_expression_bdd.png)
 
 This example shows how NOT operations and De Morgan's laws are handled in the BDD representation with 3 variables (a, b, c) displayed with their actual names.
 
@@ -317,7 +317,8 @@ bdd_test/
 │   ├── filter_expression.txt          # Complex filter expression
 │   ├── my_test_expression.txt         # Expression with underscores in name
 │   ├── test_subdir_expression.txt     # Subdirectory test
-│   └── *_bdd_nodes.txt                # Expected output files for testing
+│   └── default_ordering/              # Expected output files for testing
+│       └── *_bdd_nodes.txt            # Expected BDD node files
 └── build/                             # Build artifacts and executables
 ```
 
@@ -415,7 +416,7 @@ TeDDy is a C++ library for creation and manipulation of decision diagrams develo
 
 To add new test expressions:
 1. Create a new `.txt` file in `test_expressions/` folder with meaningful variable names
-2. Add the corresponding expected output file `*_bdd_nodes.txt` with **real variable names** (not x0, x1, x2)
+2. Add the corresponding expected output file `*_bdd_nodes.txt` in `test_expressions/default_ordering/` with **real variable names** (not x0, x1, x2)
 3. Update `CMakeLists.txt` to include the new test case
 4. Run `ctest` to verify the test passes
 
@@ -429,7 +430,7 @@ To add new test expressions:
 - Solution: Use a newer compiler (GCC 9+, Clang 10+, MSVC 19.14+)
 
 **Test Failure**: `Generated BDD nodes file differs from expected`
-- Solution: Regenerate expected output files by running the tool and copying the generated `*_bdd_nodes.txt` files
+- Solution: Regenerate expected output files by running the tool and copying the generated `*_bdd_nodes.txt` files to `test_expressions/default_ordering/`
 
 **Graphviz Not Found**: `'dot' is not recognized`
 - Solution: Install Graphviz and ensure it's in your system PATH

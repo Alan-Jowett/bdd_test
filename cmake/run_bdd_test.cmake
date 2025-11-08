@@ -33,7 +33,7 @@ set(TEST_EXPRESSION_FILE "${TEST_BUILD_DIR}/${EXPRESSION_FILE}")
 
 # Get base name for output files
 get_filename_component(BASE_NAME "${EXPRESSION_FILE}" NAME_WE)
-set(EXPECTED_NODES_FILE "${TEST_EXPRESSIONS_DIR}/${BASE_NAME}_bdd_nodes.txt")
+set(EXPECTED_NODES_FILE "${TEST_EXPRESSIONS_DIR}/default_ordering/${BASE_NAME}_bdd_nodes.txt")
 set(GENERATED_NODES_FILE "${TEST_BUILD_DIR}/${BASE_NAME}_bdd_nodes.txt")
 
 message(STATUS "Running test: ${TEST_NAME}")
