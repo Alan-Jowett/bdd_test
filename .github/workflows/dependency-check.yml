@@ -33,14 +33,22 @@ jobs:
     - name: Get current TeDDy version
       id: current-version
       run: |
-        CURRENT_VERSION=$(grep "GIT_TAG" CMakeLists.txt | sed -n 's/.*GIT_TAG \(v[0-9.]*\).*/\1/p')
+        CURRENT_VERSION=$(grep "GIT_TAG" CMakeLists.txt | sed -n 's/.*GIT_TAG \(v[0-9][0-9.a-zA-Z-]*\).*/\1/p')
+        if [ -z "$CURRENT_VERSION" ]; then
+          echo "Error: Failed to extract current TeDDy version from CMakeLists.txt"
+          exit 1
+        fi
         echo "Current TeDDy version: $CURRENT_VERSION"
         echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
 
     - name: Check for latest TeDDy release
       id: latest-version
       run: |
-        LATEST_VERSION=$(curl -s https://api.github.com/repos/MichalMrena/DecisionDiagrams/releases/latest | jq -r '.tag_name')
+        LATEST_VERSION=$(curl -s -f https://api.github.com/repos/MichalMrena/DecisionDiagrams/releases/latest | jq -r '.tag_name')
+        if [ -z "$LATEST_VERSION" ] || [ "$LATEST_VERSION" = "null" ]; then
+          echo "Error: Failed to fetch latest TeDDy version from GitHub API"
+          exit 1
+        fi
         echo "Latest TeDDy version: $LATEST_VERSION"
         echo "version=$LATEST_VERSION" >> $GITHUB_OUTPUT
 
@@ -62,7 +70,11 @@ jobs:
       if: steps.compare.outputs.update_available == 'true'
       id: release-notes
       run: |
-        RELEASE_NOTES=$(curl -s https://api.github.com/repos/MichalMrena/DecisionDiagrams/releases/latest | jq -r '.body')
+        RELEASE_NOTES=$(curl -s -f https://api.github.com/repos/MichalMrena/DecisionDiagrams/releases/latest | jq -r '.body')
+        if [ $? -ne 0 ] || [ -z "$RELEASE_NOTES" ]; then
+          echo "Warning: Failed to fetch release notes, using placeholder"
+          RELEASE_NOTES="Release notes unavailable. Check the repository for details."
+        fi
         echo "Release notes:"
         echo "$RELEASE_NOTES"
         # Save to file for multi-line output
@@ -138,6 +150,8 @@ jobs:
 
     - name: Create pull request for update
       if: steps.compare.outputs.update_available == 'true' && github.event.inputs.create_pr == 'true'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         CURRENT_VERSION="${{ steps.current-version.outputs.version }}"
         LATEST_VERSION="${{ steps.latest-version.outputs.version }}"
@@ -146,14 +160,19 @@ jobs:
         BRANCH_NAME="chore/update-teddy-${LATEST_VERSION}"
         git checkout -b "$BRANCH_NAME"
 
-        # Update CMakeLists.txt
-        sed -i "s/GIT_TAG ${CURRENT_VERSION}/GIT_TAG ${LATEST_VERSION}/" CMakeLists.txt
+        # Update CMakeLists.txt (robust to extra whitespace)
+        sed -i "s/GIT_TAG[[:space:]]*${CURRENT_VERSION}/GIT_TAG ${LATEST_VERSION}/" CMakeLists.txt
+        # Verify the update succeeded
+        if ! grep -q "GIT_TAG ${LATEST_VERSION}" CMakeLists.txt; then
+          echo "Error: Failed to update TeDDy version in CMakeLists.txt"
+          exit 1
+        fi
 
         # Commit changes
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git add CMakeLists.txt
-        git commit -m "chore(deps): Update TeDDy library from ${CURRENT_VERSION} to ${LATEST_VERSION}"
+        git commit -s -m "chore(deps): Update TeDDy library from ${CURRENT_VERSION} to ${LATEST_VERSION}"
 
         # Push branch
         git push origin "$BRANCH_NAME"
@@ -166,5 +185,3 @@ jobs:
           --head "$BRANCH_NAME" \
           --assignee "Alan-Jowett" \
           --label "dependencies,automated"
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

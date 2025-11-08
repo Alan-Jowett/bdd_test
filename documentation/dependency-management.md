@@ -62,7 +62,7 @@ This project uses a custom GitHub Actions workflow (`.github/workflows/dependenc
 6. **Commit with conventional commit message**:
    ```bash
    git add CMakeLists.txt
-   git commit -m "chore(deps): Update TeDDy library from v4.1.0 to v4.2.0"
+   git commit -s -m "chore(deps): Update TeDDy library from v4.1.0 to v4.2.0"
    ```
 
 ## Alternative Monitoring Methods
