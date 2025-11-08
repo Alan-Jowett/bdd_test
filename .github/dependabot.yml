@@ -18,19 +18,3 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
-
-  # Monitor CMake dependencies if any CMakeLists.txt uses FetchContent
-  - package-ecosystem: "cmake"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "04:00"
-    open-pull-requests-limit: 5
-    reviewers:
-      - "Alan-Jowett"
-    assignees:
-      - "Alan-Jowett"
-    commit-message:
-      prefix: "deps"
-      include: "scope"
