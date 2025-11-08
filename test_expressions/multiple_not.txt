@@ -1,0 +1,2 @@
+# Expression with only NOT operators
+NOT NOT NOT x

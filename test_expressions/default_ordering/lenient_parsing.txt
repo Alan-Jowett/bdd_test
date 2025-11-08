@@ -1,0 +1,3 @@
+# Expression that looks malformed but is handled by the lenient parser
+# Unbalanced parentheses are treated as part of variable names
+(unbalanced AND normal_var
