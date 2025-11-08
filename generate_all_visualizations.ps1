@@ -43,13 +43,13 @@ foreach ($DotFile in $DotFiles) {
     $InputPath = $DotFile.FullName
     $OutputPath = $InputPath -replace '\.dot$', '.png'
     $RelativePath = Resolve-Path -Path $InputPath -Relative
-    
+
     Write-Host "Processing: $RelativePath" -ForegroundColor Cyan
-    
+
     try {
         # Run Graphviz dot command
         $Process = Start-Process -FilePath "dot" -ArgumentList @("-Tpng", "`"$InputPath`"", "-o", "`"$OutputPath`"") -Wait -PassThru -NoNewWindow
-        
+
         if ($Process.ExitCode -eq 0) {
             Write-Host "  ✓ Generated: $(Resolve-Path -Path $OutputPath -Relative)" -ForegroundColor Green
             $SuccessCount++

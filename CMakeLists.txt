@@ -39,7 +39,7 @@ function(add_bdd_test TEST_NAME EXPRESSION_FILE)
     # Create a test that copies the expression file and generates outputs
     add_test(
         NAME ${TEST_NAME}
-        COMMAND ${CMAKE_COMMAND} 
+        COMMAND ${CMAKE_COMMAND}
             -DTEST_NAME=${TEST_NAME}
             -DEXPRESSION_FILE=${EXPRESSION_FILE}
             -DEXECUTABLE=$<TARGET_FILE:bdd_demo>
@@ -47,7 +47,7 @@ function(add_bdd_test TEST_NAME EXPRESSION_FILE)
             -DBINARY_DIR=${CMAKE_BINARY_DIR}
             -P ${CMAKE_SOURCE_DIR}/cmake/run_bdd_test.cmake
     )
-    
+
     # Set test properties
     set_tests_properties(${TEST_NAME} PROPERTIES
         TIMEOUT 30

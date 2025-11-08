@@ -10,7 +10,7 @@ body:
     attributes:
       value: |
         Thanks for suggesting a new feature!
-        
+
   - type: textarea
     id: problem
     attributes:
@@ -19,7 +19,7 @@ body:
       placeholder: A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
     validations:
       required: true
-      
+
   - type: textarea
     id: solution
     attributes:
@@ -28,14 +28,14 @@ body:
       placeholder: A clear and concise description of what you want to happen.
     validations:
       required: true
-      
+
   - type: textarea
     id: alternatives
     attributes:
       label: Alternative Solutions
       description: Describe alternatives you've considered
       placeholder: A clear and concise description of any alternative solutions or features you've considered.
-      
+
   - type: dropdown
     id: priority
     attributes:
@@ -48,7 +48,7 @@ body:
         - Critical
     validations:
       required: true
-      
+
   - type: checkboxes
     id: implementation
     attributes:
@@ -63,7 +63,7 @@ body:
         - label: Testing framework
         - label: Documentation
         - label: Build system
-        
+
   - type: textarea
     id: additional
     attributes:

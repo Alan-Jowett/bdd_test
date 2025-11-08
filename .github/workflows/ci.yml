@@ -8,7 +8,7 @@ on:
     branches: [ main, master, develop, v*.*.* ]
     paths:
       - '**.cpp'
-      - '**.hpp' 
+      - '**.hpp'
       - '**.h'
       - '**.c'
       - '**/CMakeLists.txt'
@@ -21,7 +21,7 @@ on:
     paths:
       - '**.cpp'
       - '**.hpp'
-      - '**.h' 
+      - '**.h'
       - '**.c'
       - '**/CMakeLists.txt'
       - '**.cmake'
@@ -52,7 +52,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # MacOS is disabled for now as TeDDy does not support it 
+        # MacOS is disabled for now as TeDDy does not support it
         os: [ubuntu-latest, windows-latest]
         build_type: [Debug, Release]
         compiler: [gcc, clang, msvc]
@@ -158,7 +158,7 @@ jobs:
     name: Code Quality Checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -197,7 +197,7 @@ jobs:
     name: Documentation Check
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -217,7 +217,7 @@ jobs:
           "## Usage"
           "## License"
         )
-        
+
         for section in "${required_sections[@]}"; do
           if ! grep -q "$section" README.md; then
             echo "❌ Missing required section: $section"
@@ -236,12 +236,12 @@ jobs:
             expression_files_found=true
           fi
         done
-        
+
         if [ "$expression_files_found" = false ]; then
           echo "❌ No test expression files found in test_expressions/"
           exit 1
         fi
-        
+
         echo "✅ All test expression files exist"
 
     - name: Validate DOT files can be processed by Graphviz
@@ -252,13 +252,13 @@ jobs:
         cmake ..
         make
         cd ..
-        
+
         # Test each expression file and validate generated DOT
         for expr_file in test_expressions/*.txt; do
           if [ -f "$expr_file" ]; then
             echo "Processing $expr_file"
             ./build/bdd_demo "$expr_file"
-            
+
             # Check if DOT file was created and is valid
             dot_file="${expr_file%.*}.dot"
             if [ -f "$dot_file" ]; then
@@ -277,7 +277,7 @@ jobs:
     timeout-minutes: 25
     # Skip security scan for draft PRs to save resources
     if: ${{ !github.event.pull_request.draft }}
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -286,7 +286,7 @@ jobs:
       uses: github/codeql-action/init@v3
       with:
         languages: cpp
-        
+
     - name: Build for analysis
       run: |
         mkdir build
@@ -305,7 +305,7 @@ jobs:
     needs: [build-and-test, code-quality, documentation]
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4

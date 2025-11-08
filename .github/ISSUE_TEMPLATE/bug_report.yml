@@ -10,7 +10,7 @@ body:
     attributes:
       value: |
         Thanks for taking the time to fill out this bug report!
-        
+
   - type: textarea
     id: what-happened
     attributes:
@@ -19,7 +19,7 @@ body:
       placeholder: Tell us what you see!
     validations:
       required: true
-      
+
   - type: textarea
     id: expected
     attributes:
@@ -28,7 +28,7 @@ body:
       placeholder: What should have happened instead?
     validations:
       required: true
-      
+
   - type: textarea
     id: steps
     attributes:
@@ -40,14 +40,14 @@ body:
         3. See error
     validations:
       required: true
-      
+
   - type: textarea
     id: expression
     attributes:
       label: Expression input
       description: If applicable, provide the expression that caused the issue
       placeholder: "e.g., A & B | C"
-      
+
   - type: dropdown
     id: os
     attributes:
@@ -60,7 +60,7 @@ body:
         - Other
     validations:
       required: true
-      
+
   - type: dropdown
     id: build-type
     attributes:
@@ -72,7 +72,7 @@ body:
         - Not sure
     validations:
       required: true
-      
+
   - type: textarea
     id: additional
     attributes:

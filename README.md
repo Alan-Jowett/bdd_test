@@ -15,7 +15,7 @@ This project provides a comprehensive Binary Decision Diagram (BDD) conversion t
 
 ### Output Formats
 - **Console Display**: Human-readable output with descriptive headers and **real variable names**
-- **DOT Graph Files**: Both expression tree and BDD structure exports with **semantic variable labels**  
+- **DOT Graph Files**: Both expression tree and BDD structure exports with **semantic variable labels**
 - **PNG Generation**: Automated visualization creation with **meaningful variable names**
 - **Node Tables**: Clean, structured table output displaying **actual variable names** for analysis
 
@@ -70,7 +70,7 @@ Run the BDD converter with an expression file:
 
 Create a text file containing a logical expression using these operators:
 - `AND` or `&` - Logical AND
-- `OR` or `|` - Logical OR  
+- `OR` or `|` - Logical OR
 - `NOT` or `!` - Logical NOT
 - `XOR` or `^` - Logical XOR
 - `()` - Parentheses for grouping
@@ -102,7 +102,7 @@ ctest -C Release
 
 Tests validate:
 - Expression parsing accuracy
-- BDD generation consistency  
+- BDD generation consistency
 - Cross-platform file handling
 - Output format correctness
 
@@ -199,7 +199,7 @@ This example shows how NOT operations and De Morgan's laws are handled in the BD
 
 **Binary Decision Diagrams** (right diagrams):
 - Optimized representation for efficient logical operations
-- Solid lines represent "true" paths, dashed lines represent "false" paths  
+- Solid lines represent "true" paths, dashed lines represent "false" paths
 - Terminal nodes show final boolean values (0 = false, 1 = true)
 - Shared nodes indicate common subexpressions
 
@@ -226,13 +226,13 @@ This example shows how NOT operations and De Morgan's laws are handled in the BD
    ```powershell
    # Windows (using chocolatey)
    choco install graphviz
-   
-   # Windows (using winget)  
+
+   # Windows (using winget)
    winget install Graphviz.Graphviz
-   
+
    # Linux (Ubuntu/Debian)
    sudo apt install graphviz
-   
+
    # macOS (using homebrew)
    brew install graphviz
    ```
@@ -241,7 +241,7 @@ This example shows how NOT operations and De Morgan's laws are handled in the BD
    ```powershell
    # For expression tree
    dot -Tpng example_expression_tree.dot -o example_expression_tree.png
-   
+
    # For BDD structure
    dot -Tpng example_bdd.dot -o example_bdd.png
    ```
@@ -293,7 +293,7 @@ bdd_test/
 - Understand operator precedence and grouping
 - Debug complex expressions with tree visualization
 
-### BDD Optimization  
+### BDD Optimization
 - Automatic variable ordering for optimal BDD size
 - Node sharing and reduction for memory efficiency
 - Terminal node consolidation
@@ -308,12 +308,12 @@ bdd_test/
 TeDDy is a C++ library for creation and manipulation of decision diagrams developed at the University of Žilina. It supports:
 
 - Binary Decision Diagrams (BDDs)
-- Multi-Valued Decision Diagrams (MDDs)  
+- Multi-Valued Decision Diagrams (MDDs)
 - Integer Multi-Valued Decision Diagrams (iMDDs)
 - Reliability analysis functions
 - High-performance algorithms for large-scale problems
 
-**Version Used**: v4.1.0  
+**Version Used**: v4.1.0
 **Repository**: https://github.com/MichalMrena/DecisionDiagrams
 
 ## Contributing
@@ -333,7 +333,7 @@ To add new test expressions:
 **Build Error**: `C++17 not supported`
 - Solution: Use a newer compiler (GCC 9+, Clang 10+, MSVC 19.14+)
 
-**Test Failure**: `Generated BDD nodes file differs from expected`  
+**Test Failure**: `Generated BDD nodes file differs from expected`
 - Solution: Regenerate expected output files by running the tool and copying the generated `*_bdd_nodes.txt` files
 
 **Graphviz Not Found**: `'dot' is not recognized`
@@ -354,7 +354,7 @@ This BDD Expression Converter is licensed under the MIT License - see the [LICEN
 
 **MIT License Summary:**
 - ✅ Commercial use allowed
-- ✅ Modification allowed  
+- ✅ Modification allowed
 - ✅ Distribution allowed
 - ✅ Private use allowed
 - ❗ License and copyright notice required
