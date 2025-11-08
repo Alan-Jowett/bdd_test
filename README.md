@@ -1,6 +1,8 @@
 # BDD Expression Converter
 
 [![CI/CD Pipeline](https://github.com/Alan-Jowett/bdd_test/actions/workflows/ci.yml/badge.svg)](https://github.com/Alan-Jowett/bdd_test/actions/workflows/ci.yml)
+[![Code Coverage](https://github.com/Alan-Jowett/bdd_test/actions/workflows/coverage.yml/badge.svg)](https://github.com/Alan-Jowett/bdd_test/actions/workflows/coverage.yml)
+[![Coverage Status](https://coveralls.io/repos/github/Alan-Jowett/bdd_test/badge.svg?branch=main)](https://coveralls.io/github/Alan-Jowett/bdd_test?branch=main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 This project provides a comprehensive Binary Decision Diagram (BDD) conversion tool built with the TeDDy (Templated Decision Diagrams) library. It converts logical expressions from text files into BDDs and generates multiple output formats for analysis and visualization.
@@ -105,6 +107,44 @@ Tests validate:
 - BDD generation consistency
 - Cross-platform file handling
 - Output format correctness
+
+### Code Coverage
+
+Monitor test coverage for quality assurance:
+
+#### Automated Coverage (CI/CD)
+- **Coveralls Integration**: Automatic coverage reporting on every push
+- **GitHub Actions**: Dedicated coverage workflow with detailed reporting
+- **Branch Coverage**: Tracks both line and branch coverage metrics
+- **Pull Request Reports**: Coverage changes displayed in PR reviews
+
+#### Local Coverage Generation
+Generate coverage reports for development:
+```powershell
+# Generate coverage report locally
+./generate_coverage.ps1
+
+# Generate and open report in browser
+./generate_coverage.ps1 -OpenReport
+```
+
+#### Coverage Configuration
+Enable coverage in your build:
+```powershell
+mkdir build-coverage
+cd build-coverage
+cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON
+cmake --build . --config Debug
+ctest
+```
+
+Coverage reports include:
+- **Line Coverage**: Percentage of code lines executed
+- **Branch Coverage**: Percentage of conditional branches tested
+- **Function Coverage**: Percentage of functions called
+- **HTML Reports**: Interactive coverage visualization
+
+For detailed coverage configuration and troubleshooting, see [docs/COVERAGE.md](docs/COVERAGE.md).
 
 ## Sample Output
 
@@ -269,6 +309,7 @@ bdd_test/
 ├── README.md                          # This file
 ├── LICENSE                            # MIT License file
 ├── generate_all_visualizations.ps1    # Batch PNG generation script
+├── generate_coverage.ps1              # Local code coverage report generator
 ├── cmake/                             # CMake configuration files
 │   └── run_bdd_test.cmake             # Test framework script
 ├── test_expressions/                  # Test expression files

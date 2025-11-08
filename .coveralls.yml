@@ -1,0 +1,31 @@
+# Configuration for Coveralls code coverage service
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
+
+# Specify the source encoding
+source_encoding: utf-8
+
+# Paths to exclude from coverage
+coverage_clover: build/coverage_filtered.info
+
+# Service configuration
+service_name: github-actions
+
+# Parallel job support (if using matrix builds)
+parallel: false
+
+# Coverage thresholds and behavior
+fail_ci_if_error: false
+
+# Source file paths (relative to repository root)
+# These patterns help Coveralls correctly map source files
+src_dir: .
+
+# Files to exclude from coverage reporting
+exclude_paths:
+  - "build/"
+  - "build/_deps/"
+  - "test_expressions/"
+  - "CMakeFiles/"
+  - ".github/"
+  - "docs/"
