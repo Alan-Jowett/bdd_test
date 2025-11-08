@@ -8,7 +8,7 @@ This template system eliminates the need for separate data types by making itera
 
 ## Files
 
-- **`dot_template.hpp`** - Core template system with generic DOT generation
+- **`dot_graph_generator.hpp`** - Core template system with generic DOT generation
 - **`dot_example.hpp`** - Example implementation for expression trees  
 - **`dot_template_test.cpp`** - Simple test program demonstrating usage
 - **`README_DOT_TEMPLATE.md`** - This documentation file
@@ -78,7 +78,7 @@ public:
 ## Usage Example
 
 ```cpp
-#include "dot_template.hpp"
+#include "dot_graph_generator.hpp"
 
 // 1. Define your iterator (no inheritance required)
 class MyTreeIterator {

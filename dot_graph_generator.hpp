@@ -1,5 +1,5 @@
 /**
- * @file dot_template.hpp
+ * @file dot_graph_generator.hpp
  * @brief Generic template for generating Graphviz DOT diagrams from tree-like structures
  * 
  * This header provides a pure iterator-based template system for generating DOT format
@@ -19,7 +19,7 @@
 #include <functional>
 #include <type_traits>
 
-namespace dot_template {
+namespace dot_graph {
 
 /// @name SFINAE helpers for optional property methods
 /// @{
@@ -150,9 +150,27 @@ void generate_dot_graph(const Iterator& root_iterator,
     out << "    rankdir=" << config.rankdir << ";\n";
     out << "    node [fontname=\"" << config.font_name << "\"];\n";
     out << "    edge [fontname=\"" << config.font_name << "\"];\n";
-    out << "    node [shape=" << config.default_node_shape 
-        << ", style=" << config.default_node_style << "];\n";
-    out << "    edge [style=" << config.default_edge_style << "];\n";
+    
+    // Only add default node styling if values are provided
+    if (!config.default_node_shape.empty() || !config.default_node_style.empty()) {
+        out << "    node [";
+        bool first = true;
+        if (!config.default_node_shape.empty()) {
+            out << "shape=" << config.default_node_shape;
+            first = false;
+        }
+        if (!config.default_node_style.empty()) {
+            if (!first) out << ", ";
+            out << "style=" << config.default_node_style;
+        }
+        out << "];\n";
+    }
+    
+    // Only add default edge styling if value is provided
+    if (!config.default_edge_style.empty()) {
+        out << "    edge [style=" << config.default_edge_style << "];\n";
+    }
+    
     out << "\n";
     
     // Helper to check if iterator has should_process method
@@ -219,8 +237,11 @@ void generate_dot_graph(const Iterator& root_iterator,
         bool first = true;
         
         if constexpr (has_get_edge_label<Iterator>::value) {
-            attrs += "label=\"" + parent.get_edge_label(child, index) + "\"";
-            first = false;
+            std::string label = parent.get_edge_label(child, index);
+            if (!label.empty()) {
+                attrs += "label=\"" + label + "\"";
+                first = false;
+            }
         }
         
         if constexpr (has_get_edge_style<Iterator>::value) {
@@ -286,7 +307,7 @@ void generate_dot_graph(const Iterator& root_iterator,
     traverse(root_iterator);
     
     // Write DOT footer
-    out << "\n}\n";
+    out << "}\n";
 }
 
 /**
@@ -305,4 +326,4 @@ void generate_dot_graph(const Iterator& root_iterator,
     generate_dot_graph(root_iterator, out, config);
 }
 
-} // namespace dot_template
+} // namespace dot_graph

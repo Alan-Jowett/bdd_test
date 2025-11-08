@@ -40,6 +40,10 @@
 #include <variant>
 #include <vector>
 
+// Template system headers for DOT generation
+#include "write_expression_to_dot.hpp"
+#include <vector>
+
 /**
  * @brief Writes BDD node table to any output stream
  *
@@ -290,68 +294,6 @@ void write_bdd_to_dot(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t
     out << "\n}";
 }
 
-/// @name Expression Tree Data Structures
-/// @{
-
-/**
- * @brief Forward declarations for expression tree node types
- *
- * These structures form a variant-based abstract syntax tree (AST)
- * for representing logical expressions with AND, OR, XOR, NOT operators
- * and variable references.
- */
-struct my_and;       ///< Binary AND operation
-struct my_or;        ///< Binary OR operation
-struct my_not;       ///< Unary NOT operation
-struct my_xor;       ///< Binary XOR operation
-struct my_variable;  ///< Variable reference
-
-/// @brief Variant type representing any expression node
-using my_expression = std::variant<my_and, my_or, my_not, my_xor, my_variable>;
-
-/// @brief Smart pointer to an expression for memory management
-using my_expression_ptr = std::unique_ptr<my_expression>;
-
-/**
- * @brief Represents a variable reference in the expression tree
- */
-struct my_variable {
-    std::string variable_name;  ///< Name of the variable (e.g., "x0", "input_A")
-};
-
-/**
- * @brief Represents a logical AND operation between two sub-expressions
- */
-struct my_and {
-    my_expression_ptr left;   ///< Left operand
-    my_expression_ptr right;  ///< Right operand
-};
-
-/**
- * @brief Represents a logical OR operation between two sub-expressions
- */
-struct my_or {
-    my_expression_ptr left;   ///< Left operand
-    my_expression_ptr right;  ///< Right operand
-};
-
-/**
- * @brief Represents a logical NOT operation on a single sub-expression
- */
-struct my_not {
-    my_expression_ptr expr;  ///< The expression to negate
-};
-
-/**
- * @brief Represents a logical XOR (exclusive OR) operation between two sub-expressions
- */
-struct my_xor {
-    my_expression_ptr left;   ///< Left operand
-    my_expression_ptr right;  ///< Right operand
-};
-
-/// @}
-
 /**
  * @brief Recursively collects all unique variable names from an expression tree
  *
@@ -374,69 +316,6 @@ void collect_variables(const my_expression& expr, std::unordered_set<std::string
                 collect_variables(*variant_expr.right, variables);
             } else if constexpr (std::is_same_v<T, my_not>) {
                 collect_variables(*variant_expr.expr, variables);
-            }
-        },
-        expr);
-}
-
-/**
- * @brief Recursively writes expression tree as DOT graph for visualization
- *
- * Generates a DOT format graph representing the abstract syntax tree of the expression.
- * Different node types are styled with different colors and shapes:
- * - Variables: light blue ellipses
- * - AND: light green boxes
- * - OR: light coral boxes
- * - NOT: yellow boxes
- * - XOR: light pink boxes
- *
- * @param expr The expression tree node to process
- * @param out Output stream for DOT content
- * @param node_id Reference to current node ID counter (modified during traversal)
- * @param parent_id ID of parent node for edge creation (-1 for root)
- * @param edge_label Label for the edge from parent to current node
- */
-void write_expression_to_dot(const my_expression& expr, std::ostream& out, int& node_id,
-                             int parent_id = -1, const std::string& edge_label = "") {
-    static bool first_call = true;
-
-    std::visit(
-        [&](const auto& variant_expr) {
-            using T = std::decay_t<decltype(variant_expr)>;
-
-            int current_node = node_id++;
-
-            if constexpr (std::is_same_v<T, my_variable>) {
-                out << "    node" << current_node << " [label=\"" << variant_expr.variable_name
-                    << "\", shape=ellipse, style=filled, fillcolor=lightblue];\n";
-            } else if constexpr (std::is_same_v<T, my_and>) {
-                out << "    node" << current_node
-                    << " [label=\"AND\", shape=box, style=filled, fillcolor=lightgreen];\n";
-                write_expression_to_dot(*variant_expr.left, out, node_id, current_node, "L");
-                write_expression_to_dot(*variant_expr.right, out, node_id, current_node, "R");
-            } else if constexpr (std::is_same_v<T, my_or>) {
-                out << "    node" << current_node
-                    << " [label=\"OR\", shape=box, style=filled, fillcolor=lightcoral];\n";
-                write_expression_to_dot(*variant_expr.left, out, node_id, current_node, "L");
-                write_expression_to_dot(*variant_expr.right, out, node_id, current_node, "R");
-            } else if constexpr (std::is_same_v<T, my_not>) {
-                out << "    node" << current_node
-                    << " [label=\"NOT\", shape=box, style=filled, fillcolor=yellow];\n";
-                write_expression_to_dot(*variant_expr.expr, out, node_id, current_node, "");
-            } else if constexpr (std::is_same_v<T, my_xor>) {
-                out << "    node" << current_node
-                    << " [label=\"XOR\", shape=box, style=filled, fillcolor=lightpink];\n";
-                write_expression_to_dot(*variant_expr.left, out, node_id, current_node, "L");
-                write_expression_to_dot(*variant_expr.right, out, node_id, current_node, "R");
-            }
-
-            // Create edge from parent to current node
-            if (parent_id != -1) {
-                out << "    node" << parent_id << " -> node" << current_node;
-                if (!edge_label.empty()) {
-                    out << " [label=\"" << edge_label << "\"]";
-                }
-                out << ";\n";
             }
         },
         expr);
@@ -870,19 +749,15 @@ int main(int argc, const char* argv[]) {
     std::filesystem::path bdd_dot_filename = get_output_path(input_file, "_bdd.dot");
     std::filesystem::path bdd_nodes_filename = get_output_path(input_file, "_bdd_nodes.txt");
 
-    // Output expression tree as DOT file
+    // Output expression tree as DOT file using v2 function
     std::ofstream expr_dot_file(expr_dot_filename);
     if (expr_dot_file.is_open()) {
-        expr_dot_file << "digraph ExpressionTree {\n";
-        expr_dot_file << "    rankdir=TB;\n";
-        expr_dot_file << "    node [fontname=\"Arial\"];\n";
-        expr_dot_file << "    edge [fontname=\"Arial\"];\n";
-        expr_dot_file << "\n";
+        // Reset node ID counter for consistent output
+        expression_iterator::reset_node_id_counter(0);
+        
+        // Generate complete DOT graph using updated function
+        write_expression_to_dot(*expr, expr_dot_file, "ExpressionTree");
 
-        int node_id = 0;
-        write_expression_to_dot(*expr, expr_dot_file, node_id);
-
-        expr_dot_file << "}\n";
         expr_dot_file.close();
         std::cout << "Expression tree DOT representation saved to '" << expr_dot_filename << "'\n";
         std::cout << "You can visualize it using Graphviz with: dot -Tpng " << expr_dot_filename
