@@ -411,6 +411,7 @@ TeDDy is a C++ library for creation and manipulation of decision diagrams develo
 
 **Version Used**: v4.1.0
 **Repository**: https://github.com/MichalMrena/DecisionDiagrams
+**Dependency Management**: See [documentation/dependency-management.md](documentation/dependency-management.md) for information on keeping dependencies up to date
 
 ## Contributing
 
