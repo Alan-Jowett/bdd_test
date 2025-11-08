@@ -1,0 +1,78 @@
+name: Bug Report
+description: Create a bug report to help us improve
+title: "[BUG] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+        
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of what the bug is
+      placeholder: Tell us what you see!
+    validations:
+      required: true
+      
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen
+      placeholder: What should have happened instead?
+    validations:
+      required: true
+      
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. See error
+    validations:
+      required: true
+      
+  - type: textarea
+    id: expression
+    attributes:
+      label: Expression input
+      description: If applicable, provide the expression that caused the issue
+      placeholder: "e.g., A & B | C"
+      
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      description: What operating system are you running?
+      options:
+        - Windows
+        - Linux
+        - macOS
+        - Other
+    validations:
+      required: true
+      
+  - type: dropdown
+    id: build-type
+    attributes:
+      label: Build Configuration
+      description: What build type were you using?
+      options:
+        - Debug
+        - Release
+        - Not sure
+    validations:
+      required: true
+      
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here
+      placeholder: Screenshots, logs, etc.

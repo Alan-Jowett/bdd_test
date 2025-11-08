@@ -1,0 +1,295 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop, v*.*.* ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        build_type: [Debug, Release]
+        compiler: [gcc, clang, msvc]
+        exclude:
+          # Exclude combinations that don't make sense
+          - os: ubuntu-latest
+            compiler: msvc
+          - os: macos-latest
+            compiler: msvc
+          - os: windows-latest
+            compiler: gcc
+          - os: windows-latest
+            compiler: clang
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Setup C++ environment (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        if [ "${{ matrix.compiler }}" = "gcc" ]; then
+          sudo apt-get install -y gcc g++ cmake
+        elif [ "${{ matrix.compiler }}" = "clang" ]; then
+          sudo apt-get install -y clang cmake
+        fi
+
+    - name: Setup C++ environment (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        brew install cmake
+        if [ "${{ matrix.compiler }}" = "gcc" ]; then
+          brew install gcc
+        fi
+
+    - name: Setup C++ environment (Windows)
+      if: runner.os == 'Windows'
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Set compiler environment variables (Linux/macOS)
+      if: runner.os != 'Windows'
+      run: |
+        if [ "${{ matrix.compiler }}" = "gcc" ]; then
+          echo "CC=gcc" >> $GITHUB_ENV
+          echo "CXX=g++" >> $GITHUB_ENV
+        elif [ "${{ matrix.compiler }}" = "clang" ]; then
+          echo "CC=clang" >> $GITHUB_ENV
+          echo "CXX=clang++" >> $GITHUB_ENV
+        fi
+
+    - name: Create build directory
+      run: cmake -E make_directory ${{github.workspace}}/build
+
+    - name: Configure CMake (Linux/macOS)
+      if: runner.os != 'Windows'
+      working-directory: ${{github.workspace}}/build
+      run: |
+        cmake .. \
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+          -DCMAKE_C_COMPILER=$CC \
+          -DCMAKE_CXX_COMPILER=$CXX
+
+    - name: Configure CMake (Windows)
+      if: runner.os == 'Windows'
+      working-directory: ${{github.workspace}}/build
+      run: |
+        cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+
+    - name: Build
+      working-directory: ${{github.workspace}}/build
+      run: cmake --build . --config ${{ matrix.build_type }} --parallel
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C ${{ matrix.build_type }} --output-on-failure --verbose
+
+    - name: Test with sample expressions
+      working-directory: ${{github.workspace}}
+      shell: bash
+      run: |
+        # Test that the executable runs and produces expected outputs
+        if [ "${{ runner.os }}" = "Windows" ]; then
+          EXECUTABLE="./build/${{ matrix.build_type }}/bdd_demo.exe"
+        else
+          EXECUTABLE="./build/bdd_demo"
+        fi
+        
+        # Test with each expression file
+        for expr_file in test_expressions/*.txt test_expressions/*/*.txt; do
+          if [ -f "$expr_file" ]; then
+            echo "Testing with $expr_file"
+            $EXECUTABLE "$expr_file" || exit 1
+            echo "✅ $expr_file passed"
+          fi
+        done
+
+    - name: Upload build artifacts
+      if: matrix.build_type == 'Release' && matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc'
+      uses: actions/upload-artifact@v4
+      with:
+        name: bdd-demo-linux-release
+        path: |
+          build/bdd_demo
+          README.md
+          LICENSE
+        retention-days: 30
+
+    - name: Upload build artifacts (Windows)
+      if: matrix.build_type == 'Release' && matrix.os == 'windows-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: bdd-demo-windows-release
+        path: |
+          build/Release/bdd_demo.exe
+          README.md
+          LICENSE
+        retention-days: 30
+
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cppcheck clang-format clang-tidy
+
+    - name: Run cppcheck
+      run: |
+        cppcheck --enable=all --std=c++17 --inline-suppr \
+          --suppress=missingIncludeSystem \
+          --suppress=unusedFunction \
+          --error-exitcode=1 \
+          main.cpp
+
+    - name: Check code formatting
+      run: |
+        # Check if code follows consistent formatting
+        find . -name "*.cpp" -o -name "*.hpp" | \
+        xargs clang-format --dry-run --Werror
+
+  documentation:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Graphviz (for DOT file validation)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y graphviz
+
+    - name: Validate README structure
+      run: |
+        # Check that README has required sections
+        required_sections=(
+          "# BDD Expression Converter"
+          "## Features"
+          "## Building"
+          "## Usage"
+          "## License"
+        )
+        
+        for section in "${required_sections[@]}"; do
+          if ! grep -q "$section" README.md; then
+            echo "❌ Missing required section: $section"
+            exit 1
+          fi
+        done
+        echo "✅ README structure validation passed"
+
+    - name: Check that all expression files exist
+      run: |
+        # Verify test expression files referenced in README
+        for file in test_expressions/*.txt test_expressions/*/*.txt; do
+          if [ ! -f "$file" ]; then
+            echo "❌ Missing test file: $file"
+            exit 1
+          fi
+        done
+        echo "✅ All test expression files exist"
+
+    - name: Validate DOT files can be processed by Graphviz
+      run: |
+        # Create build and run to generate DOT files, then validate them
+        mkdir -p build
+        cd build
+        cmake ..
+        make
+        cd ..
+        
+        # Test each expression file and validate generated DOT
+        for expr_file in test_expressions/*.txt test_expressions/*/*.txt; do
+          if [ -f "$expr_file" ]; then
+            echo "Processing $expr_file"
+            ./build/bdd_demo "$expr_file"
+            
+            # Check if DOT file was created and is valid
+            dot_file="${expr_file%.*}.dot"
+            if [ -f "$dot_file" ]; then
+              dot -Tpng "$dot_file" -o /tmp/test.png || {
+                echo "❌ Invalid DOT file: $dot_file"
+                exit 1
+              }
+              echo "✅ Valid DOT file: $dot_file"
+            fi
+          fi
+        done
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run CodeQL Analysis
+      uses: github/codeql-action/init@v3
+      with:
+        languages: cpp
+
+    - name: Build for analysis
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+        make
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+
+  release:
+    name: Create Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-and-test, code-quality, documentation]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Build Release
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release ..
+        make -j$(nproc)
+
+    - name: Create Release Archive
+      run: |
+        mkdir -p release
+        cp build/bdd_demo release/
+        cp README.md LICENSE release/
+        cp -r test_expressions release/
+        cp generate_all_visualizations.ps1 release/
+        tar -czf bdd-demo-${{ github.ref_name }}.tar.gz -C release .
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          bdd-demo-${{ github.ref_name }}.tar.gz
+        generate_release_notes: true
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

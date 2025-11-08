@@ -1,0 +1,29 @@
+# Code Owners for BDD Expression Converter
+# This file defines who should review changes to specific parts of the codebase
+
+# Default owners for everything in the repo
+* @Alan-Jowett
+
+# Core C++ source code
+*.cpp @Alan-Jowett
+*.hpp @Alan-Jowett
+
+# Build system
+CMakeLists.txt @Alan-Jowett
+cmake/ @Alan-Jowett
+
+# CI/CD workflows
+.github/ @Alan-Jowett
+
+# Documentation
+README.md @Alan-Jowett
+*.md @Alan-Jowett
+
+# Test expressions - require review for any changes to test cases
+test_expressions/ @Alan-Jowett
+
+# PowerShell scripts
+*.ps1 @Alan-Jowett
+
+# License and legal files
+LICENSE @Alan-Jowett
