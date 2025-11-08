@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
+
 # PowerShell script to generate PNG visualizations from all DOT files
 # Author: BDD Expression Converter
 # Description: Automatically finds all DOT files and creates corresponding PNG images using Graphviz

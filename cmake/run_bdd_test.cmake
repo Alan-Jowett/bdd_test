@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
+
 # CMake test script for BDD generation testing
 # This script is executed by CTest for each test case
 
