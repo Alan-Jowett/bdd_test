@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - CMake 3.20 or higher
-- C++17 compatible compiler (GCC 9+, Clang 10+, or MSVC 19.14+)
+- C++20 compatible compiler (GCC 10+, Clang 12+, or MSVC 19.28+)
 - Git (for fetching dependencies)
 - Optional: Graphviz (for PNG visualization generation)
 
@@ -70,8 +70,8 @@ After a successful build, you'll find:
 
 ## Common Build Issues
 
-**C++17 not supported**
-- Solution: Use a newer compiler (GCC 9+, Clang 10+, MSVC 19.14+)
+**C++20 not supported**
+- Solution: Use a newer compiler (GCC 10+, Clang 12+, MSVC 19.28+)
 
 **CMake version too old**
 - Solution: Update CMake to version 3.20 or higher

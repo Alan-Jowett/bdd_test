@@ -1,33 +1,34 @@
 # Contributing to BDD Expression Converter
 
-Thank you for your interest in contributing to the BDD Expression Converter! This document provides guidelines for contributing to this project.
+Thank you for your interest in contributing to the BDD Expression Converter!
+
+## 📚 Documentation Moved
+
+The detailed contributing guidelines have been moved to provide better organization and more comprehensive information.
+
+**Please see the complete contributing guide at: [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)**
+
+## Quick Links
+
+- **[Development Guidelines](docs/CONTRIBUTING.md#development-workflow)** - Code style, formatting requirements, and workflow
+- **[Testing Requirements](docs/CONTRIBUTING.md#testing)** - How to add and run tests
+- **[Code Style](docs/CONTRIBUTING.md#code-style-guidelines)** - Mandatory clang-format requirements
+- **[Adding Test Expressions](docs/CONTRIBUTING.md#adding-new-test-expressions)** - Step-by-step guide
+
+## Quick Start
+
+1. **Fork and clone** the repository
+2. **Create a feature branch**: `git checkout -b feature/your-feature-name`
+3. **Follow the [detailed guidelines](docs/CONTRIBUTING.md)** for development
+4. **Format your code**: `clang-format -i *.cpp *.h` (mandatory)
+5. **Test your changes**: `cmake --build build && ctest`
+6. **Submit a PR** with a clear description
+
+For the complete contributing guide with detailed requirements, please visit **[docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)**.
 
 ## Code of Conduct
 
 This project follows a simple code of conduct: be respectful, constructive, and professional in all interactions.
-
-## Getting Started
-
-1. **Fork the repository** on GitHub
-2. **Clone your fork** locally:
-   ```bash
-   git clone https://github.com/your-username/DecisionDiagrams.git
-   cd DecisionDiagrams
-   ```
-3. **Create a feature branch** from the main branch:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-## Development Setup
-
-### Prerequisites
-- C++17 compatible compiler (GCC, Clang, or MSVC)
-- CMake 3.15 or higher
-- Git
-
-### Building the Project
-```bash
 mkdir build
 cd build
 cmake ..
