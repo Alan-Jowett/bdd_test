@@ -153,6 +153,28 @@ ctest
 ./generate_coverage.ps1
 ```
 
+## GitHub Actions & Documentation
+
+### Documentation Workflow
+The project uses GitHub Actions to automatically generate and deploy Doxygen documentation:
+- **Triggered by**: pushes to main/master branches, version tags, or manual dispatch
+- **Generates**: Doxygen HTML documentation from source code comments
+- **Deploys to**: GitHub Pages and a `documentation` branch
+
+### Workflow Permissions
+The documentation workflow requires `contents: write` permission to push to the documentation branch:
+```yaml
+permissions:
+  contents: write  # Required for pushing to documentation branch
+  pages: write     # Required for GitHub Pages deployment
+  id-token: write  # Required for GitHub Pages authentication
+```
+
+### Troubleshooting Workflow Issues
+- **Permission denied errors**: Ensure the workflow has `contents: write` permission
+- **Documentation generation failures**: Check Doxyfile syntax and source code comments
+- **Deployment failures**: Verify the `peaceiris/actions-gh-pages` action is up to date (v4+)
+
 ## Common Operations
 
 ### Adding New Test Cases
