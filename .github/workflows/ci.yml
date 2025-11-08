@@ -191,7 +191,7 @@ jobs:
       run: |
         # Check if code follows consistent formatting
         echo "Checking code formatting with clang-format..."
-        
+
         format_issues=false
         for file in $(find . -name "*.cpp" -o -name "*.hpp"); do
           echo "Checking $file..."
@@ -203,14 +203,14 @@ jobs:
             echo "✅ $file is properly formatted"
           fi
         done
-        
+
         if [ "$format_issues" = true ]; then
           echo ""
           echo "💡 To fix all formatting issues, run:"
           echo "   find . -name '*.cpp' -o -name '*.hpp' | xargs clang-format -i"
           exit 1
         fi
-        
+
         echo "✅ All files are properly formatted"
 
   documentation:
@@ -272,7 +272,7 @@ jobs:
         cmake ..
         make
         cd ..
-        
+
         # Determine the correct executable path
         if [ -f "./build/bin/bdd_demo" ]; then
           EXECUTABLE="./build/bin/bdd_demo"
@@ -286,7 +286,7 @@ jobs:
           ls -la ./build/bin/ 2>/dev/null || echo "build/bin directory does not exist"
           exit 1
         fi
-        
+
         # Make sure the executable is executable
         chmod +x "$EXECUTABLE"
         echo "Using executable: $EXECUTABLE"

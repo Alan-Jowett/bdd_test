@@ -62,7 +62,7 @@ add_cmdline_test(test_help_long
     EXPECTED_EXIT_CODE 0
 )
 
-add_cmdline_test(test_help_short  
+add_cmdline_test(test_help_short
     ARGS "-h"
     OUTPUT_CONTAINS "TeDDy BDD Demo - Binary Decision Diagram Converter;Usage: bdd_demo"
     EXPECTED_EXIT_CODE 0
