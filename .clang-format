@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
+
+# clang-format configuration for BDD Expression Converter
+
+BasedOnStyle: Google
+Language: Cpp
+
+# Basic formatting
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+
+# Includes
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+
+# Braces
+BreakBeforeBraces: Attach
+AllowShortBlocksOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+
+# Spacing
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+
+# Comments and strings
+ReflowComments: true
+CommentPragmas: '^ IWYU pragma:'
+
+# Line breaking
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
+BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeTernaryOperators: true
+BreakStringLiterals: true
+
+# Alignment
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignOperands: true
+AlignTrailingComments: true
+
+# Pointer and reference alignment
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+# Miscellaneous
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+SortUsingDeclarations: true

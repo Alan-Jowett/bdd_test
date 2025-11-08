@@ -4,8 +4,9 @@
 /*
  * BDD Expression Converter
  *
- * A comprehensive Binary Decision Diagram (BDD) conversion tool built with the TeDDy library.
- * Converts logical expressions from text files into BDDs and generates multiple output formats.
+ * A comprehensive Binary Decision Diagram (BDD) conversion tool built with the
+ * TeDDy library. Converts logical expressions from text files into BDDs and
+ * generates multiple output formats.
  *
  * Copyright (c) 2025 Alan Jowett
  * Licensed under the MIT License - see LICENSE file for details

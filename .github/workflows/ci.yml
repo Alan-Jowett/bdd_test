@@ -190,8 +190,28 @@ jobs:
     - name: Check code formatting
       run: |
         # Check if code follows consistent formatting
-        find . -name "*.cpp" -o -name "*.hpp" | \
-        xargs clang-format --dry-run --Werror
+        echo "Checking code formatting with clang-format..."
+        
+        format_issues=false
+        for file in $(find . -name "*.cpp" -o -name "*.hpp"); do
+          echo "Checking $file..."
+          if ! clang-format --dry-run --Werror "$file" > /dev/null 2>&1; then
+            echo "❌ Formatting issues found in $file"
+            echo "To fix, run: clang-format -i $file"
+            format_issues=true
+          else
+            echo "✅ $file is properly formatted"
+          fi
+        done
+        
+        if [ "$format_issues" = true ]; then
+          echo ""
+          echo "💡 To fix all formatting issues, run:"
+          echo "   find . -name '*.cpp' -o -name '*.hpp' | xargs clang-format -i"
+          exit 1
+        fi
+        
+        echo "✅ All files are properly formatted"
 
   documentation:
     name: Documentation Check
@@ -252,12 +272,36 @@ jobs:
         cmake ..
         make
         cd ..
+        
+        # Determine the correct executable path
+        if [ -f "./build/bin/bdd_demo" ]; then
+          EXECUTABLE="./build/bin/bdd_demo"
+        elif [ -f "./build/bdd_demo" ]; then
+          EXECUTABLE="./build/bdd_demo"
+        else
+          echo "❌ Could not find bdd_demo executable"
+          echo "Available files in build directory:"
+          find ./build -name "*bdd_demo*" -type f
+          echo "All files in build/bin (if exists):"
+          ls -la ./build/bin/ 2>/dev/null || echo "build/bin directory does not exist"
+          exit 1
+        fi
+        
+        # Make sure the executable is executable
+        chmod +x "$EXECUTABLE"
+        echo "Using executable: $EXECUTABLE"
 
         # Test each expression file and validate generated DOT
         for expr_file in test_expressions/*.txt; do
           if [ -f "$expr_file" ]; then
             echo "Processing $expr_file"
-            ./build/bdd_demo "$expr_file"
+            "$EXECUTABLE" "$expr_file" || {
+              echo "❌ Failed to execute $EXECUTABLE with $expr_file"
+              echo "Executable info:"
+              ls -la "$EXECUTABLE"
+              file "$EXECUTABLE"
+              exit 1
+            }
 
             # Check if DOT file was created and is valid
             dot_file="${expr_file%.*}.dot"
@@ -267,6 +311,8 @@ jobs:
                 exit 1
               }
               echo "✅ Valid DOT file: $dot_file"
+            else
+              echo "⚠️  No DOT file generated for $expr_file"
             fi
           fi
         done
