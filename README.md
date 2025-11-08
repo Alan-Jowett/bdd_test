@@ -1,6 +1,6 @@
 # BDD Expression Converter
 
-[![CI/CD Pipeline](https://github.com/Alan-Jowett/DecisionDiagrams/actions/workflows/ci.yml/badge.svg)](https://github.com/Alan-Jowett/DecisionDiagrams/actions/workflows/ci.yml)
+[![CI/CD Pipeline](https://github.com/Alan-Jowett/bdd_test/actions/workflows/ci.yml/badge.svg)](https://github.com/Alan-Jowett/bdd_test/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 This project provides a comprehensive Binary Decision Diagram (BDD) conversion tool built with the TeDDy (Templated Decision Diagrams) library. It converts logical expressions from text files into BDDs and generates multiple output formats for analysis and visualization.
