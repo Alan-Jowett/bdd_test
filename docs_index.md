@@ -31,7 +31,7 @@ This tool provides:
 
 The tool supports logical expressions with these operators:
 - `AND` - Logical conjunction
-- `OR` - Logical disjunction  
+- `OR` - Logical disjunction
 - `XOR` - Exclusive or
 - `NOT` - Logical negation
 - `()` - Grouping parentheses

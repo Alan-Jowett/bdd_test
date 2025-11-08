@@ -82,6 +82,7 @@ The project uses a customized Google style with these key settings:
 - **Line Length**: 100 characters
 - **Brace Style**: Attach (K&R style)
 - **Include Sorting**: Case sensitive, regrouped
+- **Trailing Whitespace**: Must be removed from all files
 
 ### Formatting Commands
 ```powershell
@@ -93,6 +94,12 @@ clang-format --dry-run --Werror *.cpp *.h
 
 # Format specific file
 clang-format -i main.cpp
+
+# Remove trailing whitespace (PowerShell)
+Get-ChildItem -Include "*.cpp","*.h","*.cmake","*.md" -Recurse | ForEach-Object { (Get-Content $_.FullName) | ForEach-Object { $_.TrimEnd() } | Set-Content $_.FullName }
+
+# Check for trailing whitespace
+Get-ChildItem -Include "*.cpp","*.h","*.cmake","*.md" -Recurse | Select-String "\s+$" | Select-Object Filename,LineNumber,Line
 ```
 
 ### Auto-formatting in VS Code
@@ -112,6 +119,7 @@ Ensure these settings are enabled:
 - Use C++20 features appropriately
 - Maintain clear variable naming with descriptive names
 - Add comments for complex BDD operations
+- Remove all trailing whitespace from files
 
 ### File Organization
 - Input expressions go in `test_expressions/`
@@ -167,9 +175,10 @@ ctest
 
 ### Before Committing
 1. **Format all modified code**: Run `clang-format -i` on changed files
-2. **Build successfully**: Ensure `cmake --build build` completes without errors
-3. **Pass all tests**: Run `ctest` and verify all tests pass
-4. **Check formatting**: Use `clang-format --dry-run --Werror` to verify compliance
+2. **Remove trailing whitespace**: Ensure no lines end with spaces or tabs
+3. **Build successfully**: Ensure `cmake --build build` completes without errors
+4. **Pass all tests**: Run `ctest` and verify all tests pass
+5. **Check formatting**: Use `clang-format --dry-run --Werror` to verify compliance
 
 ### For New Features
 1. Add appropriate test cases

@@ -18,7 +18,7 @@
 
 .EXAMPLE
     .\generate_coverage.ps1
-    
+
 .EXAMPLE
     .\generate_coverage.ps1 -BuildDir "my-build" -OpenReport
 #>
@@ -52,14 +52,14 @@ try {
         Write-Host "🗑️  Cleaning existing build directory..."
         Remove-Item $BuildDir -Recurse -Force
     }
-    
+
     New-Item -ItemType Directory -Path $BuildDir | Out-Null
     Set-Location $BuildDir
 
     # Configure with coverage enabled
     Write-Host "⚙️  Configuring CMake with coverage enabled..."
     cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON
-    
+
     if ($LASTEXITCODE -ne 0) {
         throw "CMake configuration failed"
     }
@@ -67,7 +67,7 @@ try {
     # Build the project
     Write-Host "🔨 Building project..."
     cmake --build . --config Debug --parallel
-    
+
     if ($LASTEXITCODE -ne 0) {
         throw "Build failed"
     }
@@ -75,24 +75,24 @@ try {
     # Run tests
     Write-Host "🧪 Running tests..."
     ctest --output-on-failure --verbose
-    
+
     if ($LASTEXITCODE -ne 0) {
         Write-Warning "⚠️  Some tests failed, but continuing with coverage generation..."
     }
 
     # Generate coverage data
     Write-Host "📊 Generating coverage data..."
-    
+
     # Capture coverage info
     lcov --capture --directory . --output-file coverage.info --rc branch_coverage=1 --ignore-errors graph,gcov,unused
-    
+
     if ($LASTEXITCODE -ne 0) {
         throw "Failed to capture coverage data"
     }
 
     # Filter out external dependencies and system files
     lcov --remove coverage.info '/usr/*' '*/_deps/*' '*/CMakeFiles/*' --output-file coverage_filtered.info --rc branch_coverage=1 --ignore-errors unused
-    
+
     if ($LASTEXITCODE -ne 0) {
         throw "Failed to filter coverage data"
     }
@@ -100,7 +100,7 @@ try {
     # Generate HTML report
     Write-Host "🌐 Generating HTML coverage report..."
     genhtml coverage_filtered.info --output-directory coverage_html --branch-coverage --function-coverage --title "BDD Demo Coverage Report"
-    
+
     if ($LASTEXITCODE -ne 0) {
         throw "Failed to generate HTML report"
     }
@@ -111,7 +111,7 @@ try {
     Write-Host "📁 Build directory: $BuildDir" -ForegroundColor Cyan
     Write-Host "📄 Coverage info: $BuildDir/coverage_filtered.info" -ForegroundColor Cyan
     Write-Host "🌐 HTML report: $BuildDir/coverage_html/index.html" -ForegroundColor Cyan
-    
+
     # Show coverage summary
     Write-Host ""
     Write-Host "📈 Coverage Summary:" -ForegroundColor Yellow

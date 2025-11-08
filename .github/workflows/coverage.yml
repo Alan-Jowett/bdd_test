@@ -43,7 +43,7 @@ jobs:
   coverage:
     name: Code Coverage
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -83,10 +83,10 @@ jobs:
       run: |
         # Initialize coverage counters
         lcov --zerocounters --directory .
-        
+
         # Run tests again to ensure coverage data is fresh
         ctest --output-on-failure
-        
+
         # Create coverage info with lcov
         lcov --capture \
           --directory . \

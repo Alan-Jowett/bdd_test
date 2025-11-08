@@ -12,7 +12,7 @@ on:
       - '**.md'
       - 'Doxyfile'
       - '.github/workflows/documentation.yml'
-  
+
   # Allow manual trigger
   workflow_dispatch:
 
@@ -63,19 +63,19 @@ jobs:
         run: |
           echo "Generating Doxygen documentation..."
           doxygen Doxyfile
-          
+
           # Verify documentation was generated
           if [ ! -d "docs/html" ]; then
             echo "Error: Documentation generation failed - no docs/html directory found"
             exit 1
           fi
-          
+
           # Check if index.html exists
           if [ ! -f "docs/html/index.html" ]; then
             echo "Error: No index.html generated"
             exit 1
           fi
-          
+
           echo "Documentation generated successfully"
           ls -la docs/html/
 

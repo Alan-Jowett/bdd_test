@@ -378,7 +378,7 @@ doxygen Doxyfile
 
 # Open documentation
 # Windows: start docs/html/index.html
-# macOS: open docs/html/index.html  
+# macOS: open docs/html/index.html
 # Linux: xdg-open docs/html/index.html
 ```
 
@@ -388,7 +388,7 @@ The documentation is automatically built and deployed using GitHub Actions:
 
 1. **Triggers**: Pushes to main branch, version tags, or documentation files
 2. **Generation**: Doxygen processes all source files and generates HTML
-3. **Deployment**: 
+3. **Deployment**:
    - Published to GitHub Pages for public access
    - Committed to `documentation` branch for manual access
 4. **Versioning**: Documentation version matches git tags or branch names

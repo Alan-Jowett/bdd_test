@@ -711,6 +711,13 @@ teddy::bdd_manager::diagram_t convert_to_bdd(const my_expression& expr, teddy::b
  * Command line usage:
  * - `program` : Uses default file "test_expressions/filter_expression.txt"
  * - `program <filename>` : Processes the specified expression file
+ * - `program <filename> [options]` : Processes file with specified options
+ *
+ * Options:
+ * - `--enable-reordering` : Enable automatic variable reordering for optimization
+ * - `--disable-reordering` : Disable variable reordering (default)
+ * - `--force-reorder` : Force immediate reordering after BDD construction
+ * - `--help` or `-h` : Show help message
  *
  * Generated outputs (in same directory as input file):
  * - `*_expression_tree.dot` : DOT graph of the original expression tree
@@ -721,8 +728,9 @@ teddy::bdd_manager::diagram_t convert_to_bdd(const my_expression& expr, teddy::b
  * 1. Parses the input expression file
  * 2. Builds an abstract syntax tree (AST)
  * 3. Converts the AST to a BDD
- * 4. Generates visualization and analysis outputs
- * 5. Displays results to console
+ * 4. Applies variable reordering if requested
+ * 5. Generates visualization and analysis outputs
+ * 6. Displays results to console
  *
  * @param argc Number of command line arguments
  * @param argv Array of command line argument strings
@@ -733,12 +741,64 @@ teddy::bdd_manager::diagram_t convert_to_bdd(const my_expression& expr, teddy::b
  */
 int main(int argc, const char* argv[]) {
     std::filesystem::path input_file = "";
+    bool enable_auto_reordering = false;
+    bool force_reorder_after_build = false;
+    bool show_help = false;
+    bool help_due_to_error = false;
 
-    // Check if a filename was provided as command line argument
-    if (argc > 1) {
-        input_file = argv[1];
-    } else {
-        // Use default test expression file
+    // Parse command line arguments
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+
+        if (arg == "--enable-reordering") {
+            enable_auto_reordering = true;
+        } else if (arg == "--disable-reordering") {
+            enable_auto_reordering = false;
+        } else if (arg == "--force-reorder") {
+            force_reorder_after_build = true;
+        } else if (arg == "--help" || arg == "-h") {
+            show_help = true;
+            break;
+        } else if (arg.starts_with("--")) {
+            std::cerr << "Unknown option: " << arg << "\n";
+            show_help = true;
+            help_due_to_error = true;
+            break;
+        } else if (input_file.empty()) {
+            input_file = arg;
+        } else {
+            std::cerr << "Multiple input files specified. Only one file is allowed.\n";
+            show_help = true;
+            help_due_to_error = true;
+            break;
+        }
+    }
+
+    if (show_help) {
+        std::cout << "TeDDy BDD Demo - Binary Decision Diagram Converter\n";
+        std::cout << "==================================================\n\n";
+        std::cout << "Usage: bdd_demo [filename] [options]\n\n";
+        std::cout << "Arguments:\n";
+        std::cout << "  filename              Input expression file (optional, defaults to "
+                     "test_expressions/filter_expression.txt)\n\n";
+        std::cout << "Options:\n";
+        std::cout << "  --enable-reordering   Enable automatic variable reordering for BDD "
+                     "optimization\n";
+        std::cout << "  --disable-reordering  Disable variable reordering (default)\n";
+        std::cout << "  --force-reorder       Force immediate reordering after BDD construction\n";
+        std::cout << "  --help, -h            Show this help message\n\n";
+        std::cout << "Example expression file format:\n";
+        std::cout << "  # This is a comment\n";
+        std::cout << "  (x0 AND x1) OR (NOT x2) XOR (x3 AND (NOT x4))\n\n";
+        std::cout << "Supported operators: AND, OR, XOR, NOT\n";
+        std::cout << "Use parentheses for grouping\n\n";
+        std::cout << "Generated DOT files can be visualized using Graphviz tools:\n";
+        std::cout << "  dot -Tpng input.dot -o output.png\n";
+        return help_due_to_error ? 1 : 0;
+    }
+
+    // Use default file if none specified
+    if (input_file.empty()) {
         input_file = "test_expressions/filter_expression.txt";
     }
 
@@ -770,6 +830,14 @@ int main(int argc, const char* argv[]) {
     // Create a BDD manager with the appropriate number of variables
     teddy::bdd_manager manager(static_cast<int>(variable_names.size()), 1'000);
 
+    // Configure variable reordering based on command line options
+    if (enable_auto_reordering) {
+        manager.set_auto_reorder(true);
+        std::cout << "Automatic variable reordering enabled\n";
+    } else {
+        std::cout << "Automatic variable reordering disabled\n";
+    }
+
     // Alias for the diagram type for convenience
     using bdd_t = teddy::bdd_manager::diagram_t;
 
@@ -778,6 +846,13 @@ int main(int argc, const char* argv[]) {
 
     // Convert the expression tree to BDD (variable map built dynamically)
     bdd_t f = convert_to_bdd(*expr, manager);
+
+    // Force variable reordering if requested
+    if (force_reorder_after_build) {
+        std::cout << "Forcing variable reordering after BDD construction...\n";
+        manager.force_reorder();
+        std::cout << "Variable reordering completed\n";
+    }
 
     std::cout << "Function created successfully!\n";
     std::cout << "Using " << variable_names.size() << " variables\n\n";

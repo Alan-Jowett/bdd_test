@@ -46,29 +46,72 @@ set_target_properties(bdd_demo PROPERTIES
 # Enable testing
 enable_testing()
 
-# Define test helper function
-function(add_bdd_test TEST_NAME EXPRESSION_FILE)
-    # Create a test that copies the expression file and generates outputs
-    add_test(
-        NAME ${TEST_NAME}
-        COMMAND ${CMAKE_COMMAND}
-            -DTEST_NAME=${TEST_NAME}
-            -DEXPRESSION_FILE=${EXPRESSION_FILE}
-            -DEXECUTABLE=$<TARGET_FILE:bdd_demo>
-            -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
-            -DBINARY_DIR=${CMAKE_BINARY_DIR}
-            -P ${CMAKE_SOURCE_DIR}/cmake/run_bdd_test.cmake
-    )
+# Include test function definitions
+include(cmake/test_functions.cmake)
 
-    # Set test properties
-    set_tests_properties(${TEST_NAME} PROPERTIES
-        TIMEOUT 30
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    )
-endfunction()
-
-# Add individual tests
+# Add individual tests for BDD generation
 add_bdd_test(test_filter_expression "filter_expression.txt")
 add_bdd_test(test_simple_expression "simple_expression.txt")
 add_bdd_test(test_my_test_expression "my_test_expression.txt")
 add_bdd_test(test_subdir_expression "test_subdir_expression.txt")
+
+# Command line help tests
+add_cmdline_test(test_help_long
+    ARGS "--help"
+    OUTPUT_CONTAINS "TeDDy BDD Demo - Binary Decision Diagram Converter;Usage: bdd_demo"
+    EXPECTED_EXIT_CODE 0
+)
+
+add_cmdline_test(test_help_short
+    ARGS "-h"
+    OUTPUT_CONTAINS "TeDDy BDD Demo - Binary Decision Diagram Converter;Usage: bdd_demo"
+    EXPECTED_EXIT_CODE 0
+)
+
+# Command line error tests
+add_cmdline_test(test_unknown_option
+    ARGS "--unknown-option"
+    SHOULD_FAIL
+    ERROR_CONTAINS "Unknown option: --unknown-option"
+    OUTPUT_CONTAINS "Usage: bdd_demo"
+)
+
+add_cmdline_test(test_multiple_files
+    ARGS "file1.txt;file2.txt"
+    SHOULD_FAIL
+    ERROR_CONTAINS "Multiple input files specified. Only one file is allowed."
+    OUTPUT_CONTAINS "Usage: bdd_demo"
+)
+
+# Valid option tests
+add_cmdline_test(test_enable_reordering
+    ARGS "${CMAKE_SOURCE_DIR}/test_expressions/simple_expression.txt;--enable-reordering"
+    OUTPUT_CONTAINS "Automatic variable reordering enabled"
+    EXPECTED_EXIT_CODE 0
+)
+
+add_cmdline_test(test_disable_reordering
+    ARGS "${CMAKE_SOURCE_DIR}/test_expressions/simple_expression.txt;--disable-reordering"
+    OUTPUT_CONTAINS "Automatic variable reordering disabled"
+    EXPECTED_EXIT_CODE 0
+)
+
+add_cmdline_test(test_force_reorder
+    ARGS "${CMAKE_SOURCE_DIR}/test_expressions/simple_expression.txt;--force-reorder"
+    OUTPUT_CONTAINS "Forcing variable reordering after BDD construction"
+    EXPECTED_EXIT_CODE 0
+)
+
+# Combined option tests
+add_cmdline_test(test_combined_options
+    ARGS "${CMAKE_SOURCE_DIR}/test_expressions/simple_expression.txt;--enable-reordering;--force-reorder"
+    OUTPUT_CONTAINS "Automatic variable reordering enabled;Forcing variable reordering after BDD construction"
+    EXPECTED_EXIT_CODE 0
+)
+
+# Test option that overrides previous option
+add_cmdline_test(test_override_options
+    ARGS "${CMAKE_SOURCE_DIR}/test_expressions/simple_expression.txt;--enable-reordering;--disable-reordering"
+    OUTPUT_CONTAINS "Automatic variable reordering disabled"
+    EXPECTED_EXIT_CODE 0
+)
