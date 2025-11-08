@@ -264,6 +264,7 @@ bdd_test/
 ├── main.cpp                           # Main BDD converter application
 ├── CMakeLists.txt                     # Build configuration with testing
 ├── README.md                          # This file
+├── LICENSE                            # MIT License file
 ├── generate_all_visualizations.ps1    # Batch PNG generation script
 ├── cmake/                             # CMake configuration files
 │   └── run_bdd_test.cmake             # Test framework script
@@ -343,4 +344,14 @@ To add new test expressions:
 
 ## License
 
-This BDD converter project is provided as-is for educational and research purposes. The TeDDy library has its own license terms - see the TeDDy repository for details.
+This BDD Expression Converter is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+**Third-Party Dependencies:**
+- **TeDDy Library**: Used under its own license terms - see the [TeDDy repository](https://github.com/MichalMrena/DecisionDiagrams) for details
+
+**MIT License Summary:**
+- ✅ Commercial use allowed
+- ✅ Modification allowed  
+- ✅ Distribution allowed
+- ✅ Private use allowed
+- ❗ License and copyright notice required
