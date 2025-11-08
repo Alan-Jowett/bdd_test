@@ -51,7 +51,7 @@ Coverage reports include:
   ```bash
   # Ubuntu/Debian
   sudo apt-get install lcov
-  
+
   # macOS
   brew install lcov
   ```

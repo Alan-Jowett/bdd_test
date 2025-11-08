@@ -80,7 +80,7 @@ Example:
  * @param variables List of variable names to use
  * @return BDD structure representing the expression
  * @see generateDotFile(), saveNodeTable()
- * 
+ *
  * @code
  * auto bdd = convertToBDD("a AND b", {"a", "b"});
  * @endcode

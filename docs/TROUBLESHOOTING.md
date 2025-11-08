@@ -55,13 +55,13 @@
   ```powershell
   # Windows (using chocolatey)
   choco install graphviz
-  
+
   # Windows (using winget)
   winget install Graphviz.Graphviz
-  
+
   # Linux (Ubuntu/Debian)
   sudo apt install graphviz
-  
+
   # macOS (using homebrew)
   brew install graphviz
   ```

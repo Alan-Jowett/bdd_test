@@ -68,7 +68,7 @@ Run the BDD converter with an expression file:
 
 Create a text file containing a logical expression using these operators:
 - `AND` or `&` - Logical AND
-- `OR` or `|` - Logical OR  
+- `OR` or `|` - Logical OR
 - `NOT` or `!` - Logical NOT
 - `XOR` or `^` - Logical XOR
 - `()` - Parentheses for grouping
