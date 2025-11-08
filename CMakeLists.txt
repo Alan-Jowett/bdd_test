@@ -42,7 +42,7 @@ function(add_bdd_test TEST_NAME EXPRESSION_FILE)
             -DEXECUTABLE=$<TARGET_FILE:bdd_demo>
             -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
             -DBINARY_DIR=${CMAKE_BINARY_DIR}
-            -P ${CMAKE_SOURCE_DIR}/run_bdd_test.cmake
+            -P ${CMAKE_SOURCE_DIR}/cmake/run_bdd_test.cmake
     )
     
     # Set test properties
@@ -52,8 +52,8 @@ function(add_bdd_test TEST_NAME EXPRESSION_FILE)
     )
 endfunction()
 
-# Add tests for each expression file in test_expressions folder
+# Add individual tests
 add_bdd_test(test_filter_expression "filter_expression.txt")
-add_bdd_test(test_simple_expression "simple_expression.txt") 
-add_bdd_test(test_my_test_expression "my test expression.txt")
+add_bdd_test(test_simple_expression "simple_expression.txt")
+add_bdd_test(test_my_test_expression "my_test_expression.txt")
 add_bdd_test(test_subdir_expression "test_subdir_expression.txt")

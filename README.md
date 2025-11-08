@@ -6,15 +6,15 @@ This project provides a comprehensive Binary Decision Diagram (BDD) conversion t
 
 ### Core Functionality
 - **Expression Parsing**: Reads logical expressions from text files with support for AND, OR, NOT, XOR operators
-- **Variable Mapping**: Automatically maps expression variables to BDD variables
+- **Variable Mapping**: Automatically maps expression variables to BDD variables with **real name preservation**
 - **BDD Generation**: Converts parsed expressions into optimized Binary Decision Diagrams
 - **Cross-Platform**: Uses C++17 std::filesystem for reliable file handling
 
 ### Output Formats
-- **Console Display**: Human-readable output with descriptive headers and formatting
-- **DOT Graph Files**: Both expression tree and BDD structure exports for Graphviz visualization  
-- **PNG Generation**: Automated visualization creation with provided scripts
-- **Node Tables**: Clean, structured table output for programmatic processing and testing
+- **Console Display**: Human-readable output with descriptive headers and **real variable names**
+- **DOT Graph Files**: Both expression tree and BDD structure exports with **semantic variable labels**  
+- **PNG Generation**: Automated visualization creation with **meaningful variable names**
+- **Node Tables**: Clean, structured table output displaying **actual variable names** for analysis
 
 ### File Organization
 - **Flexible Input**: Supports expressions from any text file location
@@ -121,10 +121,10 @@ BDD Node Structure:
 BDD Node Table (Post-order + reverse - correct ordering):
 Index | Variable | False Child | True Child | Type
 ------|----------|-------------|------------|----------
-    0 |       x0 |           2 |          1 | Variable
-    1 |       x1 |           2 |          4 | Variable
-    2 |       x2 |           5 |          3 | Variable
-    3 |       x3 |           5 |          4 | Variable
+    0 |        a |           2 |          1 | Variable
+    1 |        b |           2 |          4 | Variable
+    2 |        c |           5 |          3 | Variable
+    3 |        d |           5 |          4 | Variable
     4 |        - |           - |          - | Terminal(1)
     5 |        - |           - |          - | Terminal(0)
 
@@ -139,10 +139,10 @@ Demo completed successfully!
 ```
 Index | Variable | False Child | True Child | Type
 ------|----------|-------------|------------|----------
-    0 |       x0 |           2 |          1 | Variable
-    1 |       x1 |           2 |          4 | Variable
-    2 |       x2 |           5 |          3 | Variable
-    3 |       x3 |           5 |          4 | Variable
+    0 |        a |           2 |          1 | Variable
+    1 |        b |           2 |          4 | Variable
+    2 |        c |           5 |          3 | Variable
+    3 |        d |           5 |          4 | Variable
     4 |        - |           - |          - | Terminal(1)
     5 |        - |           - |          - | Terminal(0)
 ```
@@ -159,7 +159,7 @@ The tool generates both expression tree and BDD visualizations. Here are example
 **Resulting BDD:**
 ![Simple Expression BDD](test_expressions/simple_expression_bdd.png)
 
-This basic expression shows how AND/OR operations are structured in the BDD with 4 variables (a, b, c, d mapped to x0, x1, x2, x3).
+This basic expression shows how AND/OR operations are structured in the BDD with 4 variables (a, b, c, d) displayed with their actual names.
 
 ---
 
@@ -171,7 +171,7 @@ This basic expression shows how AND/OR operations are structured in the BDD with
 **Resulting BDD:**
 ![Complex Expression BDD](test_expressions/filter_expression_bdd.png)
 
-This complex expression demonstrates all supported operators (AND, OR, NOT, XOR) with 7 variables, showing how the BDD optimization reduces the structure while preserving logical equivalence.
+This complex expression demonstrates all supported operators (AND, OR, NOT, XOR) with 7 variables (x0 through x6), showing how the BDD optimization reduces the structure while preserving logical equivalence.
 
 ---
 
@@ -183,7 +183,7 @@ This complex expression demonstrates all supported operators (AND, OR, NOT, XOR)
 **Resulting BDD:**
 ![Negated Expression BDD](test_expressions/my_test_expression_bdd.png)
 
-This example shows how NOT operations and De Morgan's laws are handled in the BDD representation with 3 variables.
+This example shows how NOT operations and De Morgan's laws are handled in the BDD representation with 3 variables (a, b, c) displayed with their actual names.
 
 ---
 
@@ -199,6 +199,21 @@ This example shows how NOT operations and De Morgan's laws are handled in the BD
 - Solid lines represent "true" paths, dashed lines represent "false" paths  
 - Terminal nodes show final boolean values (0 = false, 1 = true)
 - Shared nodes indicate common subexpressions
+
+### Real Variable Names
+
+**Key Feature**: All outputs preserve the actual variable names from your expressions instead of using generic placeholders.
+
+**Examples**:
+- Expression `temperature AND humidity` displays variables as `temperature`, `humidity`
+- Expression `(a AND b) OR c` shows variables as `a`, `b`, `c`
+- Expression `x XOR y XOR z` uses variables `x`, `y`, `z`
+
+**Benefits**:
+- **Intuitive Debugging**: No mental mapping from x0→temperature required
+- **Professional Visualizations**: Publication-ready graphs with meaningful labels
+- **Consistent Output**: Same variable names across node tables, DOT files, and PNG images
+- **Better Documentation**: Generated diagrams directly match your domain terminology
 
 ## Visualizing the BDD
 
@@ -232,11 +247,15 @@ This example shows how NOT operations and De Morgan's laws are handled in the BD
 
 Use the provided PowerShell script to generate all PNG files:
 ```powershell
-# Generate PNGs for all test expressions
+# Generate PNGs for all test expressions and any additional DOT files
 .\generate_all_visualizations.ps1
 ```
 
-This script automatically finds all DOT files and creates corresponding PNG visualizations.
+This script automatically:
+- Finds all DOT files in the project directory and subdirectories
+- Generates corresponding PNG visualizations using Graphviz
+- Provides detailed progress output and error handling
+- Works with both expression tree and BDD DOT files
 
 ## Project Structure
 
@@ -246,17 +265,24 @@ bdd_test/
 ├── CMakeLists.txt                     # Build configuration with testing
 ├── README.md                          # This file
 ├── generate_all_visualizations.ps1    # Batch PNG generation script
-├── run_bdd_test.cmake                 # Test framework script
+├── cmake/                             # CMake configuration files
+│   └── run_bdd_test.cmake             # Test framework script
 ├── test_expressions/                  # Test expression files
 │   ├── simple_expression.txt          # Basic AND/OR expression
 │   ├── filter_expression.txt          # Complex filter expression
-│   ├── my test expression.txt         # Expression with spaces in name
+│   ├── my_test_expression.txt         # Expression with underscores in name
 │   ├── test_subdir_expression.txt     # Subdirectory test
 │   └── *_bdd_nodes.txt                # Expected output files for testing
 └── build/                             # Build artifacts and executables
 ```
 
 ## Advanced Features
+
+### Real Variable Name Preservation
+- **Semantic Variable Names**: All outputs use actual variable names from your expressions
+- **Multi-Format Consistency**: Node tables, DOT files, and PNG visualizations all display the same meaningful names
+- **Professional Output**: No generic x0, x1, x2 placeholders - direct mapping to your domain terminology
+- **Enhanced Debugging**: Immediate recognition of variables without mental translation
 
 ### Expression Tree Analysis
 - View the parsed expression structure before BDD conversion
@@ -289,10 +315,12 @@ TeDDy is a C++ library for creation and manipulation of decision diagrams develo
 ## Contributing
 
 To add new test expressions:
-1. Create a new `.txt` file in `test_expressions/` folder
-2. Add the corresponding expected output file `*_bdd_nodes.txt`
+1. Create a new `.txt` file in `test_expressions/` folder with meaningful variable names
+2. Add the corresponding expected output file `*_bdd_nodes.txt` with **real variable names** (not x0, x1, x2)
 3. Update `CMakeLists.txt` to include the new test case
 4. Run `ctest` to verify the test passes
+
+**Note**: Expected output files should contain the actual variable names from your expression, not generic placeholders.
 
 ## Troubleshooting
 

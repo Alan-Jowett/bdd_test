@@ -17,7 +17,7 @@
 #include <filesystem>
 
 // Common function to format BDD node table to any output stream
-void write_bdd_nodes_to_stream(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram, std::ostream& out, bool include_headers = true) {
+void write_bdd_nodes_to_stream(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram, const std::vector<std::string>& variable_names, std::ostream& out, bool include_headers = true) {
     using node_t = teddy::bdd_manager::diagram_t::node_t;
     std::unordered_set<node_t*> visited;
     std::unordered_map<node_t*, int> node_to_index;
@@ -83,7 +83,9 @@ void write_bdd_nodes_to_stream(teddy::bdd_manager& manager, teddy::bdd_manager::
             out << std::setw(10) << "-" << " | ";
             out << "Terminal(" << node->get_value() << ")";
         } else {
-            out << std::setw(8) << ("x" + std::to_string(node->get_index())) << " | ";
+            int var_index = node->get_index();
+            std::string var_name = (var_index < variable_names.size()) ? variable_names[var_index] : ("x" + std::to_string(var_index));
+            out << std::setw(8) << var_name << " | ";
             
             node_t* false_child = node->get_son(0);
             node_t* true_child = node->get_son(1);
@@ -103,13 +105,96 @@ void write_bdd_nodes_to_stream(teddy::bdd_manager& manager, teddy::bdd_manager::
 }
 
 // Function to print BDD nodes to console (wrapper for common implementation)
-void print_bdd_nodes(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram) {
-    write_bdd_nodes_to_stream(manager, diagram, std::cout, true);
+void print_bdd_nodes(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram, const std::vector<std::string>& variable_names) {
+    write_bdd_nodes_to_stream(manager, diagram, variable_names, std::cout, true);
 }
 
 // Function to write BDD node table to file (wrapper for common implementation)
-void write_bdd_nodes_to_file(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram, std::ostream& out) {
-    write_bdd_nodes_to_stream(manager, diagram, out, false);
+void write_bdd_nodes_to_file(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram, const std::vector<std::string>& variable_names, std::ostream& out) {
+    write_bdd_nodes_to_stream(manager, diagram, variable_names, out, false);
+}
+
+// Custom BDD DOT generation function with real variable names
+void write_bdd_to_dot(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram, const std::vector<std::string>& variable_names, std::ostream& out) {
+    using node_t = teddy::bdd_manager::diagram_t::node_t;
+    std::unordered_set<node_t*> visited;
+    
+    out << "digraph DD {\n";
+    
+    // First pass: identify terminal nodes for styling
+    std::stack<node_t*> stack;
+    stack.push(diagram.unsafe_get_root());
+    
+    std::unordered_set<node_t*> terminal_nodes;
+    while (!stack.empty()) {
+        node_t* node = stack.top();
+        stack.pop();
+        
+        if (!node || visited.find(node) != visited.end()) {
+            continue;
+        }
+        
+        visited.insert(node);
+        
+        if (node->is_terminal()) {
+            terminal_nodes.insert(node);
+        } else {
+            stack.push(node->get_son(0));  // false child
+            stack.push(node->get_son(1));  // true child
+        }
+    }
+    
+    // Style terminal nodes differently
+    out << "    node [shape = square]";
+    for (node_t* terminal : terminal_nodes) {
+        out << " " << reinterpret_cast<std::uintptr_t>(terminal);
+    }
+    out << ";\n";
+    out << "    node [shape = circle];\n\n";
+    
+    // Second pass: generate node definitions and edges
+    visited.clear();
+    stack.push(diagram.unsafe_get_root());
+    
+    while (!stack.empty()) {
+        node_t* node = stack.top();
+        stack.pop();
+        
+        if (!node || visited.find(node) != visited.end()) {
+            continue;
+        }
+        
+        visited.insert(node);
+        
+        // Generate node definition
+        std::uintptr_t node_ptr = reinterpret_cast<std::uintptr_t>(node);
+        
+        if (node->is_terminal()) {
+            out << "    " << node_ptr << " [label = \"" << node->get_value() << "\", tooltip = \"" << node->get_value() << "\"];\n";
+        } else {
+            int var_index = node->get_index();
+            std::string var_name = (var_index < variable_names.size()) ? variable_names[var_index] : ("x" + std::to_string(var_index));
+            out << "    " << node_ptr << " [label = \"" << var_name << "\", tooltip = \"" << var_index << "\"];\n";
+        }
+        
+        // Generate edges for non-terminal nodes
+        if (!node->is_terminal()) {
+            node_t* false_child = node->get_son(0);
+            node_t* true_child = node->get_son(1);
+            
+            if (false_child) {
+                out << "    " << node_ptr << " -> " << reinterpret_cast<std::uintptr_t>(false_child) << " [style = dashed];\n";
+                stack.push(false_child);
+            }
+            
+            if (true_child) {
+                out << "    " << node_ptr << " -> " << reinterpret_cast<std::uintptr_t>(true_child) << " [style = solid];\n";
+                stack.push(true_child);
+            }
+        }
+    }
+    
+    out << "\n}";
 }
 
 struct my_and;
@@ -421,6 +506,10 @@ int main(int argc, char* argv[])
     std::unordered_set<std::string> variable_names;
     collect_variables(*expr, variable_names);
     
+    // Create sorted variable names for consistent ordering (same as in convert_to_bdd)
+    std::vector<std::string> sorted_variable_names(variable_names.begin(), variable_names.end());
+    std::sort(sorted_variable_names.begin(), sorted_variable_names.end());
+    
     // Create a BDD manager with the appropriate number of variables
     teddy::bdd_manager manager(static_cast<int>(variable_names.size()), 1'000);
 
@@ -465,19 +554,19 @@ int main(int argc, char* argv[])
     // Print BDD node structure
     std::cout << "BDD Node Structure:\n";
     std::cout << "==================\n";
-    print_bdd_nodes(manager, f);
+    print_bdd_nodes(manager, f, sorted_variable_names);
     std::cout << "\n";
 
     // Output DOT representation to console
     std::cout << "DOT representation of the BDD:\n";
     std::cout << "==============================\n";
-    manager.to_dot_graph(std::cout, f);
-    std::cout << "\n";
+    write_bdd_to_dot(manager, f, sorted_variable_names, std::cout);
+    std::cout << "\n\n";
 
     // Output DOT representation to file
     std::ofstream dot_file(bdd_dot_filename);
     if (dot_file.is_open()) {
-        manager.to_dot_graph(dot_file, f);
+        write_bdd_to_dot(manager, f, sorted_variable_names, dot_file);
         dot_file.close();
         std::cout << "BDD DOT representation saved to '" << bdd_dot_filename << "'\n";
         std::cout << "You can visualize it using Graphviz with: dot -Tpng " << bdd_dot_filename 
@@ -490,7 +579,7 @@ int main(int argc, char* argv[])
     // Output BDD node table to file
     std::ofstream nodes_file(bdd_nodes_filename);
     if (nodes_file.is_open()) {
-        write_bdd_nodes_to_file(manager, f, nodes_file);
+        write_bdd_nodes_to_file(manager, f, sorted_variable_names, nodes_file);
         nodes_file.close();
         std::cout << "BDD node table saved to '" << bdd_nodes_filename << "'\n";
     } else {
