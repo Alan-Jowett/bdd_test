@@ -303,6 +303,60 @@ bdd_test/
 - Consistent behavior across Windows, Linux, and macOS
 - Unicode filename support
 
+## Documentation
+
+### Auto-Generated API Documentation
+
+This project includes comprehensive Doxygen documentation that is automatically generated and published:
+
+- **📖 Online Documentation**: Available at [GitHub Pages](https://Alan-Jowett.github.io/bdd_test/) (auto-updated on pushes)
+- **🔄 Auto-Update**: Documentation is regenerated whenever code or comments are modified
+- **📱 Multiple Formats**: HTML documentation with search functionality and cross-references
+
+### Documentation Features
+
+- **Function Documentation**: Complete parameter and return value descriptions
+- **Code Examples**: Usage patterns and implementation details
+- **Cross-References**: Automatic linking between related functions and types
+- **Expression Tree Visualization**: Detailed explanation of AST structure
+- **BDD Algorithm Details**: In-depth coverage of conversion processes
+
+### Local Documentation Generation
+
+To generate documentation locally:
+
+```bash
+# Install Doxygen (if not already installed)
+# Ubuntu/Debian: sudo apt-get install doxygen graphviz
+# Windows: Download from doxygen.org
+# macOS: brew install doxygen graphviz
+
+# Generate documentation
+doxygen Doxyfile
+
+# Open documentation
+# Windows: start docs/html/index.html
+# macOS: open docs/html/index.html  
+# Linux: xdg-open docs/html/index.html
+```
+
+### Documentation Workflow
+
+The documentation is automatically built and deployed using GitHub Actions:
+
+1. **Triggers**: Pushes to main branch, version tags, or documentation files
+2. **Generation**: Doxygen processes all source files and generates HTML
+3. **Deployment**: 
+   - Published to GitHub Pages for public access
+   - Committed to `documentation` branch for manual access
+4. **Versioning**: Documentation version matches git tags or branch names
+
+### Accessing Different Versions
+
+- **Latest Stable**: Main branch documentation at GitHub Pages
+- **Tagged Releases**: Available in the `documentation` branch history
+- **Development**: Updated on every commit to main branch
+
 ## About TeDDy
 
 TeDDy is a C++ library for creation and manipulation of decision diagrams developed at the University of Žilina. It supports:
