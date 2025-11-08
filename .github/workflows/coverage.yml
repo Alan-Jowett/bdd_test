@@ -46,7 +46,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Install dependencies
       run: |
@@ -124,7 +124,7 @@ jobs:
         fail-on-error: false
 
     - name: Upload coverage reports as artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: coverage-reports
         path: |

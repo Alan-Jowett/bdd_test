@@ -195,12 +195,28 @@ permissions:
 
 ## When Making Changes
 
+### ⚠️ CRITICAL: Code Formatting is MANDATORY
+**ALL code changes MUST be formatted with clang-format before committing.**
+The CI/CD pipeline will FAIL if formatting issues are detected.
+
+**Always run these commands before any commit:**
+```bash
+# Format all C++ files (REQUIRED)
+find . -name '*.cpp' -o -name '*.hpp' | xargs clang-format -i
+
+# Verify formatting compliance (REQUIRED)
+clang-format --dry-run --Werror *.cpp *.h
+```
+
 ### Before Committing
-1. **Format all modified code**: Run `clang-format -i` on changed files
-2. **Remove trailing whitespace**: Ensure no lines end with spaces or tabs
-3. **Build successfully**: Ensure `cmake --build build` completes without errors
-4. **Pass all tests**: Run `ctest` and verify all tests pass
-5. **Check formatting**: Use `clang-format --dry-run --Werror` to verify compliance
+1. **🔥 MANDATORY: Format all code**: Run `find . -name '*.cpp' -o -name '*.hpp' | xargs clang-format -i` on ALL files
+2. **🔥 MANDATORY: Verify formatting**: Run `clang-format --dry-run --Werror *.cpp *.h` to confirm no issues
+3. **Remove trailing whitespace**: Ensure no lines end with spaces or tabs
+4. **Build successfully**: Ensure `cmake --build build` completes without errors
+5. **Pass all tests**: Run `ctest` and verify all tests pass
+6. **Include signed-off-by**: Always use `git commit -s -m "your message"` to include the "Signed-off-by" line in commit messages. The `-s` flag adds the sign-off, and the `-m` flag specifies your commit message.
+
+**⚠️ WARNING: Any PR with formatting issues will be automatically rejected by CI.**
 
 ### For New Features
 1. Add appropriate test cases
