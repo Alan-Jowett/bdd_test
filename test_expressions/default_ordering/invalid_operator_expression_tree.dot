@@ -1,7 +1,0 @@
-digraph ExpressionTree {
-    rankdir=TB;
-    node [fontname="Arial"];
-    edge [fontname="Arial"];
-
-    node0 [label="x INVALID_OP y", shape=ellipse, style=filled, fillcolor=lightblue];
-}

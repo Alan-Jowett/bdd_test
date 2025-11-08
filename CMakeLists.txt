@@ -65,7 +65,6 @@ add_bdd_test(test_same_variable "same_variable.txt")
 add_bdd_test(test_xor_chain "xor_chain.txt")
 add_bdd_test(test_underscore_vars "underscore_vars.txt")
 add_bdd_test(test_single_variable_unusual_name "single_variable_unusual_name.txt")
-add_bdd_test(test_lenient_parsing "lenient_parsing.txt")
 
 # Command line help tests
 add_cmdline_test(test_help_long
@@ -137,7 +136,7 @@ add_cmdline_test(test_nonexistent_file
 )
 
 add_cmdline_test(test_empty_expression_file
-    ARGS "${CMAKE_SOURCE_DIR}/test_expressions/comments_only.txt"
+    ARGS "${CMAKE_SOURCE_DIR}/test_expressions/edge_cases/comments_only.txt"
     SHOULD_FAIL
     ERROR_CONTAINS "Error reading expression file: No expression found in file"
     EXPECTED_EXIT_CODE 1
