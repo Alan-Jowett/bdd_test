@@ -84,14 +84,14 @@ try {
     Write-Host "📊 Generating coverage data..."
     
     # Capture coverage info
-    lcov --capture --directory . --output-file coverage.info --rc lcov_branch_coverage=1
+    lcov --capture --directory . --output-file coverage.info --rc branch_coverage=1 --ignore-errors graph,gcov,unused
     
     if ($LASTEXITCODE -ne 0) {
         throw "Failed to capture coverage data"
     }
 
     # Filter out external dependencies and system files
-    lcov --remove coverage.info '/usr/*' '*/_deps/*' '*/test_*' --output-file coverage_filtered.info --rc lcov_branch_coverage=1
+    lcov --remove coverage.info '/usr/*' '*/_deps/*' '*/CMakeFiles/*' --output-file coverage_filtered.info --rc branch_coverage=1 --ignore-errors unused
     
     if ($LASTEXITCODE -ne 0) {
         throw "Failed to filter coverage data"
