@@ -1,23 +1,20 @@
 digraph DD {
-    node [shape = square] 2260722154112 2260722154160;
+    node [shape = square] node2 node5;
     node [shape = circle];
 
-    2260722154544 [label = "b", tooltip = "1"];
-    2260722154544 -> 2260722154592 [style = dashed];
-    2260722154544 -> 2260722154256 [style = solid];
-    2260722154256 [label = "a", tooltip = "0"];
-    2260722154256 -> 2260722154736 [style = dashed];
-    2260722154256 -> 2260722154160 [style = solid];
-    2260722154160 [label = "1", tooltip = "1"];
-    2260722154736 [label = "c", tooltip = "2"];
-    2260722154736 -> 2260722154112 [style = dashed];
-    2260722154736 -> 2260722154688 [style = solid];
-    2260722154688 [label = "d", tooltip = "3"];
-    2260722154688 -> 2260722154112 [style = dashed];
-    2260722154688 -> 2260722154160 [style = solid];
-    2260722154112 [label = "0", tooltip = "0"];
-    2260722154592 [label = "a", tooltip = "0"];
-    2260722154592 -> 2260722154736 [style = dashed];
-    2260722154592 -> 2260722154736 [style = solid];
+    node0 [label = "a", tooltip = "0"];
+    node0 -> node3 [style = dashed];
+    node0 -> node1 [style = solid];
+    node1 [label = "b", tooltip = "1"];
+    node1 -> node3 [style = dashed];
+    node1 -> node2 [style = solid];
+    node2 [label = "1", tooltip = "1"];
+    node3 [label = "c", tooltip = "2"];
+    node3 -> node5 [style = dashed];
+    node3 -> node4 [style = solid];
+    node4 [label = "d", tooltip = "3"];
+    node4 -> node5 [style = dashed];
+    node4 -> node2 [style = solid];
+    node5 [label = "0", tooltip = "0"];
 
 }
