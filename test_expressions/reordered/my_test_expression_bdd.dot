@@ -1,17 +1,17 @@
 digraph DD {
-    node [shape = square] 3075417217712 3075417217664;
+    node [shape = square] node1 node4;
     node [shape = circle];
 
-    3075417218096 [label = "a", tooltip = "0"];
-    3075417218096 -> 3075417218048 [style = dashed];
-    3075417218096 -> 3075417217664 [style = solid];
-    3075417217664 [label = "0", tooltip = "0"];
-    3075417218048 [label = "b", tooltip = "1"];
-    3075417218048 -> 3075417218000 [style = dashed];
-    3075417218048 -> 3075417217664 [style = solid];
-    3075417218000 [label = "c", tooltip = "2"];
-    3075417218000 -> 3075417217664 [style = dashed];
-    3075417218000 -> 3075417217712 [style = solid];
-    3075417217712 [label = "1", tooltip = "1"];
+    node0 [label = "a", tooltip = "0"];
+    node0 -> node2 [style = dashed];
+    node0 -> node1 [style = solid];
+    node1 [label = "0", tooltip = "0"];
+    node2 [label = "b", tooltip = "1"];
+    node2 -> node3 [style = dashed];
+    node2 -> node1 [style = solid];
+    node3 [label = "c", tooltip = "2"];
+    node3 -> node1 [style = dashed];
+    node3 -> node4 [style = solid];
+    node4 [label = "1", tooltip = "1"];
 
 }

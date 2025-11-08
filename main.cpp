@@ -190,21 +190,25 @@ void write_bdd_nodes_to_file(teddy::bdd_manager& manager, teddy::bdd_manager::di
  * @param variable_names Vector of variable names for node labeling
  * @param out Output stream to write the DOT representation to
  *
- * @note The function performs two passes: first to identify terminal nodes for styling,
- *       second to generate node definitions and edges
+ * @note The function performs two passes: first to assign deterministic node IDs and identify 
+ *       terminal nodes for styling, second to generate node definitions and edges
  */
 void write_bdd_to_dot(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram,
                       const std::vector<std::string>& variable_names, std::ostream& out) {
     using node_t = teddy::bdd_manager::diagram_t::node_t;
     std::unordered_set<node_t*> visited;
+    std::unordered_map<node_t*, int> node_to_id;
+    int next_node_id = 0;
 
     out << "digraph DD {\n";
 
-    // First pass: identify terminal nodes for styling
+    // First pass: assign deterministic node IDs and identify terminal nodes for styling
     std::stack<node_t*> stack;
     stack.push(diagram.unsafe_get_root());
 
     std::unordered_set<node_t*> terminal_nodes;
+    std::vector<int> terminal_node_ids;
+    
     while (!stack.empty()) {
         node_t* node = stack.top();
         stack.pop();
@@ -214,9 +218,13 @@ void write_bdd_to_dot(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t
         }
 
         visited.insert(node);
+        
+        // Assign deterministic node ID
+        node_to_id[node] = next_node_id++;
 
         if (node->is_terminal()) {
             terminal_nodes.insert(node);
+            terminal_node_ids.push_back(node_to_id[node]);
         } else {
             stack.push(node->get_son(0));  // false child
             stack.push(node->get_son(1));  // true child
@@ -225,8 +233,8 @@ void write_bdd_to_dot(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t
 
     // Style terminal nodes differently
     out << "    node [shape = square]";
-    for (node_t* terminal : terminal_nodes) {
-        out << " " << reinterpret_cast<std::uintptr_t>(terminal);
+    for (int terminal_id : terminal_node_ids) {
+        out << " node" << terminal_id;
     }
     out << ";\n";
     out << "    node [shape = circle];\n\n";
@@ -245,18 +253,18 @@ void write_bdd_to_dot(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t
 
         visited.insert(node);
 
-        // Generate node definition
-        std::uintptr_t node_ptr = reinterpret_cast<std::uintptr_t>(node);
+        // Generate node definition using deterministic ID
+        int node_id = node_to_id[node];
 
         if (node->is_terminal()) {
-            out << "    " << node_ptr << " [label = \"" << node->get_value() << "\", tooltip = \""
+            out << "    node" << node_id << " [label = \"" << node->get_value() << "\", tooltip = \""
                 << node->get_value() << "\"];\n";
         } else {
             int var_index = node->get_index();
             std::string var_name = (var_index < variable_names.size())
                                        ? variable_names[var_index]
                                        : ("x" + std::to_string(var_index));
-            out << "    " << node_ptr << " [label = \"" << var_name << "\", tooltip = \""
+            out << "    node" << node_id << " [label = \"" << var_name << "\", tooltip = \""
                 << var_index << "\"];\n";
         }
 
@@ -266,13 +274,13 @@ void write_bdd_to_dot(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t
             node_t* true_child = node->get_son(1);
 
             if (false_child) {
-                out << "    " << node_ptr << " -> " << reinterpret_cast<std::uintptr_t>(false_child)
+                out << "    node" << node_id << " -> node" << node_to_id[false_child]
                     << " [style = dashed];\n";
                 stack.push(false_child);
             }
 
             if (true_child) {
-                out << "    " << node_ptr << " -> " << reinterpret_cast<std::uintptr_t>(true_child)
+                out << "    node" << node_id << " -> node" << node_to_id[true_child]
                     << " [style = solid];\n";
                 stack.push(true_child);
             }
