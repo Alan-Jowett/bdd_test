@@ -1,0 +1,2 @@
+# Test expression in subdirectory
+x AND y OR z

@@ -1,0 +1,2 @@
+# Expression with spaces in filename test
+NOT (a OR b) AND c

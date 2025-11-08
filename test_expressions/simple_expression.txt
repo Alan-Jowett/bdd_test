@@ -1,0 +1,4 @@
+# Simple filter expression example
+# A basic expression with just AND and OR operators
+
+(a AND b) OR (c AND d)
