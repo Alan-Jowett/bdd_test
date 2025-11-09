@@ -41,7 +41,7 @@
 #include <vector>
 
 // Template system headers for DOT generation
-#include "expression_iterator.hpp"
+#include "expression_graph.hpp"
 #include <vector>
 
 /**
@@ -752,9 +752,6 @@ int main(int argc, const char* argv[]) {
     // Output expression tree as DOT file using v2 function
     std::ofstream expr_dot_file(expr_dot_filename);
     if (expr_dot_file.is_open()) {
-        // Reset node ID counter for consistent output
-        expression_iterator::reset_node_id_counter(0);
-        
         // Generate complete DOT graph using updated function
         write_expression_to_dot(*expr, expr_dot_file, "ExpressionTree");
 

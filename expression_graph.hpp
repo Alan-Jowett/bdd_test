@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
 
 /**
- * @file expression_iterator.hpp
+ * @file expression_graph.hpp
  * @brief Expression tree iterator for DOT graph generation
  *
  * Provides an iterator interface for traversing expression trees and accessing
@@ -39,7 +39,7 @@
  * - get_shape(): Node shape (ellipse or box)
  * - get_fillcolor(): Fill color based on node type
  * - get_style(): Style attribute (always "filled")
- * - get_node_id(): Unique node identifier
+ * - get_node_address(): Node address for unique identification
  * - get_children(): Child iterators for traversal
  * - get_edge_label(): Label for edges to children
  *
@@ -65,15 +65,6 @@ public:
 
 private:
     const my_expression* current_node_;     ///< Current expression node
-    std::string node_id_;                   ///< Unique node identifier
-    static int next_node_id_;               ///< Global node ID counter
-
-    /**
-     * @brief Generates a unique node ID
-     */
-    static std::string generate_node_id() {
-        return "node" + std::to_string(next_node_id_++);
-    }
 
 public:
     /**
@@ -82,8 +73,7 @@ public:
      * @param expr Expression to iterate over (can be nullptr for end iterator)
      */
     explicit expression_iterator(const my_expression_ptr& expr) 
-        : current_node_(expr ? expr.get() : nullptr)
-        , node_id_(current_node_ ? generate_node_id() : "") {
+        : current_node_(expr ? expr.get() : nullptr) {
     }
 
     /**
@@ -92,43 +82,28 @@ public:
      * @param expr Expression to iterate over
      */
     explicit expression_iterator(const my_expression& expr)
-        : current_node_(&expr)
-        , node_id_(generate_node_id()) {
-    }
-
-    /**
-     * @brief Constructs iterator from expression reference without auto-assigning ID
-     * 
-     * @param expr Expression to iterate over
-     * @param defer_id_assignment If true, doesn't assign node ID in constructor
-     */
-    expression_iterator(const my_expression& expr, bool defer_id_assignment)
-        : current_node_(&expr)
-        , node_id_(defer_id_assignment ? "" : generate_node_id()) {
+        : current_node_(&expr) {
     }
 
     /**
      * @brief Default constructor creates end iterator
      */
     expression_iterator() 
-        : current_node_(nullptr)
-        , node_id_("") {
+        : current_node_(nullptr) {
     }
 
     /**
      * @brief Copy constructor
      */
     expression_iterator(const expression_iterator& other)
-        : current_node_(other.current_node_)
-        , node_id_(other.node_id_) {
+        : current_node_(other.current_node_) {
     }
 
     /**
      * @brief Move constructor
      */
     expression_iterator(expression_iterator&& other) noexcept
-        : current_node_(other.current_node_)
-        , node_id_(std::move(other.node_id_)) {
+        : current_node_(other.current_node_) {
         other.current_node_ = nullptr;
     }
 
@@ -138,7 +113,6 @@ public:
     expression_iterator& operator=(const expression_iterator& other) {
         if (this != &other) {
             current_node_ = other.current_node_;
-            node_id_ = other.node_id_;
         }
         return *this;
     }
@@ -149,7 +123,6 @@ public:
     expression_iterator& operator=(expression_iterator&& other) noexcept {
         if (this != &other) {
             current_node_ = other.current_node_;
-            node_id_ = std::move(other.node_id_);
             other.current_node_ = nullptr;
         }
         return *this;
@@ -181,23 +154,11 @@ public:
     // ========================================================================
 
     /**
-     * @brief Gets unique node identifier
-     * @return Unique string identifier for this node
+     * @brief Gets node address for unique identification
+     * @return Pointer address that can be used as a unique key for this node
      */
-    std::string get_node_id() const {
-        // For mutable access to assign ID if needed
-        return const_cast<expression_iterator*>(this)->ensure_node_id();
-    }
-
-    /**
-     * @brief Assigns a node ID if not already assigned
-     * @return The node ID (newly assigned or existing)
-     */
-    std::string ensure_node_id() {
-        if (node_id_.empty()) {
-            node_id_ = generate_node_id();
-        }
-        return node_id_;
+    const void* get_node_address() const {
+        return static_cast<const void*>(current_node_);
     }
 
     /**
@@ -325,7 +286,7 @@ public:
         auto child_infos = get_children_info();
         
         for (const auto& info : child_infos) {
-            children.emplace_back(*info.node, true);  // defer ID assignment
+            children.emplace_back(*info.node);
         }
         
         return children;
@@ -370,21 +331,7 @@ public:
         return "";
     }
 
-    // ========================================================================
-    // Reset method for node ID counter (useful for testing)
-    // ========================================================================
-
-    /**
-     * @brief Resets the global node ID counter
-     * @param start_value Starting value for node IDs (default: 0)
-     */
-    static void reset_node_id_counter(int start_value = 0) {
-        next_node_id_ = start_value;
-    }
 };
-
-// Static member definition
-int expression_iterator::next_node_id_ = 0;
 
 // ============================================================================
 // DOT Generation Functions
@@ -424,9 +371,6 @@ int expression_iterator::next_node_id_ = 0;
  */
 inline void write_expression_to_dot(const my_expression& expr, std::ostream& out, 
                                     const std::string& graph_name = "ExpressionTree") {
-    // Reset the node ID counter to match original function behavior
-    expression_iterator::reset_node_id_counter(0);
-    
     // Create an iterator from the expression
     expression_iterator root_iter(expr);
     

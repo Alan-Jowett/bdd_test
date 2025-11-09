@@ -18,6 +18,7 @@
 #include <vector>
 #include <functional>
 #include <type_traits>
+#include <unordered_map>
 
 namespace dot_graph {
 
@@ -116,7 +117,7 @@ struct DotConfig {
  *
  * Required iterator interface:
  * - std::vector<Iterator> get_children() const  
- * - std::string get_node_id() const
+ * - const void* get_node_address() const (for unique node identification)
  *
  * Optional node property methods (auto-detected via SFINAE):
  * - std::string get_label() const
@@ -183,7 +184,7 @@ void generate_dot_graph(const Iterator& root_iterator,
     };
     
     // Helper to build node attributes from individual property methods
-    auto build_node_attributes = [](const Iterator& iter) -> std::string {
+    auto build_node_attributes = [](const Iterator& iter, const std::string& node_id) -> std::string {
         std::string attrs = "[";
         bool first = true;
         
@@ -192,7 +193,7 @@ void generate_dot_graph(const Iterator& root_iterator,
             attrs += "label=\"" + iter.get_label() + "\"";
             first = false;
         } else {
-            attrs += "label=\"" + iter.get_node_id() + "\"";
+            attrs += "label=\"" + node_id + "\"";
             first = false;
         }
         
@@ -266,6 +267,23 @@ void generate_dot_graph(const Iterator& root_iterator,
         return first ? "" : attrs; // Return empty if no attributes
     };
     
+    // Node ID management for DOT output  
+    std::unordered_map<const void*, std::string> node_id_map;
+    int next_node_id = 0;
+    
+    // Helper to get or assign node ID
+    auto get_node_id = [&](const Iterator& iter) -> std::string {
+        // Use the address of the node that the iterator points to
+        const void* key = iter.get_node_address();
+        auto it = node_id_map.find(key);
+        if (it != node_id_map.end()) {
+            return it->second;
+        }
+        std::string id = "node" + std::to_string(next_node_id++);
+        node_id_map[key] = id;
+        return id;
+    };
+
     // Use a recursive helper to traverse the tree
     std::function<void(const Iterator&)> traverse = [&](const Iterator& current) {
         // Skip nodes that shouldn't be processed
@@ -274,8 +292,8 @@ void generate_dot_graph(const Iterator& root_iterator,
         }
         
         // Generate node definition
-        std::string node_id = current.get_node_id();
-        std::string node_attrs = build_node_attributes(current);
+        std::string node_id = get_node_id(current);
+        std::string node_attrs = build_node_attributes(current, node_id);
         out << "    " << node_id << " " << node_attrs << ";\n";
         
         // Get children and process them
@@ -292,7 +310,7 @@ void generate_dot_graph(const Iterator& root_iterator,
             traverse(child);
             
             // Generate edge from this node to child
-            std::string child_id = child.get_node_id();
+            std::string child_id = get_node_id(child);
             std::string edge_attrs = build_edge_attributes(current, child, i);
             out << "    " << node_id << " -> " << child_id;
             
