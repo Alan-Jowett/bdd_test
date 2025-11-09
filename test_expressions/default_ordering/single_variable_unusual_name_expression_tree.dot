@@ -3,5 +3,6 @@ digraph ExpressionTree {
     node [fontname="Arial"];
     edge [fontname="Arial"];
 
-    node0 [label="variable_with_unusual$characters@123", shape=ellipse, style=filled, fillcolor=lightblue];
+    node0 [label = "variable_with_unusual$characters@123", shape=ellipse, style = filled, fillcolor = lightblue];
+
 }

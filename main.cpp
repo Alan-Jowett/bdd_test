@@ -40,7 +40,7 @@
 #include <variant>
 #include <vector>
 
-// Template system headers for DOT generation
+#include "bdd_graph.hpp"
 #include "expression_graph.hpp"
 #include <vector>
 
@@ -180,118 +180,6 @@ void print_bdd_nodes(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t 
 void write_bdd_nodes_to_file(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram,
                              const std::vector<std::string>& variable_names, std::ostream& out) {
     write_bdd_nodes_to_stream(manager, diagram, variable_names, out, false);
-}
-
-/**
- * @brief Generates DOT graph representation of a BDD for visualization
- *
- * Creates a DOT format graph that can be rendered using Graphviz tools.
- * Terminal nodes are styled as squares, variable nodes as circles.
- * Edges are styled as dashed lines for false branches and solid lines for true branches.
- *
- * @param manager Reference to the BDD manager
- * @param diagram The BDD diagram to convert to DOT format
- * @param variable_names Vector of variable names for node labeling
- * @param out Output stream to write the DOT representation to
- *
- * @note The function performs two passes: first to assign deterministic node IDs and identify
- *       terminal nodes for styling, second to generate node definitions and edges
- */
-void write_bdd_to_dot(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram,
-                      const std::vector<std::string>& variable_names, std::ostream& out) {
-    using node_t = teddy::bdd_manager::diagram_t::node_t;
-    std::unordered_set<node_t*> visited;
-    std::unordered_map<node_t*, int> node_to_id;
-    int next_node_id = 0;
-
-    out << "digraph DD {\n";
-
-    // First pass: assign deterministic node IDs and identify terminal nodes for styling
-    std::stack<node_t*> stack;
-    stack.push(diagram.unsafe_get_root());
-
-    std::unordered_set<node_t*> terminal_nodes;
-    std::vector<int> terminal_node_ids;
-
-    while (!stack.empty()) {
-        node_t* node = stack.top();
-        stack.pop();
-
-        if (!node || visited.find(node) != visited.end()) {
-            continue;
-        }
-
-        visited.insert(node);
-
-        // Assign deterministic node ID
-        node_to_id[node] = next_node_id++;
-
-        if (node->is_terminal()) {
-            terminal_nodes.insert(node);
-            terminal_node_ids.push_back(node_to_id[node]);
-        } else {
-            stack.push(node->get_son(0));  // false child
-            stack.push(node->get_son(1));  // true child
-        }
-    }
-
-    // Style terminal nodes differently
-    out << "    node [shape = square]";
-    for (int terminal_id : terminal_node_ids) {
-        out << " node" << terminal_id;
-    }
-    out << ";\n";
-    out << "    node [shape = circle];\n\n";
-
-    // Second pass: generate node definitions and edges
-    visited.clear();
-    stack.push(diagram.unsafe_get_root());
-
-    while (!stack.empty()) {
-        node_t* node = stack.top();
-        stack.pop();
-
-        if (!node || visited.find(node) != visited.end()) {
-            continue;
-        }
-
-        visited.insert(node);
-
-        // Generate node definition using deterministic ID
-        int node_id = node_to_id[node];
-
-        if (node->is_terminal()) {
-            out << "    node" << node_id << " [label = \"" << node->get_value()
-                << "\", tooltip = \"" << node->get_value() << "\"];\n";
-        } else {
-            int var_index = node->get_index();
-            std::string var_name = (var_index < variable_names.size())
-                                       ? variable_names[var_index]
-                                       : ("x" + std::to_string(var_index));
-            out << "    node" << node_id << " [label = \"" << var_name << "\", tooltip = \""
-                << var_index << "\"];\n";
-        }
-
-        // Generate edges for non-terminal nodes
-        if (!node->is_terminal()) {
-            node_t* false_child = node->get_son(0);
-            node_t* true_child = node->get_son(1);
-
-            if (false_child) {
-                out << "    node" << node_id << " -> node" << node_to_id[false_child]
-                    << " [style = dashed];\n";
-                stack.push(false_child);
-            }
-
-            if (true_child) {
-                out << "    node" << node_id << " -> node" << node_to_id[true_child]
-                    << " [style = solid];\n";
-                stack.push(true_child);
-            }
-        }
-    }
-
-    out << "\n}";
 }
 
 /**

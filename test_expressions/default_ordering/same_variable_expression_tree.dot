@@ -3,9 +3,10 @@ digraph ExpressionTree {
     node [fontname="Arial"];
     edge [fontname="Arial"];
 
-    node0 [label="AND", shape=box, style=filled, fillcolor=lightgreen];
-    node1 [label="x0", shape=ellipse, style=filled, fillcolor=lightblue];
-    node0 -> node1 [label="L"];
-    node2 [label="x0", shape=ellipse, style=filled, fillcolor=lightblue];
-    node0 -> node2 [label="R"];
+    node0 [label = "AND", shape=box, style = filled, fillcolor = lightgreen];
+    node1 [label = "x0", shape=ellipse, style = filled, fillcolor = lightblue];
+    node2 [label = "x0", shape=ellipse, style = filled, fillcolor = lightblue];
+
+    node0 -> node1 [label = "L"];
+    node0 -> node2 [label = "R"];
 }
