@@ -3,12 +3,12 @@
 
 #include "expression_parser.hpp"
 
+#include <cctype>
 #include <fstream>
 #include <iostream>
 #include <memory>
-#include <string>
 #include <stdexcept>
-#include <cctype>
+#include <string>
 
 #include "expression_types.hpp"
 
@@ -33,45 +33,45 @@ std::string trim(const std::string& str) {
  * @brief Tokenizer for logical expressions
  */
 class Tokenizer {
-private:
+   private:
     std::string text;
     size_t pos = 0;
-    
+
     void skip_whitespace() {
         while (pos < text.length() && std::isspace(text[pos])) {
             pos++;
         }
     }
-    
-public:
+
+   public:
     enum TokenType {
         TOKEN_VARIABLE,
         TOKEN_AND,
-        TOKEN_OR, 
+        TOKEN_OR,
         TOKEN_XOR,
         TOKEN_NOT,
         TOKEN_LPAREN,
         TOKEN_RPAREN,
         TOKEN_EOF
     };
-    
+
     struct Token {
         TokenType type;
         std::string value;
         size_t position;
     };
-    
+
     explicit Tokenizer(const std::string& input) : text(input) {}
-    
+
     Token next_token() {
         skip_whitespace();
-        
+
         if (pos >= text.length()) {
             return {TOKEN_EOF, "", pos};
         }
-        
+
         size_t start_pos = pos;
-        
+
         // Check for operators and parentheses
         if (pos + 3 <= text.length() && text.substr(pos, 3) == "AND") {
             pos += 3;
@@ -79,7 +79,7 @@ public:
         }
         if (pos + 2 <= text.length() && text.substr(pos, 2) == "OR") {
             // Make sure it's not XOR
-            if (pos == 0 || text[pos-1] != 'X') {
+            if (pos == 0 || text[pos - 1] != 'X') {
                 pos += 2;
                 return {TOKEN_OR, "OR", start_pos};
             }
@@ -100,37 +100,36 @@ public:
             pos++;
             return {TOKEN_RPAREN, ")", start_pos};
         }
-        
+
         // Parse variable name (any non-whitespace that's not an operator or parentheses)
         if (!std::isspace(text[pos]) && text[pos] != '(' && text[pos] != ')') {
             std::string var_name;
-            while (pos < text.length() && 
-                   !std::isspace(text[pos]) && 
-                   text[pos] != '(' && text[pos] != ')') {
-                
+            while (pos < text.length() && !std::isspace(text[pos]) && text[pos] != '('
+                   && text[pos] != ')') {
                 // Check if we're about to hit an operator
-                if (pos + 3 <= text.length() && 
-                    (text.substr(pos, 3) == "AND" || text.substr(pos, 3) == "XOR" || text.substr(pos, 3) == "NOT")) {
+                if (pos + 3 <= text.length()
+                    && (text.substr(pos, 3) == "AND" || text.substr(pos, 3) == "XOR"
+                        || text.substr(pos, 3) == "NOT")) {
                     break;
                 }
-                if (pos + 2 <= text.length() && text.substr(pos, 2) == "OR" &&
-                    (pos == 0 || text[pos-1] != 'X')) { // Make sure it's not part of XOR
+                if (pos + 2 <= text.length() && text.substr(pos, 2) == "OR"
+                    && (pos == 0 || text[pos - 1] != 'X')) {  // Make sure it's not part of XOR
                     break;
                 }
-                
+
                 var_name += text[pos];
                 pos++;
             }
-            
+
             if (!var_name.empty()) {
                 return {TOKEN_VARIABLE, var_name, start_pos};
             }
         }
-        
-        throw std::runtime_error("Unexpected character at position " + 
-                                std::to_string(pos) + ": '" + text[pos] + "'");
+
+        throw std::runtime_error("Unexpected character at position " + std::to_string(pos) + ": '"
+                                 + text[pos] + "'");
     }
-    
+
     Token peek_token() {
         size_t saved_pos = pos;
         Token token = next_token();
@@ -141,7 +140,7 @@ public:
 
 /**
  * @brief Recursive descent parser for logical expressions
- * 
+ *
  * Grammar (in order of precedence, lowest to highest):
  * expression -> xor_expr
  * xor_expr -> or_expr (XOR or_expr)*
@@ -151,99 +150,99 @@ public:
  * primary -> VARIABLE | ( expression )
  */
 class Parser {
-private:
+   private:
     Tokenizer tokenizer;
     Tokenizer::Token current_token;
-    
+
     void advance() {
         current_token = tokenizer.next_token();
     }
-    
+
     void expect(Tokenizer::TokenType expected) {
         if (current_token.type != expected) {
-            throw std::runtime_error("Expected token type " + std::to_string(expected) +
-                                   " but got " + std::to_string(current_token.type) +
-                                   " at position " + std::to_string(current_token.position));
+            throw std::runtime_error("Expected token type " + std::to_string(expected) + " but got "
+                                     + std::to_string(current_token.type) + " at position "
+                                     + std::to_string(current_token.position));
         }
         advance();
     }
-    
+
     my_expression_ptr parse_primary() {
         if (current_token.type == Tokenizer::TOKEN_VARIABLE) {
             std::string var_name = current_token.value;
             advance();
             return std::make_unique<my_expression>(my_variable{var_name});
         } else if (current_token.type == Tokenizer::TOKEN_LPAREN) {
-            advance(); // consume '('
+            advance();  // consume '('
             auto expr = parse_expression();
             expect(Tokenizer::TOKEN_RPAREN);
             return expr;
         } else {
-            throw std::runtime_error("Expected variable or '(' at position " +
-                                   std::to_string(current_token.position));
+            throw std::runtime_error("Expected variable or '(' at position "
+                                     + std::to_string(current_token.position));
         }
     }
-    
+
     my_expression_ptr parse_not_expr() {
         if (current_token.type == Tokenizer::TOKEN_NOT) {
-            advance(); // consume 'NOT'
-            auto operand = parse_not_expr(); // right-associative
+            advance();                        // consume 'NOT'
+            auto operand = parse_not_expr();  // right-associative
             return std::make_unique<my_expression>(my_not{std::move(operand)});
         } else {
             return parse_primary();
         }
     }
-    
+
     my_expression_ptr parse_and_expr() {
         auto left = parse_not_expr();
-        
+
         while (current_token.type == Tokenizer::TOKEN_AND) {
-            advance(); // consume 'AND'
+            advance();  // consume 'AND'
             auto right = parse_not_expr();
             left = std::make_unique<my_expression>(my_and{std::move(left), std::move(right)});
         }
-        
+
         return left;
     }
-    
+
     my_expression_ptr parse_or_expr() {
         auto left = parse_and_expr();
-        
+
         while (current_token.type == Tokenizer::TOKEN_OR) {
-            advance(); // consume 'OR'
+            advance();  // consume 'OR'
             auto right = parse_and_expr();
             left = std::make_unique<my_expression>(my_or{std::move(left), std::move(right)});
         }
-        
+
         return left;
     }
-    
+
     my_expression_ptr parse_xor_expr() {
         auto left = parse_or_expr();
-        
+
         while (current_token.type == Tokenizer::TOKEN_XOR) {
-            advance(); // consume 'XOR'
+            advance();  // consume 'XOR'
             auto right = parse_or_expr();
             left = std::make_unique<my_expression>(my_xor{std::move(left), std::move(right)});
         }
-        
+
         return left;
     }
-    
-public:
+
+   public:
     explicit Parser(const std::string& input) : tokenizer(input) {
-        advance(); // Initialize current_token
+        advance();  // Initialize current_token
     }
-    
+
     my_expression_ptr parse_expression() {
         return parse_xor_expr();
     }
-    
+
     my_expression_ptr parse() {
         auto expr = parse_expression();
         if (current_token.type != Tokenizer::TOKEN_EOF) {
-            throw std::runtime_error("Unexpected token after expression at position " +
-                                   std::to_string(current_token.position));
+            throw std::runtime_error("Unexpected token after expression at position "
+                                     + std::to_string(current_token.position));
         }
         return expr;
     }
@@ -254,7 +253,7 @@ public:
  *
  * Clean recursive descent parser that handles operator precedence correctly.
  * Supports proper operator precedence (highest to lowest):
- * 1. NOT (unary, right-associative) 
+ * 1. NOT (unary, right-associative)
  * 2. AND (binary, left-associative)
  * 3. OR (binary, left-associative)
  * 4. XOR (binary, left-associative)
@@ -264,11 +263,11 @@ public:
  */
 my_expression_ptr parse_expression(const std::string& expr_str) {
     std::string trimmed = trim(expr_str);
-    
+
     if (trimmed.empty()) {
         throw std::runtime_error("Empty expression encountered during parsing");
     }
-    
+
     try {
         Parser parser(trimmed);
         return parser.parse();
