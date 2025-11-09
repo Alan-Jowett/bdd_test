@@ -33,7 +33,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(DecisionDiagrams)
 
 # Create executable
-add_executable(bdd_demo main.cpp)
+add_executable(bdd_demo main.cpp bdd_graph.cpp expression_graph.cpp)
 
 # Link with TeDDy library
 target_link_libraries(bdd_demo PRIVATE teddy::teddy)

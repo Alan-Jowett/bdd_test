@@ -9,7 +9,7 @@ This template system eliminates the need for separate data types by making itera
 ## Files
 
 - **`dot_graph_generator.hpp`** - Core template system with generic DOT generation
-- **`dot_example.hpp`** - Example implementation for expression trees  
+- **`dot_example.hpp`** - Example implementation for expression trees
 - **`dot_template_test.cpp`** - Simple test program demonstrating usage
 - **`README_DOT_TEMPLATE.md`** - This documentation file
 
@@ -35,7 +35,7 @@ props.fillcolor = "lightblue";
 props.tooltip = "Additional info";
 ```
 
-### EdgeProperties  
+### EdgeProperties
 Defines how edges between nodes appear:
 ```cpp
 dot_template::EdgeProperties edge_props;
@@ -53,7 +53,7 @@ public:
     // Required methods:
     std::vector<MyIterator> get_children() const;
     std::string get_node_id() const;
-    
+
     // Optional node property methods (auto-detected via SFINAE):
     std::string get_label() const;
     std::string get_shape() const;           // circle, box, ellipse, diamond, etc.
@@ -61,15 +61,15 @@ public:
     std::string get_fillcolor() const;       // lightblue, red, #FF0000, etc.
     std::string get_fontcolor() const;       // black, white, blue, etc.
     std::string get_tooltip() const;         // tooltip text
-    
+
     // Optional edge property methods (auto-detected via SFINAE):
     std::string get_edge_label(const MyIterator& child, size_t index) const;
     std::string get_edge_style(const MyIterator& child, size_t index) const;     // solid, dashed, dotted, etc.
     std::string get_edge_color(const MyIterator& child, size_t index) const;     // black, blue, red, etc.
     std::string get_edge_fontcolor(const MyIterator& child, size_t index) const; // color for edge labels
-    
+
     // Optional filtering:
-    bool should_process() const; 
+    bool should_process() const;
 };
 ```
 
@@ -91,7 +91,7 @@ public:
     // Optional: bool should_process(const MyTree& data) const;
 };
 
-// 2. Generate the graph  
+// 2. Generate the graph
 void generate_my_graph(const MyTree& root, std::ostream& out) {
     MyTreeIterator iterator;
     dot_template::DotConfig config("MyTreeGraph");
@@ -146,7 +146,7 @@ void write_to_dot(const MyData& data, std::ostream& out) {
 ## Benefits
 
 1. **Code Reuse** - Common DOT structure logic is centralized
-2. **Type Safety** - Template system prevents type mismatches  
+2. **Type Safety** - Template system prevents type mismatches
 3. **Flexibility** - Easy to customize appearance and behavior
 4. **Duck Typing** - No inheritance required, works with any compatible class
 5. **Maintainability** - Clear separation of concerns
