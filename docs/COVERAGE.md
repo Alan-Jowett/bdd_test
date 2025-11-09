@@ -17,10 +17,10 @@ Generate coverage reports for development:
 
 ```powershell
 # Generate coverage report locally
-./generate_coverage.ps1
+./scripts/generate_coverage.ps1
 
 # Generate and open report in browser
-./generate_coverage.ps1 -OpenReport
+./scripts/generate_coverage.ps1 -OpenReport
 ```
 
 ## Coverage Configuration

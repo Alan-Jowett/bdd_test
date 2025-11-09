@@ -99,7 +99,7 @@ This example shows how NOT operations and De Morgan's laws are handled in the BD
 Use the provided PowerShell script to generate all PNG files:
 ```powershell
 # Generate PNGs for all test expressions and any additional DOT files
-.\generate_all_visualizations.ps1
+.\scripts\generate_all_visualizations.ps1
 ```
 
 This script automatically:
