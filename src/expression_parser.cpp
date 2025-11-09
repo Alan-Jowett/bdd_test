@@ -37,6 +37,12 @@ class Tokenizer {
     std::string text;
     size_t pos = 0;
 
+    /**
+     * @brief Skips whitespace characters at current position
+     *
+     * Advances the position pointer past any whitespace characters.
+     * Uses unsigned char casting to safely handle extended ASCII.
+     */
     void skip_whitespace() {
         while (pos < text.length() && std::isspace(static_cast<unsigned char>(text[pos]))) {
             pos++;
@@ -61,6 +67,12 @@ class Tokenizer {
         size_t position;
     };
 
+    /**
+     * @brief Converts TokenType enum to human-readable string
+     *
+     * @param type The token type to convert
+     * @return String representation of the token type for error messages
+     */
     static std::string token_type_to_string(TokenType type) {
         switch (type) {
             case TOKEN_VARIABLE:
@@ -84,8 +96,22 @@ class Tokenizer {
         }
     }
 
+    /**
+     * @brief Constructs a tokenizer with input text
+     *
+     * @param input The expression string to tokenize
+     */
     explicit Tokenizer(const std::string& input) : text(input) {}
 
+    /**
+     * @brief Gets the next token from the input stream
+     *
+     * Performs lexical analysis to identify operators, parentheses, and variables.
+     * Handles proper boundary detection for operator keywords within variable names.
+     *
+     * @return The next token with type, value, and position information
+     * @throws std::runtime_error If an unexpected character is encountered
+     */
     Token next_token() {
         skip_whitespace();
 
@@ -161,6 +187,11 @@ class Tokenizer {
                                  + text[pos] + "'");
     }
 
+    /**
+     * @brief Peeks at the next token without advancing the position
+     *
+     * @return The next token that would be returned by next_token()
+     */
     Token peek_token() {
         size_t saved_pos = pos;
         Token token = next_token();
@@ -252,6 +283,14 @@ class Parser {
         }
     }
 
+    /**
+     * @brief Parses AND expressions with left-associative binary operations
+     *
+     * Handles binary AND operations with proper left-associative parsing.
+     * Parses sequences like: expr AND expr AND expr
+     *
+     * @return Pointer to the parsed AND expression tree
+     */
     my_expression_ptr parse_and_expr() {
         auto left = parse_not_expr();
 
@@ -264,6 +303,14 @@ class Parser {
         return left;
     }
 
+    /**
+     * @brief Parses OR expressions with left-associative binary operations
+     *
+     * Handles binary OR operations with proper left-associative parsing.
+     * Parses sequences like: expr OR expr OR expr
+     *
+     * @return Pointer to the parsed OR expression tree
+     */
     my_expression_ptr parse_or_expr() {
         auto left = parse_and_expr();
 
@@ -276,6 +323,15 @@ class Parser {
         return left;
     }
 
+    /**
+     * @brief Parses XOR expressions with left-associative binary operations
+     *
+     * Handles binary XOR operations with proper left-associative parsing.
+     * Parses sequences like: expr XOR expr XOR expr. This is the top-level
+     * expression parsing method due to XOR having the lowest precedence.
+     *
+     * @return Pointer to the parsed XOR expression tree
+     */
     my_expression_ptr parse_xor_expr() {
         auto left = parse_or_expr();
 
@@ -289,14 +345,30 @@ class Parser {
     }
 
    public:
+    /**
+     * @brief Constructs a parser with input text
+     *
+     * @param input The expression string to parse
+     */
     explicit Parser(const std::string& input) : tokenizer(input) {
         advance();  // Initialize current_token
     }
 
+    /**
+     * @brief Parses the top-level expression (entry point for grammar)
+     *
+     * @return Pointer to the parsed expression tree
+     */
     my_expression_ptr parse_expression() {
         return parse_xor_expr();
     }
 
+    /**
+     * @brief Parses a complete expression and ensures no trailing tokens
+     *
+     * @return Pointer to the parsed expression tree
+     * @throws std::runtime_error If unexpected tokens remain after parsing
+     */
     my_expression_ptr parse() {
         auto expr = parse_expression();
         if (current_token.type != Tokenizer::TOKEN_EOF) {

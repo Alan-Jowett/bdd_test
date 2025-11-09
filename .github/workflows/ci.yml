@@ -184,7 +184,7 @@ jobs:
             echo "ℹ️  Run 'cppcheck --enable=warning,style,performance,portability --std=c++20 -I include/ src/' locally to see details"
             exit 1
           }
-        
+
         # Check if there were any real errors (not just information)
         ISSUES=$(cppcheck --enable=warning,style,performance,portability \
           --std=c++20 \
@@ -195,12 +195,12 @@ jobs:
           --quiet \
           --template='[{file}:{line}]: ({severity}) {message}' \
           src/ 2>&1 | grep -v '(information)' | wc -l)
-        
+
         if [ "$ISSUES" -gt 0 ]; then
           echo "❌ cppcheck found $ISSUES issue(s) in the code"
           exit 1
         fi
-        
+
         echo "✅ cppcheck passed - no issues found"
 
     - name: Check code formatting
@@ -314,7 +314,7 @@ jobs:
             echo "⏭️  Skipping output file: $expr_file"
             continue
           fi
-          
+
           if [ -f "$expr_file" ]; then
             echo "Processing $expr_file"
             "$EXECUTABLE" "$expr_file" || {
