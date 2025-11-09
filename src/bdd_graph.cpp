@@ -323,13 +323,15 @@ void write_bdd_to_dot(const teddy::bdd_manager& manager, teddy::bdd_manager::dia
     bdd_iterator root_iter(diagram.unsafe_get_root(), &variable_names);
 
     // Configure the DOT generation for BDD format
-    dot_graph::DotConfig config(graph_name);
-    config.rankdir = "";             // No rankdir (original doesn't have it)
-    config.font_name = "";           // No font declarations (original doesn't have it)
-    config.default_node_shape = "";  // Shapes are specified per node
-    config.default_node_style = "";  // No default style
-    config.default_edge_style = "";  // Edge styles specified per edge
-    config.show_node_ids = false;    // Don't show internal IDs
+    dot_graph::DotConfig config{
+        .graph_name = graph_name,
+        .rankdir = "",             // No rankdir (original doesn't have it)
+        .font_name = "",           // No font declarations (original doesn't have it)
+        .default_node_shape = "",  // Shapes are specified per node
+        .default_node_style = "",  // No default style
+        .default_edge_style = "",  // Edge styles specified per edge
+        .show_node_ids = false     // Don't show internal IDs
+    };
 
     // Generate BDD-specific terminal declarations and then the DOT graph
     generate_bdd_dot_graph(root_iter, out, config);

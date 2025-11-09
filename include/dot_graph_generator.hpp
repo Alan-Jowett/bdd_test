@@ -100,9 +100,6 @@ struct DotConfig {
     std::string default_node_style = "filled";  ///< Default style for nodes
     std::string default_edge_style = "solid";   ///< Default style for edges
     bool show_node_ids = false;                 ///< Whether to show internal node IDs
-
-    DotConfig() = default;
-    explicit DotConfig(const std::string& name) : graph_name(name) {}
 };
 
 /**
