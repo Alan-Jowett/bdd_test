@@ -44,11 +44,48 @@ To add new test expressions:
 
 **ALL code changes MUST be formatted with clang-format before committing.**
 
+#### Automated Setup (Recommended)
+
+Set up pre-commit hooks for automatic formatting checks:
+
+```powershell
+# Quick setup - install pre-commit hooks
+.\scripts\setup-dev-env.ps1
+
+# Or install hooks only
+.\scripts\install-hooks.ps1
+
+# Alternative: Use pre-commit framework (requires Python)
+.\scripts\install-hooks.ps1 -Framework
+```
+
+The pre-commit hooks will automatically:
+- Check code formatting before each commit
+- Block commits with formatting issues
+- Provide clear instructions to fix problems
+
+#### Manual Formatting Commands
+
+```powershell
+# Check formatting compliance
+.\scripts\check-format.ps1
+
+# Automatically fix formatting issues
+.\scripts\check-format.ps1 -Fix
+
+# Check only staged files
+.\scripts\check-format.ps1 -Staged
+
+# See what would change without modifying files
+.\scripts\check-format.ps1 -WhatIf
+```
+
+Legacy commands (still supported):
 ```bash
-# Format all C++ files (REQUIRED)
+# Format all C++ files
 find . -name '*.cpp' -o -name '*.hpp' | xargs clang-format -i
 
-# Verify formatting compliance (REQUIRED)
+# Verify formatting compliance
 clang-format --dry-run --Werror *.cpp *.h
 ```
 
@@ -64,16 +101,41 @@ clang-format --dry-run --Werror *.cpp *.h
 
 ## Development Workflow
 
+### Quick Start for New Contributors
+
+1. **Set up development environment**:
+   ```powershell
+   .\scripts\setup-dev-env.ps1
+   ```
+
+2. **Verify setup**:
+   ```powershell
+   .\scripts\check-format.ps1 -WhatIf
+   ```
+
 ### Before Committing
 
-1. **🔥 MANDATORY: Format all code**: Run formatting commands on ALL files
-2. **🔥 MANDATORY: Verify formatting**: Confirm no formatting issues exist
-3. **Remove trailing whitespace**: Ensure no lines end with spaces or tabs
-4. **Build successfully**: Ensure `cmake --build build` completes without errors
-5. **Pass all tests**: Run `ctest` and verify all tests pass
-6. **Include signed-off-by**: Use `git commit -s -m "your message"` to include the "Signed-off-by" line
+1. **🔥 MANDATORY: Pre-commit hooks**: Install with `.\scripts\install-hooks.ps1`
+2. **Build successfully**: Ensure `cmake --build build` completes without errors
+3. **Pass all tests**: Run `ctest` and verify all tests pass
+4. **Include signed-off-by**: Use `git commit -s -m "your message"` to include the "Signed-off-by" line
 
-**⚠️ WARNING: Any PR with formatting issues will be automatically rejected by CI.**
+**✅ With pre-commit hooks installed, formatting and basic checks happen automatically!**
+
+### Manual Verification (Optional)
+
+If you prefer manual checks or need to bypass hooks:
+
+```powershell
+# Check formatting manually
+.\scripts\check-format.ps1
+
+# Fix formatting issues
+.\scripts\check-format.ps1 -Fix
+
+# Skip hooks for emergency commits (not recommended)
+git commit --no-verify
+```
 
 ### For New Features
 
