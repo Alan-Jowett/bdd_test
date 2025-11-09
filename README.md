@@ -150,6 +150,9 @@ bdd_test/
 
 TeDDy is a C++ library for creation and manipulation of decision diagrams developed at the University of Žilina. This project uses TeDDy v4.1.0 to provide high-performance BDD operations with support for various decision diagram types.
 
+**Version Used**: v4.1.0
+**Repository**: https://github.com/MichalMrena/DecisionDiagrams
+**Dependency Management**: See [documentation/dependency-management.md](documentation/dependency-management.md) for information on keeping dependencies up to date
 For more information about TeDDy, see [docs/TEDDY.md](docs/TEDDY.md).
 
 ## Contributing

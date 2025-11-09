@@ -1,0 +1,187 @@
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
+
+name: CMake Dependency Check
+
+on:
+  schedule:
+    # Run weekly on Mondays at 06:00 UTC (after Dependabot runs)
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      create_pr:
+        description: 'Create PR if updates are available'
+        required: false
+        default: 'false'
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  check-teddy-updates:
+    name: Check TeDDy Library Updates
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Get current TeDDy version
+      id: current-version
+      run: |
+        CURRENT_VERSION=$(grep "GIT_TAG" CMakeLists.txt | sed -n 's/.*GIT_TAG \(v[0-9][0-9.a-zA-Z-]*\).*/\1/p')
+        if [ -z "$CURRENT_VERSION" ]; then
+          echo "Error: Failed to extract current TeDDy version from CMakeLists.txt"
+          exit 1
+        fi
+        echo "Current TeDDy version: $CURRENT_VERSION"
+        echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+    - name: Check for latest TeDDy release
+      id: latest-version
+      run: |
+        LATEST_VERSION=$(curl -s -f https://api.github.com/repos/MichalMrena/DecisionDiagrams/releases/latest | jq -r '.tag_name')
+        if [ -z "$LATEST_VERSION" ] || [ "$LATEST_VERSION" = "null" ]; then
+          echo "Error: Failed to fetch latest TeDDy version from GitHub API"
+          exit 1
+        fi
+        echo "Latest TeDDy version: $LATEST_VERSION"
+        echo "version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+
+    - name: Compare versions
+      id: compare
+      run: |
+        CURRENT="${{ steps.current-version.outputs.version }}"
+        LATEST="${{ steps.latest-version.outputs.version }}"
+
+        if [ "$CURRENT" = "$LATEST" ]; then
+          echo "✅ TeDDy is up to date (${CURRENT})"
+          echo "update_available=false" >> $GITHUB_OUTPUT
+        else
+          echo "🔄 TeDDy update available: ${CURRENT} → ${LATEST}"
+          echo "update_available=true" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Get release notes
+      if: steps.compare.outputs.update_available == 'true'
+      id: release-notes
+      run: |
+        RELEASE_NOTES=$(curl -s -f https://api.github.com/repos/MichalMrena/DecisionDiagrams/releases/latest | jq -r '.body')
+        if [ $? -ne 0 ] || [ -z "$RELEASE_NOTES" ]; then
+          echo "Warning: Failed to fetch release notes, using placeholder"
+          RELEASE_NOTES="Release notes unavailable. Check the repository for details."
+        fi
+        echo "Release notes:"
+        echo "$RELEASE_NOTES"
+        # Save to file for multi-line output
+        echo "$RELEASE_NOTES" > /tmp/release-notes.txt
+
+    - name: Create issue for manual update
+      if: steps.compare.outputs.update_available == 'true' && github.event.inputs.create_pr != 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const currentVersion = '${{ steps.current-version.outputs.version }}';
+          const latestVersion = '${{ steps.latest-version.outputs.version }}';
+          const releaseNotes = fs.readFileSync('/tmp/release-notes.txt', 'utf8');
+
+          const issueTitle = `chore(deps): Update TeDDy library from ${currentVersion} to ${latestVersion}`;
+          const issueBody = `## CMake Dependency Update Available
+
+          A new version of the TeDDy (DecisionDiagrams) library is available.
+
+          **Current version:** ${currentVersion}
+          **Latest version:** ${latestVersion}
+          **Repository:** https://github.com/MichalMrena/DecisionDiagrams
+
+          ### Release Notes
+          ${releaseNotes}
+
+          ### Update Instructions
+          To update the TeDDy library, modify \`CMakeLists.txt\`:
+
+          \`\`\`cmake
+          FetchContent_Declare(
+              DecisionDiagrams
+              GIT_REPOSITORY https://github.com/MichalMrena/DecisionDiagrams.git
+              GIT_TAG ${latestVersion}
+          )
+          \`\`\`
+
+          ### Testing
+          After updating:
+          1. Build the project: \`cmake --build build --config Release\`
+          2. Run tests: \`ctest --test-dir build\`
+          3. Verify all tests pass before merging
+
+          ---
+          *This issue was automatically created by the CMake Dependency Check workflow.*`;
+
+          // Check if issue already exists
+          const issues = await github.rest.issues.listForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: 'open',
+            labels: 'dependencies'
+          });
+
+          const existingIssue = issues.data.find(issue =>
+            issue.title.includes('Update TeDDy library') && issue.title.includes(latestVersion)
+          );
+
+          if (existingIssue) {
+            console.log(`Issue already exists: #${existingIssue.number}`);
+          } else {
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: issueTitle,
+              body: issueBody,
+              labels: ['dependencies', 'automated'],
+              assignees: ['Alan-Jowett']
+            });
+            console.log(`Created issue #${issue.data.number}`);
+          }
+
+    - name: Create pull request for update
+      if: steps.compare.outputs.update_available == 'true' && github.event.inputs.create_pr == 'true'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        CURRENT_VERSION="${{ steps.current-version.outputs.version }}"
+        LATEST_VERSION="${{ steps.latest-version.outputs.version }}"
+
+        # Create a new branch
+        BRANCH_NAME="chore/update-teddy-${LATEST_VERSION}"
+        git checkout -b "$BRANCH_NAME"
+
+        # Update CMakeLists.txt (robust to extra whitespace)
+        sed -i "s/GIT_TAG[[:space:]]*${CURRENT_VERSION}/GIT_TAG ${LATEST_VERSION}/" CMakeLists.txt
+        # Verify the update succeeded
+        if ! grep -q "GIT_TAG ${LATEST_VERSION}" CMakeLists.txt; then
+          echo "Error: Failed to update TeDDy version in CMakeLists.txt"
+          exit 1
+        fi
+
+        # Commit changes
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add CMakeLists.txt
+        git commit -s -m "chore(deps): Update TeDDy library from ${CURRENT_VERSION} to ${LATEST_VERSION}"
+
+        # Push branch
+        git push origin "$BRANCH_NAME"
+
+        # Create PR using GitHub CLI
+        gh pr create \
+          --title "chore(deps): Update TeDDy library from ${CURRENT_VERSION} to ${LATEST_VERSION}" \
+          --body "$(cat /tmp/release-notes.txt)" \
+          --base main \
+          --head "$BRANCH_NAME" \
+          --assignee "Alan-Jowett" \
+          --label "dependencies,automated"
