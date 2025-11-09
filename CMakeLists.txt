@@ -4,6 +4,16 @@
 cmake_minimum_required(VERSION 3.20)
 project(BDD_Demo)
 
+# Install Git hooks if enabled and .git/hooks directory exists
+option(BDD_INSTALL_GIT_HOOKS "Install git hooks for pre-commit formatting checks" ON)
+if (BDD_INSTALL_GIT_HOOKS AND EXISTS "${PROJECT_SOURCE_DIR}/.git/hooks")
+    # Install Git pre-commit hook
+    file(COPY scripts/pre-commit
+        DESTINATION "${PROJECT_SOURCE_DIR}/.git/hooks"
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+    message(STATUS "Installing git pre-commit hook to .git/hooks/")
+endif()
+
 # Set C++20 standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
