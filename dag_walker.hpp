@@ -148,6 +148,100 @@ void walk_dag(const Iterator& root_iterator, Visitor&& visitor,
 }
 
 /**
+ * @brief Walk a DAG in weak topological order using a visitor pattern
+ *
+ * This function traverses a tree or DAG structure in weak topological order,
+ * ensuring that each node is visited after all its dependencies (children) have
+ * been processed. This is useful for operations like dependency resolution,
+ * bottom-up computation, or post-order processing.
+ *
+ * The traversal order guarantees that:
+ * - Leaf nodes (no children) are visited first
+ * - Each node is visited only after all its children have been visited
+ * - Shared nodes in DAGs are visited only once, after all paths to them complete
+ *
+ * Required iterator interface:
+ * - std::vector<Iterator> get_children() const
+ * - const void* get_node_address() const (for unique node identification)
+ *
+ * Optional filtering:
+ * - bool should_process() const (defaults to true if not provided)
+ *
+ * @tparam Iterator The iterator type that represents tree/DAG nodes
+ * @tparam Visitor A callable that accepts NodeInfo<Iterator>&
+ * @param root_iterator The root iterator to start traversal from
+ * @param visitor Function called for each node during traversal
+ * @param config Configuration for the walking behavior
+ */
+template <typename Iterator, typename Visitor>
+void walk_dag_topological(const Iterator& root_iterator, Visitor&& visitor,
+                          const WalkConfig& config = WalkConfig()) {
+    std::unordered_set<const void*> visited_nodes;
+    std::unordered_set<const void*> completed_nodes;
+
+    // Helper to check if iterator has should_process method
+    auto should_process_impl = [&](const Iterator& iter) -> bool {
+        if constexpr (has_should_process_v<Iterator>) {
+            return iter.should_process();
+        } else {
+            return true;  // Default behavior if method not provided
+        }
+    };
+
+    std::function<void(const Iterator&, size_t, size_t, const Iterator*)> walk_impl =
+        [&](const Iterator& current, size_t depth, size_t index_from_parent,
+            const Iterator* parent) {
+            const void* node_key = current.get_node_address();
+
+            // Skip nodes that shouldn't be processed
+            if (!should_process_impl(current)) {
+                return;
+            }
+
+            // If we've already completed this node, don't process it again
+            if (completed_nodes.find(node_key) != completed_nodes.end()) {
+                return;
+            }
+
+            // Check if we're already in the process of visiting this node (cycle detection)
+            bool is_revisit = false;
+            if (config.track_unique_nodes) {
+                if (visited_nodes.find(node_key) != visited_nodes.end()) {
+                    // We're in a cycle - mark as revisit but don't recurse
+                    is_revisit = true;
+                    if (config.call_visitor_on_revisit) {
+                        NodeInfo<Iterator> node_info(current, depth, index_from_parent, is_revisit,
+                                                     parent);
+                        visitor(node_info);
+                    }
+                    return;
+                } else {
+                    visited_nodes.insert(node_key);
+                }
+            }
+
+            // Process all children first (post-order traversal)
+            std::vector<Iterator> children = current.get_children();
+            for (size_t i = 0; i < children.size(); ++i) {
+                const Iterator& child = children[i];
+                walk_impl(child, depth + 1, i, &current);
+            }
+
+            // Now visit this node after all children have been processed
+            NodeInfo<Iterator> node_info(current, depth, index_from_parent, is_revisit, parent);
+            visitor(node_info);
+
+            // Mark this node as completed
+            if (config.track_unique_nodes) {
+                completed_nodes.insert(node_key);
+            }
+        };
+
+    // Start traversal from root
+    walk_impl(root_iterator, 0, 0, nullptr);
+}
+
+/**
  * @brief Collect all unique nodes from a DAG or tree structure
  *
  * This function traverses the structure and returns a vector of all unique nodes
@@ -265,6 +359,66 @@ size_t get_max_depth(const Iterator& root_iterator) {
     });
 
     return max_depth;
+}
+
+/**
+ * @brief Collect all unique nodes from a DAG or tree in weak topological order
+ *
+ * This function traverses the structure in weak topological order and returns
+ * a vector of all unique nodes, with each node appearing after all its dependencies.
+ * This is useful for operations that need to process nodes after their children.
+ *
+ * @tparam Iterator The iterator type that represents tree/DAG nodes
+ * @param root_iterator The root iterator to start traversal from
+ * @param config Configuration for the walking behavior
+ * @return std::vector<Iterator> Vector of all unique nodes in topological order
+ */
+template <typename Iterator>
+std::vector<Iterator> collect_unique_nodes_topological(const Iterator& root_iterator,
+                                                       const WalkConfig& config = WalkConfig()) {
+    std::vector<Iterator> unique_nodes;
+
+    walk_dag_topological(
+        root_iterator,
+        [&](const NodeInfo<Iterator>& node_info) {
+            if (!node_info.is_revisit) {
+                unique_nodes.push_back(node_info.node);
+            }
+        },
+        config);
+
+    return unique_nodes;
+}
+
+/**
+ * @brief Collect all edges from a DAG or tree in weak topological order
+ *
+ * This function traverses the structure in weak topological order and returns
+ * information about all edges. The edges are collected as parent nodes are
+ * visited (after their children), providing a specific ordering useful for
+ * dependency-aware processing.
+ *
+ * @tparam Iterator The iterator type that represents tree/DAG nodes
+ * @param root_iterator The root iterator to start traversal from
+ * @param config Configuration for the walking behavior
+ * @return std::vector<EdgeInfo<Iterator>> Vector of all edges in topological order
+ */
+template <typename Iterator>
+std::vector<EdgeInfo<Iterator>> collect_edges_topological(const Iterator& root_iterator,
+                                                          const WalkConfig& config = WalkConfig()) {
+    std::vector<EdgeInfo<Iterator>> edges;
+
+    walk_dag_topological(
+        root_iterator,
+        [&](const NodeInfo<Iterator>& node_info) {
+            if (node_info.parent && !node_info.is_revisit) {
+                edges.emplace_back(*node_info.parent, node_info.node, node_info.index_from_parent,
+                                   node_info.depth);
+            }
+        },
+        config);
+
+    return edges;
 }
 
 }  // namespace dag_walker
