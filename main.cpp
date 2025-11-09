@@ -546,7 +546,7 @@ int main(int argc, const char* argv[]) {
     std::filesystem::path bdd_dot_filename = get_output_path(input_file, "_bdd.dot");
     std::filesystem::path bdd_nodes_filename = get_output_path(input_file, "_bdd_nodes.txt");
 
-    // Output expression tree as DOT file using v2 function
+    // Output expression tree as DOT file using updated function
     std::ofstream expr_dot_file(expr_dot_filename);
     if (expr_dot_file.is_open()) {
         // Generate complete DOT graph using updated function

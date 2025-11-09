@@ -20,6 +20,7 @@
 #include <memory>
 #include <stack>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 #include <variant>
@@ -300,12 +301,6 @@ void write_expression_to_dot(const my_expression& expr, std::ostream& out,
 
     // Generate the DOT graph using the template system
     dot_graph::generate_dot_graph(root_iter, out, config);
-}
-
-void write_complete_expression_dot(const my_expression& expr, std::ostream& out,
-                                   const std::string& graph_name) {
-    // The template system already provides complete DOT output
-    write_expression_to_dot(expr, out, graph_name);
 }
 
 // ============================================================================
