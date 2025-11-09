@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+
+# Copyright (c) BDD Expression Converter contributors
+# SPDX-License-Identifier: MIT
+
+set -o errexit
+
+exit_() {
+    echo ""
+    echo "$1"
+    echo ""
+    echo "This hook can be skipped if needed with 'git commit --no-verify'"
+    echo "See '.git/hooks/pre-commit', installed from 'scripts/pre-commit'"
+    exit 1
+}
+
+if [[ $(git config --get user.name | wc -w) -lt 2 ]]; then
+    # This heuristic avoids bad user names such as "root" or "Ubuntu"
+    # or a computer login name. A full name should (usually) have at
+    # least two words. We can change this if needed later.
+    exit_ "Commit failed: please fix your Git user name (should be full name)"
+fi
+
+if ! git diff-index --check --cached HEAD --; then
+    exit_ "Commit failed: please fix the conflict markers or whitespace errors"
+fi
+
+mapfile -t files < <(git diff --cached --name-only --diff-filter=ACMR)
+
+if [[ ${#files[@]} -eq 0 ]]; then
+    # When 'git commit --amend' is used, the files list is empty. The
+    # scripts below interpret an empty file set as a directive to
+    # check all the files, which is slow (but used in CI). So in this
+    # Git hook, we just skip the following checks instead.
+    exit 0
+fi
+
+scripts=$(git rev-parse --show-toplevel)/scripts
+
+# Check if we have C++ files to format
+cpp_files=()
+for file in "${files[@]}"; do
+    if [[ $file =~ \.(cpp|hpp|c|h|cc|cxx|hxx)$ ]]; then
+        cpp_files+=("$file")
+    fi
+done
+
+# Only run formatting check if we have C++ files
+if [[ ${#cpp_files[@]} -gt 0 ]]; then
+    echo "🔍 Checking code formatting..."
+    # Use PowerShell if available, otherwise try to use the bash equivalent
+    if command -v powershell.exe >/dev/null 2>&1; then
+        if ! powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$scripts/check-format.ps1" -Staged -Quiet; then
+            exit_ "Commit failed: code formatting issues found. Run './scripts/check-format.ps1 -Fix' to fix them."
+        fi
+    elif command -v pwsh >/dev/null 2>&1; then
+        if ! pwsh -NoProfile -ExecutionPolicy Bypass -File "$scripts/check-format.ps1" -Staged -Quiet; then
+            exit_ "Commit failed: code formatting issues found. Run './scripts/check-format.ps1 -Fix' to fix them."
+        fi
+    else
+        # Fallback to direct clang-format check
+        if command -v clang-format >/dev/null 2>&1; then
+            echo "  Using direct clang-format check (PowerShell not available)"
+            format_issues=false
+            for file in "${cpp_files[@]}"; do
+                if ! clang-format --dry-run --Werror "$file" >/dev/null 2>&1; then
+                    format_issues=true
+                    echo "  ❌ Formatting issue in: $file"
+                fi
+            done
+            if [ "$format_issues" = true ]; then
+                exit_ "Commit failed: code formatting issues found. Run 'clang-format -i <files>' to fix them."
+            fi
+        else
+            echo "  ⚠️  Warning: Neither PowerShell nor clang-format found. Skipping format check."
+        fi
+    fi
+
+    echo "  ✅ Code formatting check passed"
+fi
+
+echo "✅ Pre-commit checks passed!"

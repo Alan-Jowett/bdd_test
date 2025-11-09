@@ -1,0 +1,32 @@
+# Copyright (c) BDD Expression Converter contributors
+# SPDX-License-Identifier: MIT
+---
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: end-of-file-fixer
+        types: [c++, c, cmake, markdown]
+      - id: trailing-whitespace
+        types: [c++, c, cmake, markdown]
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-xml
+      - id: check-case-conflict
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+  - repo: https://github.com/pocc/pre-commit-hooks
+    rev: v1.3.5
+    hooks:
+      - id: clang-format
+        args: [--style=file]
+  - repo: local
+    hooks:
+      - id: clang-format-check
+        name: clang-format check
+        entry: ./scripts/check-format.ps1
+        language: system
+        files: \.(cpp|hpp|c|h|cc|cxx|hxx)$
+        pass_filenames: false

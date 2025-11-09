@@ -157,11 +157,24 @@ For more information about TeDDy, see [docs/TEDDY.md](docs/TEDDY.md).
 
 ## Contributing
 
-We welcome contributions! Please see [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for:
+We welcome contributions! For quick setup:
+
+```powershell
+# One-command development environment setup
+.\scripts\setup-dev-env.ps1
+
+# Quick verification
+.\scripts\check-format.ps1 -WhatIf
+```
+
+See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for complete details on:
+- Development environment setup
+- Pre-commit hooks and code formatting
 - Adding new test expressions
-- Code style guidelines (clang-format required)
-- Development workflow
+- Code style guidelines
 - Testing requirements
+
+**✅ Pro tip:** The setup script installs pre-commit hooks that automatically check your code before commits!
 
 ## Troubleshooting
 
