@@ -34,18 +34,21 @@ FetchContent_MakeAvailable(DecisionDiagrams)
 
 # Create executable with source files and header dependencies
 add_executable(bdd_demo
-    main.cpp
-    bdd_graph.cpp
-    expression_graph.cpp
+    src/main.cpp
+    src/bdd_graph.cpp
+    src/expression_graph.cpp
+    src/expression_parser.cpp
     # Header dependencies for proper rebuild on changes
-    bdd_graph.hpp
-    expression_graph.hpp
-    expression_types.hpp
-    dot_graph_generator.hpp
-    dag_walker.hpp
-    expression_parser.cpp
-    expression_parser.hpp
+    include/bdd_graph.hpp
+    include/expression_graph.hpp
+    include/expression_types.hpp
+    include/dot_graph_generator.hpp
+    include/dag_walker.hpp
+    include/expression_parser.hpp
 )
+
+# Add include directories
+target_include_directories(bdd_demo PRIVATE include)
 
 # Link with TeDDy library
 target_link_libraries(bdd_demo PRIVATE teddy::teddy)
