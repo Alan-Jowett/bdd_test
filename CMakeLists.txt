@@ -43,6 +43,8 @@ add_executable(bdd_demo
     expression_types.hpp
     dot_graph_generator.hpp
     dag_walker.hpp
+    expression_parser.cpp
+    expression_parser.hpp
 )
 
 # Link with TeDDy library
