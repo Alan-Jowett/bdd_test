@@ -54,8 +54,13 @@ std::string trim(const std::string& str) {
 my_expression_ptr parse_expression(const std::string& expr_str) {
     std::string trimmed = trim(expr_str);
 
+    // Handle empty expression
+    if (trimmed.empty()) {
+        throw std::runtime_error("Empty expression encountered during parsing");
+    }
+
     // Remove outer parentheses if they exist and are balanced
-    if (trimmed.front() == '(' && trimmed.back() == ')') {
+    if (trimmed.size() >= 2 && trimmed.front() == '(' && trimmed.back() == ')') {
         int depth = 0;
         bool valid_outer_parens = true;
         for (size_t i = 0; i < trimmed.length() - 1; ++i) {
@@ -78,7 +83,7 @@ my_expression_ptr parse_expression(const std::string& expr_str) {
     int depth = 0;
     int xor_pos = -1, or_pos = -1, and_pos = -1;
 
-    for (int i = trimmed.length() - 1; i >= 0; --i) {
+    for (size_t i = trimmed.length(); i-- > 0;) {
         char c = trimmed[i];
         if (c == ')')
             depth++;
@@ -117,7 +122,7 @@ my_expression_ptr parse_expression(const std::string& expr_str) {
     }
 
     // Check for NOT
-    if (trimmed.length() > 3 && trimmed.substr(0, 3) == "NOT") {
+    if (trimmed.length() >= 3 && trimmed.substr(0, 3) == "NOT") {
         std::string operand = trim(trimmed.substr(3));
         return std::make_unique<my_expression>(my_not{parse_expression(operand)});
     }

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
 
+#pragma once
+
 /**
  * @file expression_parser.hpp
  * @brief Expression Parser Interface - Public interface for logical expression parsing
@@ -37,11 +39,11 @@
  * Supported operators (in order of precedence, highest to lowest):
  * - NOT: Unary negation operator
  * - AND: Binary conjunction operator (left-associative)
- * - XOR: Binary exclusive-or operator (left-associative)
  * - OR: Binary disjunction operator (left-associative)
+ * - XOR: Binary exclusive-or operator (left-associative)
  *
  * @param filename Path to the text file containing the logical expression
- * @return my_expression_ptr Shared pointer to the parsed expression tree
+ * @return my_expression_ptr Unique pointer to the parsed expression tree
  *
  * @throws std::runtime_error If the file cannot be opened or read
  * @throws std::runtime_error If the expression contains syntax errors
@@ -49,7 +51,6 @@
  *
  * @note The function automatically trims whitespace from the expression
  * @note Empty lines and lines starting with # are treated as comments and ignored
- * @note Variable names must be valid C-style identifiers
  *
  * Example file format:
  * @code
