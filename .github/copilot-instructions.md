@@ -150,7 +150,7 @@ cmake --build build --config Release
 ctest
 
 # Generate coverage report (requires gcov/lcov)
-./generate_coverage.ps1
+./scripts/generate_coverage.ps1
 ```
 
 ## GitHub Actions & Documentation
