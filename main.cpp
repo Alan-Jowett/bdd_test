@@ -119,21 +119,6 @@ void write_bdd_nodes_to_stream(teddy::bdd_manager& manager, teddy::bdd_manager::
 }
 
 /**
- * @brief Recursively collects all unique variable names from an expression tree
- *
- * Performs a depth-first traversal of the expression tree and accumulates
- * all variable names found in leaf nodes into the provided set.
- * Now uses the generic dag_walker for traversal.
- *
- * @param expr The expression tree to traverse
- * @param variables Set to store unique variable names (output parameter)
- */
-void collect_variables(const my_expression& expr, std::unordered_set<std::string>& variables) {
-    // Use the dag_walker-based implementation
-    collect_variables_with_dag_walker(expr, variables);
-}
-
-/**
  * @brief Trims leading and trailing whitespace from a string
  *
  * Removes space, tab, newline, and carriage return characters from
@@ -351,7 +336,7 @@ teddy::bdd_manager::diagram_t convert_to_bdd(const my_expression& expr, teddy::b
 
     // First pass: collect all unique variable names
     std::unordered_set<std::string> variable_names;
-    collect_variables(expr, variable_names);
+    collect_variables_with_dag_walker(expr, variable_names);
 
     // Build variable map with sorted variable names for consistent ordering
     std::vector<std::string> sorted_vars(variable_names.begin(), variable_names.end());
@@ -520,7 +505,7 @@ int main(int argc, const char* argv[]) {
 
     // Dynamically determine the number of variables needed
     std::unordered_set<std::string> variable_names;
-    collect_variables(*expr, variable_names);
+    collect_variables_with_dag_walker(*expr, variable_names);
 
     // Create sorted variable names for consistent ordering (same as in convert_to_bdd)
     std::vector<std::string> sorted_variable_names(variable_names.begin(), variable_names.end());
