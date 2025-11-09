@@ -21,9 +21,11 @@
 #include <stack>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
+#include "dag_walker.hpp"
 #include "dot_graph_generator.hpp"
 
 // ============================================================================
@@ -304,4 +306,28 @@ void write_complete_expression_dot(const my_expression& expr, std::ostream& out,
                                    const std::string& graph_name) {
     // The template system already provides complete DOT output
     write_expression_to_dot(expr, out, graph_name);
+}
+
+// ============================================================================
+// DAG Walker Based Variable Collection
+// ============================================================================
+
+void collect_variables_with_dag_walker(const my_expression& expr,
+                                       std::unordered_set<std::string>& variables) {
+    expression_iterator root_iter(expr);
+
+    dag_walker::walk_dag(
+        root_iter, [&](const dag_walker::NodeInfo<expression_iterator>& node_info) {
+            if (!node_info.is_revisit) {
+                // Check if this is a variable node by examining its label and children
+                std::string label = node_info.node.get_label();
+                std::vector<expression_iterator> children = node_info.node.get_children();
+
+                // Variables have no children and their label is the variable name (not an operator)
+                if (children.empty() && !label.empty() && label != "AND" && label != "OR"
+                    && label != "XOR" && label != "NOT") {
+                    variables.insert(label);
+                }
+            }
+        });
 }

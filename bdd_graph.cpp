@@ -21,6 +21,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "dag_walker.hpp"
 #include "dot_graph_generator.hpp"
 
 // ============================================================================
@@ -279,4 +280,29 @@ void write_bdd_to_dot(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t
 
     // Generate BDD-specific terminal declarations and then the DOT graph
     generate_bdd_dot_graph(root_iter, out, config);
+}
+
+// ============================================================================
+// DAG Walker Based BDD Node Collection
+// ============================================================================
+
+std::vector<teddy::bdd_manager::diagram_t::node_t*> collect_bdd_nodes_topological(
+    teddy::bdd_manager::diagram_t diagram, const std::vector<std::string>& variable_names) {
+    using node_t = teddy::bdd_manager::diagram_t::node_t;
+
+    // Create BDD iterator and collect nodes in topological order
+    bdd_iterator root_iter(diagram.unsafe_get_root(), &variable_names);
+    std::vector<bdd_iterator> nodes_in_order =
+        dag_walker::collect_unique_nodes_topological(root_iter);
+
+    // Convert iterator vector to node pointer vector
+    std::vector<node_t*> result;
+    result.reserve(nodes_in_order.size());
+
+    for (const auto& node_iter : nodes_in_order) {
+        node_t* node = static_cast<node_t*>(const_cast<void*>(node_iter.get_node_address()));
+        result.push_back(node);
+    }
+
+    return result;
 }

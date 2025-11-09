@@ -41,6 +41,7 @@
 #include <vector>
 
 #include "bdd_graph.hpp"
+#include "dag_walker.hpp"
 #include "expression_graph.hpp"
 
 /**
@@ -56,55 +57,22 @@
  * @param out Output stream to write the table to
  * @param include_headers Whether to include descriptive headers and footers (default: true)
  *
- * @note The function uses post-order traversal followed by reversal to ensure
+ * @note The function uses dag_walker's topological traversal to ensure
  *       that parent nodes have lower indices than their children
  */
 void write_bdd_nodes_to_stream(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram,
                                const std::vector<std::string>& variable_names, std::ostream& out,
                                bool include_headers = true) {
     using node_t = teddy::bdd_manager::diagram_t::node_t;
-    std::unordered_set<node_t*> visited;
-    std::unordered_map<node_t*, int> node_to_index;
-    std::vector<node_t*> nodes_in_order;
 
-    // Step 1: Gather nodes in post-order (children before parents)
-    std::stack<std::pair<node_t*, bool>> stack;  // pair of (node, processed)
-    stack.push({diagram.unsafe_get_root(), false});
+    // Get nodes in topological order using dag_walker
+    std::vector<node_t*> nodes_in_order = collect_bdd_nodes_topological(diagram, variable_names);
 
-    while (!stack.empty()) {
-        auto [node, processed] = stack.top();
-
-        if (!node || visited.find(node) != visited.end()) {
-            stack.pop();
-            continue;
-        }
-
-        if (!processed) {
-            // Mark as being processed and push children first
-            stack.top().second = true;
-
-            if (!node->is_terminal()) {
-                // Push children (they will be processed before parent)
-                stack.push({node->get_son(1), false});  // true child
-                stack.push({node->get_son(0), false});  // false child
-            }
-        } else {
-            // Process the node (children are already processed)
-            stack.pop();
-            visited.insert(node);
-
-            // Assign index and collect node
-            int index = static_cast<int>(nodes_in_order.size());
-            node_to_index[node] = index;
-            nodes_in_order.push_back(node);
-        }
-    }
-
-    // Step 2: Reverse the order (highest index becomes 0)
+    // Reverse to match original ordering (parents before children, terminals at end)
     std::reverse(nodes_in_order.begin(), nodes_in_order.end());
 
-    // Step 3: Rebuild index mapping for the reversed order
-    node_to_index.clear();
+    // Create node-to-index mapping
+    std::unordered_map<node_t*, int> node_to_index;
     for (int i = 0; i < nodes_in_order.size(); ++i) {
         node_to_index[nodes_in_order[i]] = i;
     }
@@ -151,61 +119,18 @@ void write_bdd_nodes_to_stream(teddy::bdd_manager& manager, teddy::bdd_manager::
 }
 
 /**
- * @brief Prints BDD nodes to console (wrapper for write_bdd_nodes_to_stream)
- *
- * Convenience function that prints the BDD node table to standard output
- * with headers and formatting enabled.
- *
- * @param manager Reference to the BDD manager
- * @param diagram The BDD diagram to display
- * @param variable_names Vector of variable names for display
- */
-void print_bdd_nodes(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram,
-                     const std::vector<std::string>& variable_names) {
-    write_bdd_nodes_to_stream(manager, diagram, variable_names, std::cout, true);
-}
-
-/**
- * @brief Writes BDD node table to file (wrapper for write_bdd_nodes_to_stream)
- *
- * Convenience function that writes the BDD node table to a file stream
- * without headers (for clean file output).
- *
- * @param manager Reference to the BDD manager
- * @param diagram The BDD diagram to write
- * @param variable_names Vector of variable names for display
- * @param out Output file stream to write to
- */
-void write_bdd_nodes_to_file(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram,
-                             const std::vector<std::string>& variable_names, std::ostream& out) {
-    write_bdd_nodes_to_stream(manager, diagram, variable_names, out, false);
-}
-
-/**
  * @brief Recursively collects all unique variable names from an expression tree
  *
  * Performs a depth-first traversal of the expression tree and accumulates
  * all variable names found in leaf nodes into the provided set.
+ * Now uses the generic dag_walker for traversal.
  *
  * @param expr The expression tree to traverse
  * @param variables Set to store unique variable names (output parameter)
  */
 void collect_variables(const my_expression& expr, std::unordered_set<std::string>& variables) {
-    std::visit(
-        [&](const auto& variant_expr) {
-            using T = std::decay_t<decltype(variant_expr)>;
-
-            if constexpr (std::is_same_v<T, my_variable>) {
-                variables.insert(variant_expr.variable_name);
-            } else if constexpr (std::is_same_v<T, my_and> || std::is_same_v<T, my_or>
-                                 || std::is_same_v<T, my_xor>) {
-                collect_variables(*variant_expr.left, variables);
-                collect_variables(*variant_expr.right, variables);
-            } else if constexpr (std::is_same_v<T, my_not>) {
-                collect_variables(*variant_expr.expr, variables);
-            }
-        },
-        expr);
+    // Use the dag_walker-based implementation
+    collect_variables_with_dag_walker(expr, variables);
 }
 
 /**
@@ -653,7 +578,7 @@ int main(int argc, const char* argv[]) {
     // Print BDD node structure
     std::cout << "BDD Node Structure:\n";
     std::cout << "==================\n";
-    print_bdd_nodes(manager, f, sorted_variable_names);
+    write_bdd_nodes_to_stream(manager, f, sorted_variable_names, std::cout, true);
     std::cout << "\n";
 
     // Output DOT representation to console
@@ -678,7 +603,7 @@ int main(int argc, const char* argv[]) {
     // Output BDD node table to file
     std::ofstream nodes_file(bdd_nodes_filename);
     if (nodes_file.is_open()) {
-        write_bdd_nodes_to_file(manager, f, sorted_variable_names, nodes_file);
+        write_bdd_nodes_to_stream(manager, f, sorted_variable_names, nodes_file, false);
         nodes_file.close();
         std::cout << "BDD node table saved to '" << bdd_nodes_filename << "'\n";
     } else {

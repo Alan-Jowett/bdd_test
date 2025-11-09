@@ -60,3 +60,17 @@
 void write_bdd_to_dot(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram,
                       const std::vector<std::string>& variable_names, std::ostream& out,
                       const std::string& graph_name = "DD");
+
+/**
+ * @brief Collect BDD nodes in topological order using dag_walker
+ *
+ * Alternative implementation that uses the generic dag_walker system
+ * to collect BDD nodes in post-order (topological) traversal order.
+ * This replaces manual stack-based traversal with the generic walker.
+ *
+ * @param diagram BDD diagram to traverse
+ * @param variable_names Vector of variable names for labeling
+ * @return Vector of node pointers in topological order (children before parents)
+ */
+std::vector<teddy::bdd_manager::diagram_t::node_t*> collect_bdd_nodes_topological(
+    teddy::bdd_manager::diagram_t diagram, const std::vector<std::string>& variable_names);

@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include <string>
+#include <unordered_set>
 
 #include "expression_types.hpp"
 
@@ -48,3 +49,15 @@
  */
 void write_expression_to_dot(const my_expression& expr, std::ostream& out,
                              const std::string& graph_name);
+
+/**
+ * @brief Collects variable names using dag_walker traversal
+ *
+ * Alternative implementation of variable collection that uses the
+ * generic dag_walker system for traversal instead of manual recursion.
+ *
+ * @param expr Expression tree to traverse
+ * @param variables Set to store unique variable names (output parameter)
+ */
+void collect_variables_with_dag_walker(const my_expression& expr,
+                                       std::unordered_set<std::string>& variables);
