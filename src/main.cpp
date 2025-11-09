@@ -45,6 +45,12 @@
 #include "expression_graph.hpp"
 #include "expression_parser.hpp"
 
+// ============================================================================
+// Anonymous namespace for implementation details
+// ============================================================================
+
+namespace {
+
 /**
  * @brief Writes BDD node table to any output stream
  *
@@ -218,6 +224,12 @@ teddy::bdd_manager::diagram_t convert_to_bdd(const my_expression& expr, teddy::b
 
     return convert_recursive(expr);
 }
+
+}  // end anonymous namespace
+
+// ============================================================================
+// Exported functions (global namespace)
+// ============================================================================
 
 /**
  * @brief Main function - BDD Expression Converter application entry point
