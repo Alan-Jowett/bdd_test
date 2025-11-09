@@ -325,16 +325,31 @@ jobs:
               exit 1
             }
 
-            # Check if DOT file was created and is valid
-            dot_file="${expr_file%.*}.dot"
-            if [ -f "$dot_file" ]; then
-              dot -Tpng "$dot_file" -o /tmp/test.png || {
-                echo "❌ Invalid DOT file: $dot_file"
+            # Get base filename for checking generated files
+            base_name=$(basename "$expr_file" .txt)
+            
+            # Check if BDD DOT file was created and is valid
+            bdd_dot_file="${base_name}_bdd.dot"
+            tree_dot_file="${base_name}_expression_tree.dot"
+            
+            if [ -f "$bdd_dot_file" ]; then
+              dot -Tpng "$bdd_dot_file" -o /tmp/test_bdd.png || {
+                echo "❌ Invalid BDD DOT file: $bdd_dot_file"
                 exit 1
               }
-              echo "✅ Valid DOT file: $dot_file"
+              echo "✅ Valid BDD DOT file: $bdd_dot_file"
             else
-              echo "⚠️  No DOT file generated for $expr_file"
+              echo "⚠️  No BDD DOT file generated for $expr_file"
+            fi
+            
+            if [ -f "$tree_dot_file" ]; then
+              dot -Tpng "$tree_dot_file" -o /tmp/test_tree.png || {
+                echo "❌ Invalid expression tree DOT file: $tree_dot_file"
+                exit 1
+              }
+              echo "✅ Valid expression tree DOT file: $tree_dot_file"
+            else
+              echo "⚠️  No expression tree DOT file generated for $expr_file"
             fi
           fi
         done
