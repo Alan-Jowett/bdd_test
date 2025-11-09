@@ -10,6 +10,12 @@
 
 #include "expression_types.hpp"
 
+// ============================================================================
+// Anonymous namespace for implementation details
+// ============================================================================
+
+namespace {
+
 /**
  * @brief Trims leading and trailing whitespace from a string
  *
@@ -130,6 +136,12 @@ my_expression_ptr parse_expression(const std::string& expr_str) {
     // Must be a variable
     return std::make_unique<my_expression>(my_variable{trimmed});
 }
+
+}  // end anonymous namespace
+
+// ============================================================================
+// Exported functions (global namespace)
+// ============================================================================
 
 /**
  * @brief Reads and parses a logical expression from a text file

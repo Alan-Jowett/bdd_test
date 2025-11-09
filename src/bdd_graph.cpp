@@ -168,7 +168,13 @@ class bdd_iterator {
 };
 
 // ============================================================================
-// BDD DOT Generation Functions Implementation
+// Anonymous namespace for implementation details
+// ============================================================================
+
+namespace {
+
+// ============================================================================
+// BDD DOT Generation Helper Functions
 // ============================================================================
 
 /**
@@ -301,6 +307,12 @@ void generate_bdd_dot_graph(const bdd_iterator& root_iter, std::ostream& out,
     // Write DOT footer
     out << "}\n";
 }
+
+}  // end anonymous namespace
+
+// ============================================================================
+// Exported functions (global namespace)
+// ============================================================================
 
 void write_bdd_to_dot(const teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram,
                       const std::vector<std::string>& variable_names, std::ostream& out,
