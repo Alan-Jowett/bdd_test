@@ -17,7 +17,9 @@
 #include "bdd_graph.hpp"
 
 #include <algorithm>
+#include <format>
 #include <functional>
+#include <ranges>
 #include <iostream>
 #include <unordered_map>
 #include <unordered_set>
@@ -113,7 +115,7 @@ class bdd_iterator {
             if (variable_names_ && var_index < variable_names_->size()) {
                 return (*variable_names_)[var_index];
             } else {
-                return "x" + std::to_string(var_index);
+                return std::format("x{}", var_index);
             }
         }
     }
@@ -291,7 +293,7 @@ void generate_bdd_dot_graph(const bdd_iterator& root_iter, std::ostream& out,
     // Create node ID mapping
     std::unordered_map<const void*, std::string> node_id_map;
     for (size_t i = 0; i < all_nodes.size(); ++i) {
-        node_id_map[all_nodes[i]] = "node" + std::to_string(i);
+        node_id_map[all_nodes[i]] = std::format("node{}", i);
     }
 
     // Output BDD-specific terminal node styling
@@ -350,7 +352,7 @@ std::vector<teddy::bdd_manager::diagram_t::node_t*> collect_bdd_nodes_topologica
     std::vector<node_t*> result;
     result.reserve(nodes_in_order.size());
 
-    std::transform(nodes_in_order.begin(), nodes_in_order.end(), std::back_inserter(result),
+    std::ranges::transform(nodes_in_order, std::back_inserter(result),
                    [](const auto& node_iter) { return node_iter.get_node(); });
 
     return result;

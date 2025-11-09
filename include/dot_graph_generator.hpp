@@ -21,6 +21,7 @@
 #pragma once
 
 #include <concepts>
+#include <format>
 #include <iostream>
 #include <string>
 #include <type_traits>
@@ -182,7 +183,7 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
         if (it != node_id_map.end()) {
             return it->second;
         }
-        std::string id = "node" + std::to_string(next_node_id++);
+        std::string id = std::format("node{}", next_node_id++);
         node_id_map[key] = id;
         return id;
     };
