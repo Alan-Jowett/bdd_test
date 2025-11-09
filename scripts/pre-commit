@@ -79,4 +79,40 @@ if [[ ${#cpp_files[@]} -gt 0 ]]; then
     echo "  ✅ Code formatting check passed"
 fi
 
+# Run cppcheck if available and we have C++ files
+if [[ ${#cpp_files[@]} -gt 0 ]] && command -v cppcheck >/dev/null 2>&1; then
+    echo "🔍 Running cppcheck static analysis..."
+
+    # Use the same cppcheck options as CI
+    if ! cppcheck --enable=warning,style,performance,portability \
+      --std=c++20 \
+      --inline-suppr \
+      --suppress=missingIncludeSystem \
+      --suppress=unmatchedSuppression \
+      -I include/ \
+      --template='[{file}:{line}]: ({severity}) {message}' \
+      --quiet \
+      "${cpp_files[@]}" 2>&1 | grep -v '(information)'; then
+
+        # Check if there were any real errors (not just information)
+        ISSUES=$(cppcheck --enable=warning,style,performance,portability \
+          --std=c++20 \
+          --inline-suppr \
+          --suppress=missingIncludeSystem \
+          --suppress=unmatchedSuppression \
+          -I include/ \
+          --quiet \
+          --template='[{file}:{line}]: ({severity}) {message}' \
+          "${cpp_files[@]}" 2>&1 | grep -v '(information)' | wc -l)
+
+        if [ "$ISSUES" -gt 0 ]; then
+            exit_ "Commit failed: cppcheck found $ISSUES issue(s) in your changes. Fix them before committing."
+        fi
+    fi
+
+    echo "  ✅ cppcheck analysis passed"
+elif [[ ${#cpp_files[@]} -gt 0 ]]; then
+    echo "  ⚠️  Warning: cppcheck not found. Skipping static analysis."
+fi
+
 echo "✅ Pre-commit checks passed!"
