@@ -177,12 +177,6 @@ jobs:
           --inline-suppr \
           --suppress=missingIncludeSystem \
           --suppress=unmatchedSuppression \
-          --suppress=unusedFunction \
-          --suppress=noExplicitConstructor \
-          --suppress=useStlAlgorithm \
-          --suppress=unusedPrivateFunction \
-          --suppress=constParameterReference \
-          --suppress=stlFindInsert \
           -I include/ \
           --template='[{file}:{line}]: ({severity}) {message}' \
           src/ 2>&1 | grep -v '(information)' || {
@@ -197,12 +191,6 @@ jobs:
           --inline-suppr \
           --suppress=missingIncludeSystem \
           --suppress=unmatchedSuppression \
-          --suppress=unusedFunction \
-          --suppress=noExplicitConstructor \
-          --suppress=useStlAlgorithm \
-          --suppress=unusedPrivateFunction \
-          --suppress=constParameterReference \
-          --suppress=stlFindInsert \
           -I include/ \
           --quiet \
           --template='[{file}:{line}]: ({severity}) {message}' \

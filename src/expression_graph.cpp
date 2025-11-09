@@ -124,18 +124,6 @@ class expression_iterator {
     mutable std::unordered_map<const my_expression*, std::string> id_cache_;  ///< Node ID cache
     mutable size_t next_id_;                                                  ///< Next available ID
 
-    /**
-     * @brief Generates unique ID for expression nodes
-     * @param expr Expression node to get ID for
-     * @return Unique string identifier
-     */
-    std::string get_node_id(const my_expression* expr) const {
-        if (id_cache_.find(expr) == id_cache_.end()) {
-            id_cache_[expr] = "node" + std::to_string(next_id_++);
-        }
-        return id_cache_[expr];
-    }
-
    public:
     /**
      * @brief Constructs iterator from expression

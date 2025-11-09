@@ -61,7 +61,8 @@
  * @note The function uses dag_walker's topological traversal to ensure
  *       that parent nodes have lower indices than their children
  */
-void write_bdd_nodes_to_stream(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram,
+void write_bdd_nodes_to_stream(const teddy::bdd_manager& manager,
+                               teddy::bdd_manager::diagram_t diagram,
                                const std::vector<std::string>& variable_names, std::ostream& out,
                                bool include_headers = true) {
     using node_t = teddy::bdd_manager::diagram_t::node_t;

@@ -16,6 +16,7 @@
 
 #include "bdd_graph.hpp"
 
+#include <algorithm>
 #include <functional>
 #include <iostream>
 #include <unordered_map>
@@ -301,7 +302,7 @@ void generate_bdd_dot_graph(const bdd_iterator& root_iter, std::ostream& out,
     out << "}\n";
 }
 
-void write_bdd_to_dot(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram,
+void write_bdd_to_dot(const teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram,
                       const std::vector<std::string>& variable_names, std::ostream& out,
                       const std::string& graph_name) {
     // Create an iterator from the BDD root
@@ -337,9 +338,8 @@ std::vector<teddy::bdd_manager::diagram_t::node_t*> collect_bdd_nodes_topologica
     std::vector<node_t*> result;
     result.reserve(nodes_in_order.size());
 
-    for (const auto& node_iter : nodes_in_order) {
-        result.push_back(node_iter.get_node());
-    }
+    std::transform(nodes_in_order.begin(), nodes_in_order.end(), std::back_inserter(result),
+                   [](const auto& node_iter) { return node_iter.get_node(); });
 
     return result;
 }
