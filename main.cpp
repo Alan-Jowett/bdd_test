@@ -309,11 +309,11 @@ my_expression_ptr read_expression_from_file(const std::string& filename) {
  * @brief Converts an expression tree to a Binary Decision Diagram (BDD)
  *
  * Performs recursive conversion of the custom expression tree into a BDD using
- * the TeDDy library. Variables are automatically sorted alphabetically for
- * consistent ordering across multiple runs.
+ * the TeDDy library. Uses dag_walker for efficient variable collection and
+ * simple recursion for BDD construction since expressions form a tree structure.
  *
  * The conversion process:
- * 1. Collects all unique variable names from the expression
+ * 1. Uses dag_walker to collect all unique variable names efficiently
  * 2. Creates a sorted variable mapping for consistent BDD ordering
  * 3. Recursively converts each expression node to BDD operations
  *
@@ -334,7 +334,7 @@ teddy::bdd_manager::diagram_t convert_to_bdd(const my_expression& expr, teddy::b
     using bdd_t = teddy::bdd_manager::diagram_t;
     using namespace teddy::ops;
 
-    // First pass: collect all unique variable names
+    // First pass: collect all unique variable names using dag_walker
     std::unordered_set<std::string> variable_names;
     collect_variables_with_dag_walker(expr, variable_names);
 
@@ -347,7 +347,7 @@ teddy::bdd_manager::diagram_t convert_to_bdd(const my_expression& expr, teddy::b
         var_map[sorted_vars[i]] = static_cast<int>(i);
     }
 
-    // Helper function for recursive conversion
+    // Helper function for recursive conversion (no memoization needed for tree structure)
     std::function<bdd_t(const my_expression&)> convert_recursive =
         [&](const my_expression& e) -> bdd_t {
         return std::visit(
