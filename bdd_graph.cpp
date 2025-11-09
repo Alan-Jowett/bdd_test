@@ -96,6 +96,11 @@ class bdd_iterator {
         return static_cast<const void*>(current_node_);
     }
 
+    // Type-safe node access
+    node_t* get_node() const {
+        return current_node_;
+    }
+
     std::string get_label() const {
         if (!current_node_)
             return "";
@@ -165,78 +170,84 @@ class bdd_iterator {
 // BDD DOT Generation Functions Implementation
 // ============================================================================
 
-void generate_bdd_dot_graph(const bdd_iterator& root_iter, std::ostream& out,
-                            const dot_graph::DotConfig& config) {
-    // Write DOT header
-    out << "digraph " << config.graph_name << " {\n\n";
-
-    // Collect terminal nodes for BDD-specific styling
-    std::vector<const void*> terminal_nodes;
-    std::vector<const void*> all_nodes;
-    std::unordered_set<const void*> visited;
-
-    std::function<void(const bdd_iterator&)> collect_nodes = [&](const bdd_iterator& current) {
-        const void* node_key = current.get_node_address();
-
-        if (visited.find(node_key) != visited.end()) {
-            return;
+/**
+ * @brief Convenience wrapper around dag_walker::walk_dag for BDD nodes
+ *
+ * @param root_iter Starting iterator for traversal
+ * @param visitor Function to call on each unique node during traversal
+ */
+void traverse_bdd_nodes(const bdd_iterator& root_iter,
+                        std::function<void(const bdd_iterator&)> visitor) {
+    dag_walker::walk_dag(root_iter, [&](const dag_walker::NodeInfo<bdd_iterator>& node_info) {
+        if (!node_info.is_revisit) {
+            visitor(node_info.node);
         }
-        visited.insert(node_key);
+    });
+}
+
+/**
+ * @brief Collect all nodes and identify terminal nodes in a BDD structure
+ */
+void collect_and_categorize_nodes(const bdd_iterator& root_iter,
+                                  std::vector<const void*>& all_nodes,
+                                  std::vector<const void*>& terminal_nodes) {
+    all_nodes.clear();
+    terminal_nodes.clear();
+
+    // Use dag_walker to collect all unique nodes
+    std::vector<bdd_iterator> unique_node_iters = dag_walker::collect_unique_nodes(root_iter);
+
+    // Extract node addresses and identify terminals
+    for (const auto& node_iter : unique_node_iters) {
+        const void* node_key = node_iter.get_node_address();
         all_nodes.push_back(node_key);
 
         // Check if this is a terminal node (no children)
-        std::vector<bdd_iterator> children = current.get_children();
+        std::vector<bdd_iterator> children = node_iter.get_children();
         if (children.empty()) {
             terminal_nodes.push_back(node_key);
         }
-
-        for (const bdd_iterator& child : children) {
-            collect_nodes(child);
-        }
-    };
-
-    collect_nodes(root_iter);
-
-    // Create node ID mapping
-    std::unordered_map<const void*, std::string> node_id_map;
-    for (size_t i = 0; i < all_nodes.size(); ++i) {
-        node_id_map[all_nodes[i]] = "node" + std::to_string(i);
     }
+}
 
-    // Output BDD-specific terminal node styling
+/**
+ * @brief Output terminal node styling declarations
+ */
+void output_terminal_node_styling(const std::vector<const void*>& terminal_nodes,
+                                  const std::unordered_map<const void*, std::string>& node_id_map,
+                                  std::ostream& out) {
     if (!terminal_nodes.empty()) {
         out << "    node [shape = square]";
         for (const void* terminal_node : terminal_nodes) {
-            out << " " << node_id_map[terminal_node];
+            out << " " << node_id_map.at(terminal_node);
         }
         out << ";\n";
         out << "    node [shape = circle];\n\n";
     }
+}
 
-    // Generate nodes
-    std::unordered_set<const void*> processed_nodes;
-    std::function<void(const bdd_iterator&)> output_nodes = [&](const bdd_iterator& current) {
+/**
+ * @brief Output node declarations with labels and tooltips
+ */
+void output_node_declarations(const bdd_iterator& root_iter,
+                              const std::unordered_map<const void*, std::string>& node_id_map,
+                              std::ostream& out) {
+    traverse_bdd_nodes(root_iter, [&](const bdd_iterator& current) {
         const void* node_key = current.get_node_address();
-
-        if (processed_nodes.find(node_key) != processed_nodes.end()) {
-            return;
-        }
-        processed_nodes.insert(node_key);
-
-        std::string node_id = node_id_map[node_key];
+        std::string node_id = node_id_map.at(node_key);
         out << "    " << node_id << " [label = \"" << current.get_label() << "\", tooltip = \""
             << current.get_tooltip() << "\"];\n";
+    });
+}
 
-        for (const bdd_iterator& child : current.get_children()) {
-            output_nodes(child);
-        }
-    };
+/**
+ * @brief Output edge declarations with proper styling (preserves original traversal order)
+ */
+void output_edge_declarations(const bdd_iterator& root_iter,
+                              const std::unordered_map<const void*, std::string>& node_id_map,
+                              std::ostream& out) {
+    std::unordered_set<const void*> processed_nodes;
 
-    output_nodes(root_iter);
-
-    // Generate edges
-    out << "\n";
-    processed_nodes.clear();
     std::function<void(const bdd_iterator&)> output_edges = [&](const bdd_iterator& current) {
         const void* node_key = current.get_node_address();
 
@@ -248,8 +259,8 @@ void generate_bdd_dot_graph(const bdd_iterator& root_iter, std::ostream& out,
         std::vector<bdd_iterator> children = current.get_children();
         for (size_t i = 0; i < children.size(); ++i) {
             const bdd_iterator& child = children[i];
-            std::string parent_id = node_id_map[node_key];
-            std::string child_id = node_id_map[child.get_node_address()];
+            std::string parent_id = node_id_map.at(node_key);
+            std::string child_id = node_id_map.at(child.get_node_address());
             std::string style = current.get_edge_style(child, i);
 
             out << "    " << parent_id << " -> " << child_id << " [style = " << style << "];\n";
@@ -258,6 +269,33 @@ void generate_bdd_dot_graph(const bdd_iterator& root_iter, std::ostream& out,
     };
 
     output_edges(root_iter);
+}
+
+void generate_bdd_dot_graph(const bdd_iterator& root_iter, std::ostream& out,
+                            const dot_graph::DotConfig& config) {
+    // Write DOT header
+    out << "digraph " << config.graph_name << " {\n\n";
+
+    // Collect and categorize all nodes
+    std::vector<const void*> all_nodes;
+    std::vector<const void*> terminal_nodes;
+    collect_and_categorize_nodes(root_iter, all_nodes, terminal_nodes);
+
+    // Create node ID mapping
+    std::unordered_map<const void*, std::string> node_id_map;
+    for (size_t i = 0; i < all_nodes.size(); ++i) {
+        node_id_map[all_nodes[i]] = "node" + std::to_string(i);
+    }
+
+    // Output BDD-specific terminal node styling
+    output_terminal_node_styling(terminal_nodes, node_id_map, out);
+
+    // Generate node declarations
+    output_node_declarations(root_iter, node_id_map, out);
+
+    // Generate edge declarations
+    out << "\n";
+    output_edge_declarations(root_iter, node_id_map, out);
 
     // Write DOT footer
     out << "}\n";
@@ -295,13 +333,12 @@ std::vector<teddy::bdd_manager::diagram_t::node_t*> collect_bdd_nodes_topologica
     std::vector<bdd_iterator> nodes_in_order =
         dag_walker::collect_unique_nodes_topological(root_iter);
 
-    // Convert iterator vector to node pointer vector
+    // Convert iterator vector to node pointer vector using type-safe access
     std::vector<node_t*> result;
     result.reserve(nodes_in_order.size());
 
     for (const auto& node_iter : nodes_in_order) {
-        node_t* node = static_cast<node_t*>(const_cast<void*>(node_iter.get_node_address()));
-        result.push_back(node);
+        result.push_back(node_iter.get_node());
     }
 
     return result;
