@@ -32,13 +32,23 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(DecisionDiagrams)
 
-# Create executable
-add_executable(bdd_demo main.cpp)
+# Create executable with source files and header dependencies
+add_executable(bdd_demo
+    main.cpp
+    bdd_graph.cpp
+    expression_graph.cpp
+    # Header dependencies for proper rebuild on changes
+    bdd_graph.hpp
+    expression_graph.hpp
+    expression_types.hpp
+    dot_graph_generator.hpp
+    dag_walker.hpp
+)
 
 # Link with TeDDy library
 target_link_libraries(bdd_demo PRIVATE teddy::teddy)
 
-# Set output directory
+# Set output directory for executable
 set_target_properties(bdd_demo PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
@@ -54,6 +64,17 @@ add_bdd_test(test_filter_expression "filter_expression.txt")
 add_bdd_test(test_simple_expression "simple_expression.txt")
 add_bdd_test(test_my_test_expression "my_test_expression.txt")
 add_bdd_test(test_subdir_expression "test_subdir_expression.txt")
+
+# Add new tests to improve coverage
+add_bdd_test(test_single_variable "single_variable.txt")
+add_bdd_test(test_deeply_nested "deeply_nested.txt")
+add_bdd_test(test_multiple_not "multiple_not.txt")
+add_bdd_test(test_all_operators "all_operators.txt")
+add_bdd_test(test_many_variables "many_variables.txt")
+add_bdd_test(test_same_variable "same_variable.txt")
+add_bdd_test(test_xor_chain "xor_chain.txt")
+add_bdd_test(test_underscore_vars "underscore_vars.txt")
+add_bdd_test(test_single_variable_unusual_name "single_variable_unusual_name.txt")
 
 # Command line help tests
 add_cmdline_test(test_help_long
@@ -114,4 +135,19 @@ add_cmdline_test(test_override_options
     ARGS "${CMAKE_SOURCE_DIR}/test_expressions/simple_expression.txt;--enable-reordering;--disable-reordering"
     OUTPUT_CONTAINS "Automatic variable reordering disabled"
     EXPECTED_EXIT_CODE 0
+)
+
+# Error handling tests to improve coverage
+add_cmdline_test(test_nonexistent_file
+    ARGS "nonexistent_file.txt"
+    SHOULD_FAIL
+    ERROR_CONTAINS "Error reading expression file: Could not open file: nonexistent_file.txt"
+    EXPECTED_EXIT_CODE 1
+)
+
+add_cmdline_test(test_empty_expression_file
+    ARGS "${CMAKE_SOURCE_DIR}/test_expressions/edge_cases/comments_only.txt"
+    SHOULD_FAIL
+    ERROR_CONTAINS "Error reading expression file: No expression found in file"
+    EXPECTED_EXIT_CODE 1
 )

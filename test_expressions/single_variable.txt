@@ -1,0 +1,2 @@
+# Single variable expression - tests minimal BDD construction
+x0

@@ -1,0 +1,2 @@
+# Expression with all operators to ensure complete coverage
+(var1 AND var2) OR (NOT var3) XOR (var4 OR var5) AND (NOT (var6 XOR var7))
