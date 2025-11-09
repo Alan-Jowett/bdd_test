@@ -18,7 +18,39 @@ This project includes comprehensive Doxygen documentation that is automatically 
 
 ## Local Documentation Generation
 
-To generate documentation locally:
+To generate documentation locally, you have several options:
+
+### Option 1: Use the Provided Scripts (Recommended)
+
+The project includes convenient scripts that mirror the GitHub Actions workflow:
+
+**PowerShell (Windows):**
+```powershell
+# Generate documentation
+.\generate_docs.ps1
+
+# Generate and automatically open
+.\generate_docs.ps1 -Open
+```
+
+**Bash (Linux/macOS):**
+```bash
+# Generate documentation
+./generate_docs.sh
+
+# Make sure script is executable first
+chmod +x generate_docs.sh
+./generate_docs.sh
+```
+
+These scripts will:
+- ✅ Check for Doxygen installation and provide install instructions if missing
+- ✅ Handle version detection from git tags/branches
+- ✅ Generate documentation with proper configuration
+- ✅ Create GitHub Pages compatible output (with .nojekyll file)
+- ✅ Provide helpful status messages and error reporting
+
+### Option 2: Manual Generation
 
 ```bash
 # Install Doxygen (if not already installed)

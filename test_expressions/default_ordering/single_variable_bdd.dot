@@ -1,11 +1,12 @@
 digraph DD {
+
     node [shape = square] node1 node2;
     node [shape = circle];
 
     node0 [label = "x0", tooltip = "0"];
-    node0 -> node2 [style = dashed];
-    node0 -> node1 [style = solid];
-    node1 [label = "1", tooltip = "1"];
-    node2 [label = "0", tooltip = "0"];
+    node1 [label = "0", tooltip = "0"];
+    node2 [label = "1", tooltip = "1"];
 
+    node0 -> node1 [style = dashed];
+    node0 -> node2 [style = solid];
 }

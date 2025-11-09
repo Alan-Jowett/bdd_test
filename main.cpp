@@ -40,6 +40,10 @@
 #include <variant>
 #include <vector>
 
+#include "bdd_graph.hpp"
+#include "dag_walker.hpp"
+#include "expression_graph.hpp"
+
 /**
  * @brief Writes BDD node table to any output stream
  *
@@ -53,62 +57,29 @@
  * @param out Output stream to write the table to
  * @param include_headers Whether to include descriptive headers and footers (default: true)
  *
- * @note The function uses post-order traversal followed by reversal to ensure
+ * @note The function uses dag_walker's topological traversal to ensure
  *       that parent nodes have lower indices than their children
  */
 void write_bdd_nodes_to_stream(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram,
                                const std::vector<std::string>& variable_names, std::ostream& out,
                                bool include_headers = true) {
     using node_t = teddy::bdd_manager::diagram_t::node_t;
-    std::unordered_set<node_t*> visited;
-    std::unordered_map<node_t*, int> node_to_index;
-    std::vector<node_t*> nodes_in_order;
 
-    // Step 1: Gather nodes in post-order (children before parents)
-    std::stack<std::pair<node_t*, bool>> stack;  // pair of (node, processed)
-    stack.push({diagram.unsafe_get_root(), false});
+    // Get nodes in topological order using dag_walker
+    std::vector<node_t*> nodes_in_order = collect_bdd_nodes_topological(diagram, variable_names);
 
-    while (!stack.empty()) {
-        auto [node, processed] = stack.top();
-
-        if (!node || visited.find(node) != visited.end()) {
-            stack.pop();
-            continue;
-        }
-
-        if (!processed) {
-            // Mark as being processed and push children first
-            stack.top().second = true;
-
-            if (!node->is_terminal()) {
-                // Push children (they will be processed before parent)
-                stack.push({node->get_son(1), false});  // true child
-                stack.push({node->get_son(0), false});  // false child
-            }
-        } else {
-            // Process the node (children are already processed)
-            stack.pop();
-            visited.insert(node);
-
-            // Assign index and collect node
-            int index = static_cast<int>(nodes_in_order.size());
-            node_to_index[node] = index;
-            nodes_in_order.push_back(node);
-        }
-    }
-
-    // Step 2: Reverse the order (highest index becomes 0)
+    // Reverse to achieve parents-before-children ordering with terminals at end
     std::reverse(nodes_in_order.begin(), nodes_in_order.end());
 
-    // Step 3: Rebuild index mapping for the reversed order
-    node_to_index.clear();
+    // Create node-to-index mapping
+    std::unordered_map<node_t*, int> node_to_index;
     for (int i = 0; i < nodes_in_order.size(); ++i) {
         node_to_index[nodes_in_order[i]] = i;
     }
 
-    // Step 4: Write all nodes in the final order to stream
+    // Write all nodes in the final order to stream
     if (include_headers) {
-        out << "BDD Node Table (Post-order + reverse - correct ordering):\n";
+        out << "BDD Node Table (topological ordering):\n";
     }
     out << "Index | Variable | False Child | True Child | Type\n";
     out << "------|----------|-------------|------------|----------\n";
@@ -143,303 +114,8 @@ void write_bdd_nodes_to_stream(teddy::bdd_manager& manager, teddy::bdd_manager::
 
     if (include_headers) {
         out << "\nTotal nodes: " << nodes_in_order.size() << "\n";
-        out << "Note: True post-order + reverse ordering.\n";
+        out << "Note: Topological order reversed for parents-first display.\n";
     }
-}
-
-/**
- * @brief Prints BDD nodes to console (wrapper for write_bdd_nodes_to_stream)
- *
- * Convenience function that prints the BDD node table to standard output
- * with headers and formatting enabled.
- *
- * @param manager Reference to the BDD manager
- * @param diagram The BDD diagram to display
- * @param variable_names Vector of variable names for display
- */
-void print_bdd_nodes(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram,
-                     const std::vector<std::string>& variable_names) {
-    write_bdd_nodes_to_stream(manager, diagram, variable_names, std::cout, true);
-}
-
-/**
- * @brief Writes BDD node table to file (wrapper for write_bdd_nodes_to_stream)
- *
- * Convenience function that writes the BDD node table to a file stream
- * without headers (for clean file output).
- *
- * @param manager Reference to the BDD manager
- * @param diagram The BDD diagram to write
- * @param variable_names Vector of variable names for display
- * @param out Output file stream to write to
- */
-void write_bdd_nodes_to_file(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram,
-                             const std::vector<std::string>& variable_names, std::ostream& out) {
-    write_bdd_nodes_to_stream(manager, diagram, variable_names, out, false);
-}
-
-/**
- * @brief Generates DOT graph representation of a BDD for visualization
- *
- * Creates a DOT format graph that can be rendered using Graphviz tools.
- * Terminal nodes are styled as squares, variable nodes as circles.
- * Edges are styled as dashed lines for false branches and solid lines for true branches.
- *
- * @param manager Reference to the BDD manager
- * @param diagram The BDD diagram to convert to DOT format
- * @param variable_names Vector of variable names for node labeling
- * @param out Output stream to write the DOT representation to
- *
- * @note The function performs two passes: first to assign deterministic node IDs and identify
- *       terminal nodes for styling, second to generate node definitions and edges
- */
-void write_bdd_to_dot(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram,
-                      const std::vector<std::string>& variable_names, std::ostream& out) {
-    using node_t = teddy::bdd_manager::diagram_t::node_t;
-    std::unordered_set<node_t*> visited;
-    std::unordered_map<node_t*, int> node_to_id;
-    int next_node_id = 0;
-
-    out << "digraph DD {\n";
-
-    // First pass: assign deterministic node IDs and identify terminal nodes for styling
-    std::stack<node_t*> stack;
-    stack.push(diagram.unsafe_get_root());
-
-    std::unordered_set<node_t*> terminal_nodes;
-    std::vector<int> terminal_node_ids;
-
-    while (!stack.empty()) {
-        node_t* node = stack.top();
-        stack.pop();
-
-        if (!node || visited.find(node) != visited.end()) {
-            continue;
-        }
-
-        visited.insert(node);
-
-        // Assign deterministic node ID
-        node_to_id[node] = next_node_id++;
-
-        if (node->is_terminal()) {
-            terminal_nodes.insert(node);
-            terminal_node_ids.push_back(node_to_id[node]);
-        } else {
-            stack.push(node->get_son(0));  // false child
-            stack.push(node->get_son(1));  // true child
-        }
-    }
-
-    // Style terminal nodes differently
-    out << "    node [shape = square]";
-    for (int terminal_id : terminal_node_ids) {
-        out << " node" << terminal_id;
-    }
-    out << ";\n";
-    out << "    node [shape = circle];\n\n";
-
-    // Second pass: generate node definitions and edges
-    visited.clear();
-    stack.push(diagram.unsafe_get_root());
-
-    while (!stack.empty()) {
-        node_t* node = stack.top();
-        stack.pop();
-
-        if (!node || visited.find(node) != visited.end()) {
-            continue;
-        }
-
-        visited.insert(node);
-
-        // Generate node definition using deterministic ID
-        int node_id = node_to_id[node];
-
-        if (node->is_terminal()) {
-            out << "    node" << node_id << " [label = \"" << node->get_value()
-                << "\", tooltip = \"" << node->get_value() << "\"];\n";
-        } else {
-            int var_index = node->get_index();
-            std::string var_name = (var_index < variable_names.size())
-                                       ? variable_names[var_index]
-                                       : ("x" + std::to_string(var_index));
-            out << "    node" << node_id << " [label = \"" << var_name << "\", tooltip = \""
-                << var_index << "\"];\n";
-        }
-
-        // Generate edges for non-terminal nodes
-        if (!node->is_terminal()) {
-            node_t* false_child = node->get_son(0);
-            node_t* true_child = node->get_son(1);
-
-            if (false_child) {
-                out << "    node" << node_id << " -> node" << node_to_id[false_child]
-                    << " [style = dashed];\n";
-                stack.push(false_child);
-            }
-
-            if (true_child) {
-                out << "    node" << node_id << " -> node" << node_to_id[true_child]
-                    << " [style = solid];\n";
-                stack.push(true_child);
-            }
-        }
-    }
-
-    out << "\n}";
-}
-
-/// @name Expression Tree Data Structures
-/// @{
-
-/**
- * @brief Forward declarations for expression tree node types
- *
- * These structures form a variant-based abstract syntax tree (AST)
- * for representing logical expressions with AND, OR, XOR, NOT operators
- * and variable references.
- */
-struct my_and;       ///< Binary AND operation
-struct my_or;        ///< Binary OR operation
-struct my_not;       ///< Unary NOT operation
-struct my_xor;       ///< Binary XOR operation
-struct my_variable;  ///< Variable reference
-
-/// @brief Variant type representing any expression node
-using my_expression = std::variant<my_and, my_or, my_not, my_xor, my_variable>;
-
-/// @brief Smart pointer to an expression for memory management
-using my_expression_ptr = std::unique_ptr<my_expression>;
-
-/**
- * @brief Represents a variable reference in the expression tree
- */
-struct my_variable {
-    std::string variable_name;  ///< Name of the variable (e.g., "x0", "input_A")
-};
-
-/**
- * @brief Represents a logical AND operation between two sub-expressions
- */
-struct my_and {
-    my_expression_ptr left;   ///< Left operand
-    my_expression_ptr right;  ///< Right operand
-};
-
-/**
- * @brief Represents a logical OR operation between two sub-expressions
- */
-struct my_or {
-    my_expression_ptr left;   ///< Left operand
-    my_expression_ptr right;  ///< Right operand
-};
-
-/**
- * @brief Represents a logical NOT operation on a single sub-expression
- */
-struct my_not {
-    my_expression_ptr expr;  ///< The expression to negate
-};
-
-/**
- * @brief Represents a logical XOR (exclusive OR) operation between two sub-expressions
- */
-struct my_xor {
-    my_expression_ptr left;   ///< Left operand
-    my_expression_ptr right;  ///< Right operand
-};
-
-/// @}
-
-/**
- * @brief Recursively collects all unique variable names from an expression tree
- *
- * Performs a depth-first traversal of the expression tree and accumulates
- * all variable names found in leaf nodes into the provided set.
- *
- * @param expr The expression tree to traverse
- * @param variables Set to store unique variable names (output parameter)
- */
-void collect_variables(const my_expression& expr, std::unordered_set<std::string>& variables) {
-    std::visit(
-        [&](const auto& variant_expr) {
-            using T = std::decay_t<decltype(variant_expr)>;
-
-            if constexpr (std::is_same_v<T, my_variable>) {
-                variables.insert(variant_expr.variable_name);
-            } else if constexpr (std::is_same_v<T, my_and> || std::is_same_v<T, my_or>
-                                 || std::is_same_v<T, my_xor>) {
-                collect_variables(*variant_expr.left, variables);
-                collect_variables(*variant_expr.right, variables);
-            } else if constexpr (std::is_same_v<T, my_not>) {
-                collect_variables(*variant_expr.expr, variables);
-            }
-        },
-        expr);
-}
-
-/**
- * @brief Recursively writes expression tree as DOT graph for visualization
- *
- * Generates a DOT format graph representing the abstract syntax tree of the expression.
- * Different node types are styled with different colors and shapes:
- * - Variables: light blue ellipses
- * - AND: light green boxes
- * - OR: light coral boxes
- * - NOT: yellow boxes
- * - XOR: light pink boxes
- *
- * @param expr The expression tree node to process
- * @param out Output stream for DOT content
- * @param node_id Reference to current node ID counter (modified during traversal)
- * @param parent_id ID of parent node for edge creation (-1 for root)
- * @param edge_label Label for the edge from parent to current node
- */
-void write_expression_to_dot(const my_expression& expr, std::ostream& out, int& node_id,
-                             int parent_id = -1, const std::string& edge_label = "") {
-    static bool first_call = true;
-
-    std::visit(
-        [&](const auto& variant_expr) {
-            using T = std::decay_t<decltype(variant_expr)>;
-
-            int current_node = node_id++;
-
-            if constexpr (std::is_same_v<T, my_variable>) {
-                out << "    node" << current_node << " [label=\"" << variant_expr.variable_name
-                    << "\", shape=ellipse, style=filled, fillcolor=lightblue];\n";
-            } else if constexpr (std::is_same_v<T, my_and>) {
-                out << "    node" << current_node
-                    << " [label=\"AND\", shape=box, style=filled, fillcolor=lightgreen];\n";
-                write_expression_to_dot(*variant_expr.left, out, node_id, current_node, "L");
-                write_expression_to_dot(*variant_expr.right, out, node_id, current_node, "R");
-            } else if constexpr (std::is_same_v<T, my_or>) {
-                out << "    node" << current_node
-                    << " [label=\"OR\", shape=box, style=filled, fillcolor=lightcoral];\n";
-                write_expression_to_dot(*variant_expr.left, out, node_id, current_node, "L");
-                write_expression_to_dot(*variant_expr.right, out, node_id, current_node, "R");
-            } else if constexpr (std::is_same_v<T, my_not>) {
-                out << "    node" << current_node
-                    << " [label=\"NOT\", shape=box, style=filled, fillcolor=yellow];\n";
-                write_expression_to_dot(*variant_expr.expr, out, node_id, current_node, "");
-            } else if constexpr (std::is_same_v<T, my_xor>) {
-                out << "    node" << current_node
-                    << " [label=\"XOR\", shape=box, style=filled, fillcolor=lightpink];\n";
-                write_expression_to_dot(*variant_expr.left, out, node_id, current_node, "L");
-                write_expression_to_dot(*variant_expr.right, out, node_id, current_node, "R");
-            }
-
-            // Create edge from parent to current node
-            if (parent_id != -1) {
-                out << "    node" << parent_id << " -> node" << current_node;
-                if (!edge_label.empty()) {
-                    out << " [label=\"" << edge_label << "\"]";
-                }
-                out << ";\n";
-            }
-        },
-        expr);
 }
 
 /**
@@ -633,11 +309,11 @@ my_expression_ptr read_expression_from_file(const std::string& filename) {
  * @brief Converts an expression tree to a Binary Decision Diagram (BDD)
  *
  * Performs recursive conversion of the custom expression tree into a BDD using
- * the TeDDy library. Variables are automatically sorted alphabetically for
- * consistent ordering across multiple runs.
+ * the TeDDy library. Uses dag_walker for efficient variable collection and
+ * simple recursion for BDD construction since expressions form a tree structure.
  *
  * The conversion process:
- * 1. Collects all unique variable names from the expression
+ * 1. Uses dag_walker to collect all unique variable names efficiently
  * 2. Creates a sorted variable mapping for consistent BDD ordering
  * 3. Recursively converts each expression node to BDD operations
  *
@@ -658,9 +334,9 @@ teddy::bdd_manager::diagram_t convert_to_bdd(const my_expression& expr, teddy::b
     using bdd_t = teddy::bdd_manager::diagram_t;
     using namespace teddy::ops;
 
-    // First pass: collect all unique variable names
+    // First pass: collect all unique variable names using dag_walker
     std::unordered_set<std::string> variable_names;
-    collect_variables(expr, variable_names);
+    collect_variables_with_dag_walker(expr, variable_names);
 
     // Build variable map with sorted variable names for consistent ordering
     std::vector<std::string> sorted_vars(variable_names.begin(), variable_names.end());
@@ -671,7 +347,7 @@ teddy::bdd_manager::diagram_t convert_to_bdd(const my_expression& expr, teddy::b
         var_map[sorted_vars[i]] = static_cast<int>(i);
     }
 
-    // Helper function for recursive conversion
+    // Helper function for recursive conversion (no memoization needed for tree structure)
     std::function<bdd_t(const my_expression&)> convert_recursive =
         [&](const my_expression& e) -> bdd_t {
         return std::visit(
@@ -829,7 +505,7 @@ int main(int argc, const char* argv[]) {
 
     // Dynamically determine the number of variables needed
     std::unordered_set<std::string> variable_names;
-    collect_variables(*expr, variable_names);
+    collect_variables_with_dag_walker(*expr, variable_names);
 
     // Create sorted variable names for consistent ordering (same as in convert_to_bdd)
     std::vector<std::string> sorted_variable_names(variable_names.begin(), variable_names.end());
@@ -870,19 +546,12 @@ int main(int argc, const char* argv[]) {
     std::filesystem::path bdd_dot_filename = get_output_path(input_file, "_bdd.dot");
     std::filesystem::path bdd_nodes_filename = get_output_path(input_file, "_bdd_nodes.txt");
 
-    // Output expression tree as DOT file
+    // Output expression tree as DOT file using updated function
     std::ofstream expr_dot_file(expr_dot_filename);
     if (expr_dot_file.is_open()) {
-        expr_dot_file << "digraph ExpressionTree {\n";
-        expr_dot_file << "    rankdir=TB;\n";
-        expr_dot_file << "    node [fontname=\"Arial\"];\n";
-        expr_dot_file << "    edge [fontname=\"Arial\"];\n";
-        expr_dot_file << "\n";
+        // Generate complete DOT graph using updated function
+        write_expression_to_dot(*expr, expr_dot_file, "ExpressionTree");
 
-        int node_id = 0;
-        write_expression_to_dot(*expr, expr_dot_file, node_id);
-
-        expr_dot_file << "}\n";
         expr_dot_file.close();
         std::cout << "Expression tree DOT representation saved to '" << expr_dot_filename << "'\n";
         std::cout << "You can visualize it using Graphviz with: dot -Tpng " << expr_dot_filename
@@ -894,7 +563,7 @@ int main(int argc, const char* argv[]) {
     // Print BDD node structure
     std::cout << "BDD Node Structure:\n";
     std::cout << "==================\n";
-    print_bdd_nodes(manager, f, sorted_variable_names);
+    write_bdd_nodes_to_stream(manager, f, sorted_variable_names, std::cout, true);
     std::cout << "\n";
 
     // Output DOT representation to console
@@ -919,7 +588,7 @@ int main(int argc, const char* argv[]) {
     // Output BDD node table to file
     std::ofstream nodes_file(bdd_nodes_filename);
     if (nodes_file.is_open()) {
-        write_bdd_nodes_to_file(manager, f, sorted_variable_names, nodes_file);
+        write_bdd_nodes_to_stream(manager, f, sorted_variable_names, nodes_file, false);
         nodes_file.close();
         std::cout << "BDD node table saved to '" << bdd_nodes_filename << "'\n";
     } else {

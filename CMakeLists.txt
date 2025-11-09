@@ -32,13 +32,23 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(DecisionDiagrams)
 
-# Create executable
-add_executable(bdd_demo main.cpp)
+# Create executable with source files and header dependencies
+add_executable(bdd_demo
+    main.cpp
+    bdd_graph.cpp
+    expression_graph.cpp
+    # Header dependencies for proper rebuild on changes
+    bdd_graph.hpp
+    expression_graph.hpp
+    expression_types.hpp
+    dot_graph_generator.hpp
+    dag_walker.hpp
+)
 
 # Link with TeDDy library
 target_link_libraries(bdd_demo PRIVATE teddy::teddy)
 
-# Set output directory
+# Set output directory for executable
 set_target_properties(bdd_demo PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
