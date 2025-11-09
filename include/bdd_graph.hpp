@@ -57,7 +57,7 @@
  * write_bdd_to_dot(manager, diagram, variable_names, std::cout);
  * @endcode
  */
-void write_bdd_to_dot(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram,
+void write_bdd_to_dot(const teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram,
                       const std::vector<std::string>& variable_names, std::ostream& out,
                       const std::string& graph_name = "DD");
 
