@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
+
 # Local Documentation Generation Script
 # This script mirrors the GitHub Actions workflow for local testing
 

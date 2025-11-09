@@ -42,7 +42,6 @@
 
 #include "bdd_graph.hpp"
 #include "expression_graph.hpp"
-#include <vector>
 
 /**
  * @brief Writes BDD node table to any output stream
