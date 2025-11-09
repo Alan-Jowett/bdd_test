@@ -30,6 +30,84 @@
 #include "dot_graph_generator.hpp"
 
 // ============================================================================
+// Expression Constants and Traits
+// ============================================================================
+
+namespace expression_constants {
+// Operator labels
+inline constexpr const char* AND_LABEL = "AND";
+inline constexpr const char* OR_LABEL = "OR";
+inline constexpr const char* NOT_LABEL = "NOT";
+inline constexpr const char* XOR_LABEL = "XOR";
+
+// Edge labels
+inline constexpr const char* LEFT_EDGE = "L";
+inline constexpr const char* RIGHT_EDGE = "R";
+
+// Node shapes
+inline constexpr const char* VARIABLE_SHAPE = "ellipse";
+inline constexpr const char* OPERATOR_SHAPE = "box";
+
+// Fill colors
+inline constexpr const char* VARIABLE_COLOR = "lightblue";
+inline constexpr const char* AND_COLOR = "lightgreen";
+inline constexpr const char* OR_COLOR = "lightcoral";
+inline constexpr const char* NOT_COLOR = "yellow";
+inline constexpr const char* XOR_COLOR = "lightpink";
+inline constexpr const char* DEFAULT_COLOR = "white";
+
+// Style
+inline constexpr const char* FILLED_STYLE = "filled";
+}  // namespace expression_constants
+
+namespace detail {
+/**
+ * @brief Expression type traits for eliminating code duplication
+ */
+template <typename T>
+struct expression_traits {
+    static constexpr const char* label = "";
+    static constexpr const char* shape = expression_constants::OPERATOR_SHAPE;
+    static constexpr const char* fillcolor = expression_constants::DEFAULT_COLOR;
+};
+
+template <>
+struct expression_traits<my_variable> {
+    static constexpr const char* label = "";  // Will use actual variable name
+    static constexpr const char* shape = expression_constants::VARIABLE_SHAPE;
+    static constexpr const char* fillcolor = expression_constants::VARIABLE_COLOR;
+};
+
+template <>
+struct expression_traits<my_and> {
+    static constexpr const char* label = expression_constants::AND_LABEL;
+    static constexpr const char* shape = expression_constants::OPERATOR_SHAPE;
+    static constexpr const char* fillcolor = expression_constants::AND_COLOR;
+};
+
+template <>
+struct expression_traits<my_or> {
+    static constexpr const char* label = expression_constants::OR_LABEL;
+    static constexpr const char* shape = expression_constants::OPERATOR_SHAPE;
+    static constexpr const char* fillcolor = expression_constants::OR_COLOR;
+};
+
+template <>
+struct expression_traits<my_not> {
+    static constexpr const char* label = expression_constants::NOT_LABEL;
+    static constexpr const char* shape = expression_constants::OPERATOR_SHAPE;
+    static constexpr const char* fillcolor = expression_constants::NOT_COLOR;
+};
+
+template <>
+struct expression_traits<my_xor> {
+    static constexpr const char* label = expression_constants::XOR_LABEL;
+    static constexpr const char* shape = expression_constants::OPERATOR_SHAPE;
+    static constexpr const char* fillcolor = expression_constants::XOR_COLOR;
+};
+}  // namespace detail
+
+// ============================================================================
 // Expression Iterator Class (Implementation Detail)
 // ============================================================================
 
@@ -157,17 +235,12 @@ class expression_iterator {
                 using T = std::decay_t<decltype(variant_expr)>;
 
                 if constexpr (std::is_same_v<T, my_variable>) {
+                    // Variables use their actual name, not the trait label
                     return variant_expr.variable_name;
-                } else if constexpr (std::is_same_v<T, my_and>) {
-                    return "AND";
-                } else if constexpr (std::is_same_v<T, my_or>) {
-                    return "OR";
-                } else if constexpr (std::is_same_v<T, my_not>) {
-                    return "NOT";
-                } else if constexpr (std::is_same_v<T, my_xor>) {
-                    return "XOR";
+                } else {
+                    // Operators use their trait-defined label
+                    return detail::expression_traits<T>::label;
                 }
-                return "";
             },
             *current_expr_);
     }
@@ -177,17 +250,12 @@ class expression_iterator {
      */
     std::string get_shape() const {
         if (!current_expr_)
-            return "ellipse";
+            return expression_constants::VARIABLE_SHAPE;
 
         return std::visit(
             [](const auto& variant_expr) -> std::string {
                 using T = std::decay_t<decltype(variant_expr)>;
-
-                if constexpr (std::is_same_v<T, my_variable>) {
-                    return "ellipse";
-                } else {
-                    return "box";
-                }
+                return detail::expression_traits<T>::shape;
             },
             *current_expr_);
     }
@@ -197,24 +265,12 @@ class expression_iterator {
      */
     std::string get_fillcolor() const {
         if (!current_expr_)
-            return "white";
+            return expression_constants::DEFAULT_COLOR;
 
         return std::visit(
             [](const auto& variant_expr) -> std::string {
                 using T = std::decay_t<decltype(variant_expr)>;
-
-                if constexpr (std::is_same_v<T, my_variable>) {
-                    return "lightblue";
-                } else if constexpr (std::is_same_v<T, my_and>) {
-                    return "lightgreen";
-                } else if constexpr (std::is_same_v<T, my_or>) {
-                    return "lightcoral";
-                } else if constexpr (std::is_same_v<T, my_not>) {
-                    return "yellow";
-                } else if constexpr (std::is_same_v<T, my_xor>) {
-                    return "lightpink";
-                }
-                return "white";
+                return detail::expression_traits<T>::fillcolor;
             },
             *current_expr_);
     }
@@ -223,7 +279,7 @@ class expression_iterator {
      * @brief Gets style for DOT display
      */
     std::string get_style() const {
-        return "filled";
+        return expression_constants::FILLED_STYLE;
     }
 
     /**
@@ -272,7 +328,8 @@ class expression_iterator {
 
                 if constexpr (std::is_same_v<T, my_and> || std::is_same_v<T, my_or>
                               || std::is_same_v<T, my_xor>) {
-                    return child_index == 0 ? "L" : "R";
+                    return child_index == 0 ? expression_constants::LEFT_EDGE
+                                            : expression_constants::RIGHT_EDGE;
                 } else {
                     return "";
                 }
@@ -314,14 +371,20 @@ void collect_variables_with_dag_walker(const my_expression& expr,
     dag_walker::walk_dag(
         root_iter, [&](const dag_walker::NodeInfo<expression_iterator>& node_info) {
             if (!node_info.is_revisit) {
-                // Check if this is a variable node by examining its label and children
-                std::string label = node_info.node.get_label();
-                std::vector<expression_iterator> children = node_info.node.get_children();
+                // Type-safe variable detection using direct variant access
+                const my_expression* current_expr =
+                    reinterpret_cast<const my_expression*>(node_info.node.get_node_address());
 
-                // Variables have no children and their label is the variable name (not an operator)
-                if (children.empty() && !label.empty() && label != "AND" && label != "OR"
-                    && label != "XOR" && label != "NOT") {
-                    variables.insert(label);
+                if (current_expr) {
+                    std::visit(
+                        [&](const auto& variant_expr) {
+                            using T = std::decay_t<decltype(variant_expr)>;
+                            if constexpr (std::is_same_v<T, my_variable>) {
+                                variables.insert(variant_expr.variable_name);
+                            }
+                            // Operators are ignored - only variables are collected
+                        },
+                        *current_expr);
                 }
             }
         });
