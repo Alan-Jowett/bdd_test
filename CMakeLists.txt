@@ -81,6 +81,12 @@ add_bdd_test(test_xor_chain "xor_chain.txt")
 add_bdd_test(test_underscore_vars "underscore_vars.txt")
 add_bdd_test(test_single_variable_unusual_name "single_variable_unusual_name.txt")
 
+# Regression tests for PR #22 - robust expression parser fixes
+add_bdd_test(test_boundary_detection_regression "edge_cases/boundary_detection_regression.txt")
+add_bdd_test(test_operator_keywords_in_vars "edge_cases/operator_keywords_in_vars.txt")
+add_bdd_test(test_unicode_chars_regression "edge_cases/unicode_chars_regression.txt")
+add_bdd_test(test_complex_boundary_regression "edge_cases/complex_boundary_regression.txt")
+
 # Command line help tests
 add_cmdline_test(test_help_long
     ARGS "--help"
@@ -154,5 +160,13 @@ add_cmdline_test(test_empty_expression_file
     ARGS "${CMAKE_SOURCE_DIR}/test_expressions/edge_cases/comments_only.txt"
     SHOULD_FAIL
     ERROR_CONTAINS "Error reading expression file: No expression found in file"
+    EXPECTED_EXIT_CODE 1
+)
+
+# Regression test for readable error messages (PR #22)
+add_cmdline_test(test_error_message_regression
+    ARGS "${CMAKE_SOURCE_DIR}/test_expressions/edge_cases/missing_paren_regression.txt"
+    SHOULD_FAIL
+    ERROR_CONTAINS "Expected ')' but got end of input"
     EXPECTED_EXIT_CODE 1
 )

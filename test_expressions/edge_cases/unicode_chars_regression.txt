@@ -1,0 +1,5 @@
+# Regression test for Unicode and extended ASCII character handling
+# Tests characters that could cause std::isspace undefined behavior
+# Variables with extended ASCII characters and Unicode-like patterns
+
+var_with_éxtended_chars AND ñoñ_ascii_123 OR café_münü XOR résumé_naïve

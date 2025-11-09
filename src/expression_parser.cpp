@@ -38,7 +38,7 @@ class Tokenizer {
     size_t pos = 0;
 
     void skip_whitespace() {
-        while (pos < text.length() && std::isspace(text[pos])) {
+        while (pos < text.length() && std::isspace(static_cast<unsigned char>(text[pos]))) {
             pos++;
         }
     }
@@ -61,6 +61,29 @@ class Tokenizer {
         size_t position;
     };
 
+    static std::string token_type_to_string(TokenType type) {
+        switch (type) {
+            case TOKEN_VARIABLE:
+                return "variable";
+            case TOKEN_AND:
+                return "AND";
+            case TOKEN_OR:
+                return "OR";
+            case TOKEN_XOR:
+                return "XOR";
+            case TOKEN_NOT:
+                return "NOT";
+            case TOKEN_LPAREN:
+                return "'('";
+            case TOKEN_RPAREN:
+                return "')'";
+            case TOKEN_EOF:
+                return "end of input";
+            default:
+                return "unknown token";
+        }
+    }
+
     explicit Tokenizer(const std::string& input) : text(input) {}
 
     Token next_token() {
@@ -73,22 +96,40 @@ class Tokenizer {
         size_t start_pos = pos;
 
         // Check for operators and parentheses
-        if (pos + 3 <= text.length() && text.substr(pos, 3) == "AND") {
+        auto is_boundary_char = [&](size_t idx) {
+            if (idx >= text.length()) {
+                return true;
+            }
+            char ch = text[idx];
+            unsigned char c = static_cast<unsigned char>(ch);
+            return std::isspace(c) || ch == '(' || ch == ')';
+        };
+        auto has_boundary_before = [&](size_t idx) {
+            if (idx == 0) {
+                return true;
+            }
+            char ch = text[idx - 1];
+            unsigned char c = static_cast<unsigned char>(ch);
+            return std::isspace(c) || ch == '(' || ch == ')';
+        };
+
+        if (pos + 3 <= text.length() && text.compare(pos, 3, "AND") == 0 && has_boundary_before(pos)
+            && is_boundary_char(pos + 3)) {
             pos += 3;
             return {TOKEN_AND, "AND", start_pos};
         }
-        if (pos + 2 <= text.length() && text.substr(pos, 2) == "OR") {
-            // Make sure it's not XOR
-            if (pos == 0 || text[pos - 1] != 'X') {
-                pos += 2;
-                return {TOKEN_OR, "OR", start_pos};
-            }
+        if (pos + 2 <= text.length() && text.compare(pos, 2, "OR") == 0 && has_boundary_before(pos)
+            && is_boundary_char(pos + 2)) {
+            pos += 2;
+            return {TOKEN_OR, "OR", start_pos};
         }
-        if (pos + 3 <= text.length() && text.substr(pos, 3) == "XOR") {
+        if (pos + 3 <= text.length() && text.compare(pos, 3, "XOR") == 0 && has_boundary_before(pos)
+            && is_boundary_char(pos + 3)) {
             pos += 3;
             return {TOKEN_XOR, "XOR", start_pos};
         }
-        if (pos + 3 <= text.length() && text.substr(pos, 3) == "NOT") {
+        if (pos + 3 <= text.length() && text.compare(pos, 3, "NOT") == 0 && has_boundary_before(pos)
+            && is_boundary_char(pos + 3)) {
             pos += 3;
             return {TOKEN_NOT, "NOT", start_pos};
         }
@@ -102,21 +143,11 @@ class Tokenizer {
         }
 
         // Parse variable name (any non-whitespace that's not an operator or parentheses)
-        if (!std::isspace(text[pos]) && text[pos] != '(' && text[pos] != ')') {
+        if (!std::isspace(static_cast<unsigned char>(text[pos])) && text[pos] != '('
+            && text[pos] != ')') {
             std::string var_name;
-            while (pos < text.length() && !std::isspace(text[pos]) && text[pos] != '('
-                   && text[pos] != ')') {
-                // Check if we're about to hit an operator
-                if (pos + 3 <= text.length()
-                    && (text.substr(pos, 3) == "AND" || text.substr(pos, 3) == "XOR"
-                        || text.substr(pos, 3) == "NOT")) {
-                    break;
-                }
-                if (pos + 2 <= text.length() && text.substr(pos, 2) == "OR"
-                    && (pos == 0 || text[pos - 1] != 'X')) {  // Make sure it's not part of XOR
-                    break;
-                }
-
+            while (pos < text.length() && !std::isspace(static_cast<unsigned char>(text[pos]))
+                   && text[pos] != '(' && text[pos] != ')') {
                 var_name += text[pos];
                 pos++;
             }
@@ -154,19 +185,39 @@ class Parser {
     Tokenizer tokenizer;
     Tokenizer::Token current_token;
 
+    /**
+     * @brief Advances to the next token in the input stream
+     *
+     * Updates current_token by calling the tokenizer's next_token() method.
+     */
     void advance() {
         current_token = tokenizer.next_token();
     }
 
+    /**
+     * @brief Consumes current token if it matches expected type, otherwise throws error
+     *
+     * @param expected The token type that is expected
+     * @throws std::runtime_error If current token doesn't match expected type
+     */
     void expect(Tokenizer::TokenType expected) {
         if (current_token.type != expected) {
-            throw std::runtime_error("Expected token type " + std::to_string(expected) + " but got "
-                                     + std::to_string(current_token.type) + " at position "
-                                     + std::to_string(current_token.position));
+            throw std::runtime_error("Expected " + Tokenizer::token_type_to_string(expected)
+                                     + " but got "
+                                     + Tokenizer::token_type_to_string(current_token.type)
+                                     + " at position " + std::to_string(current_token.position));
         }
         advance();
     }
 
+    /**
+     * @brief Parses a primary expression (variable or parenthesized expression)
+     *
+     * Primary expressions are the highest precedence level in the grammar.
+     *
+     * @return Pointer to the parsed expression
+     * @throws std::runtime_error If neither a variable nor '(' is found
+     */
     my_expression_ptr parse_primary() {
         if (current_token.type == Tokenizer::TOKEN_VARIABLE) {
             std::string var_name = current_token.value;
@@ -183,6 +234,14 @@ class Parser {
         }
     }
 
+    /**
+     * @brief Parses NOT expressions (unary, right-associative)
+     *
+     * Handles unary NOT operations with proper right-associative parsing.
+     * Falls through to parse_primary() for non-NOT expressions.
+     *
+     * @return Pointer to the parsed NOT expression or primary expression
+     */
     my_expression_ptr parse_not_expr() {
         if (current_token.type == Tokenizer::TOKEN_NOT) {
             advance();                        // consume 'NOT'

@@ -1,0 +1,4 @@
+# Regression test for readable error messages - missing closing parenthesis
+# This should trigger "Expected ')' but got end of input" message
+
+(var1 AND var2

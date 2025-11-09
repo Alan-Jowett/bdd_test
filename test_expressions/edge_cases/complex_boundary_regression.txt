@@ -1,0 +1,4 @@
+# Regression test for boundary detection with underscores and numbers
+# Tests complex variable names that include operator substrings with various separators
+
+foo_123_AND_456 OR bar_AND_baz_789 XOR test_OR_case_NOT_working AND final_XOR_test
