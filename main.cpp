@@ -68,7 +68,7 @@ void write_bdd_nodes_to_stream(teddy::bdd_manager& manager, teddy::bdd_manager::
     // Get nodes in topological order using dag_walker
     std::vector<node_t*> nodes_in_order = collect_bdd_nodes_topological(diagram, variable_names);
 
-    // Reverse to match original ordering (parents before children, terminals at end)
+    // Reverse to achieve parents-before-children ordering with terminals at end
     std::reverse(nodes_in_order.begin(), nodes_in_order.end());
 
     // Create node-to-index mapping
@@ -77,9 +77,9 @@ void write_bdd_nodes_to_stream(teddy::bdd_manager& manager, teddy::bdd_manager::
         node_to_index[nodes_in_order[i]] = i;
     }
 
-    // Step 4: Write all nodes in the final order to stream
+    // Write all nodes in the final order to stream
     if (include_headers) {
-        out << "BDD Node Table (Post-order + reverse - correct ordering):\n";
+        out << "BDD Node Table (topological ordering):\n";
     }
     out << "Index | Variable | False Child | True Child | Type\n";
     out << "------|----------|-------------|------------|----------\n";
@@ -114,7 +114,7 @@ void write_bdd_nodes_to_stream(teddy::bdd_manager& manager, teddy::bdd_manager::
 
     if (include_headers) {
         out << "\nTotal nodes: " << nodes_in_order.size() << "\n";
-        out << "Note: True post-order + reverse ordering.\n";
+        out << "Note: Topological order reversed for parents-first display.\n";
     }
 }
 
