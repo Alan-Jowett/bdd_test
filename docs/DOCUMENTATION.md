@@ -27,20 +27,20 @@ The project includes convenient scripts that mirror the GitHub Actions workflow:
 **PowerShell (Windows):**
 ```powershell
 # Generate documentation
-.\generate_docs.ps1
+.\scripts\generate_docs.ps1
 
 # Generate and automatically open
-.\generate_docs.ps1 -Open
+.\scripts\generate_docs.ps1 -Open
 ```
 
 **Bash (Linux/macOS):**
 ```bash
 # Generate documentation
-./generate_docs.sh
+./scripts/generate_docs.sh
 
 # Make sure script is executable first
-chmod +x generate_docs.sh
-./generate_docs.sh
+chmod +x scripts/generate_docs.sh
+./scripts/generate_docs.sh
 ```
 
 These scripts will:

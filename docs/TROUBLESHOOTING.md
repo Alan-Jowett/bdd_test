@@ -69,7 +69,7 @@
 
 **PNG files not generated**
 - **Problem**: DOT files exist but PNG files are missing
-- **Solution**: Use the batch script `.\generate_all_visualizations.ps1`
+- **Solution**: Use the batch script `.\scripts\generate_all_visualizations.ps1`
 - **Manual**: Run `dot -Tpng input.dot -o output.png`
 
 ### Performance Issues
