@@ -1,0 +1,4 @@
+# Regression test for variables with operator keywords at different positions
+# Tests beginning, middle, and end positions of operator keywords in variable names
+
+AND_at_start AND OR_in_middle AND at_end_NOT AND NOT_multiple_AND_keywords

@@ -1,0 +1,21 @@
+digraph DD {
+
+    node [shape = square] node1 node5;
+    node [shape = circle];
+
+    node0 [label = "AND_at_start", tooltip = "0"];
+    node1 [label = "0", tooltip = "0"];
+    node2 [label = "NOT_multiple_AND_keywords", tooltip = "1"];
+    node3 [label = "OR_in_middle", tooltip = "2"];
+    node4 [label = "at_end_NOT", tooltip = "3"];
+    node5 [label = "1", tooltip = "1"];
+
+    node0 -> node1 [style = dashed];
+    node0 -> node2 [style = solid];
+    node2 -> node1 [style = dashed];
+    node2 -> node3 [style = solid];
+    node3 -> node1 [style = dashed];
+    node3 -> node4 [style = solid];
+    node4 -> node1 [style = dashed];
+    node4 -> node5 [style = solid];
+}

@@ -33,12 +33,18 @@ set(TEST_EXPRESSION_FILE "${TEST_BUILD_DIR}/${EXPRESSION_FILE}")
 
 # Get base name for output files
 get_filename_component(BASE_NAME "${EXPRESSION_FILE}" NAME_WE)
+get_filename_component(EXPRESSION_FILE_DIR "${EXPRESSION_FILE}" DIRECTORY)
+if(EXPRESSION_FILE_DIR)
+    set(OUTPUT_DIR "${TEST_BUILD_DIR}/${EXPRESSION_FILE_DIR}")
+else()
+    set(OUTPUT_DIR "${TEST_BUILD_DIR}")
+endif()
 set(EXPECTED_NODES_FILE "${TEST_EXPRESSIONS_DIR}/default_ordering/${BASE_NAME}_bdd_nodes.txt")
-set(GENERATED_NODES_FILE "${TEST_BUILD_DIR}/${BASE_NAME}_bdd_nodes.txt")
+set(GENERATED_NODES_FILE "${OUTPUT_DIR}/${BASE_NAME}_bdd_nodes.txt")
 set(EXPECTED_BDD_DOT_FILE "${TEST_EXPRESSIONS_DIR}/default_ordering/${BASE_NAME}_bdd.dot")
-set(GENERATED_BDD_DOT_FILE "${TEST_BUILD_DIR}/${BASE_NAME}_bdd.dot")
+set(GENERATED_BDD_DOT_FILE "${OUTPUT_DIR}/${BASE_NAME}_bdd.dot")
 set(EXPECTED_TREE_DOT_FILE "${TEST_EXPRESSIONS_DIR}/default_ordering/${BASE_NAME}_expression_tree.dot")
-set(GENERATED_TREE_DOT_FILE "${TEST_BUILD_DIR}/${BASE_NAME}_expression_tree.dot")
+set(GENERATED_TREE_DOT_FILE "${OUTPUT_DIR}/${BASE_NAME}_expression_tree.dot")
 
 message(STATUS "Running test: ${TEST_NAME}")
 message(STATUS "Expression file: ${EXPRESSION_FILE}")
@@ -65,8 +71,12 @@ if(NOT EXISTS "${EXPECTED_TREE_DOT_FILE}")
     message(FATAL_ERROR "Expected expression tree DOT file not found: ${EXPECTED_TREE_DOT_FILE}")
 endif()
 
-# Copy expression file to test directory
-file(COPY "${SOURCE_EXPRESSION_FILE}" DESTINATION "${TEST_BUILD_DIR}")
+# Copy expression file to test directory, preserving directory structure
+get_filename_component(EXPRESSION_FILE_DIR "${EXPRESSION_FILE}" DIRECTORY)
+if(EXPRESSION_FILE_DIR)
+    file(MAKE_DIRECTORY "${TEST_BUILD_DIR}/${EXPRESSION_FILE_DIR}")
+endif()
+file(COPY "${SOURCE_EXPRESSION_FILE}" DESTINATION "${TEST_BUILD_DIR}/${EXPRESSION_FILE_DIR}")
 message(STATUS "Copied expression file to test directory")
 
 # Run the BDD demo executable
