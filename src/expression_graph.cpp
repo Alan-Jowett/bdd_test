@@ -35,29 +35,59 @@
 
 namespace expression_constants {
 // Operator labels (consteval for compile-time evaluation)
-inline consteval const char* and_label() { return "AND"; }
-inline consteval const char* or_label() { return "OR"; }
-inline consteval const char* not_label() { return "NOT"; }
-inline consteval const char* xor_label() { return "XOR"; }
+inline consteval const char* and_label() {
+    return "AND";
+}
+inline consteval const char* or_label() {
+    return "OR";
+}
+inline consteval const char* not_label() {
+    return "NOT";
+}
+inline consteval const char* xor_label() {
+    return "XOR";
+}
 
 // Edge labels (consteval for compile-time evaluation)
-inline consteval const char* left_edge() { return "L"; }
-inline consteval const char* right_edge() { return "R"; }
+inline consteval const char* left_edge() {
+    return "L";
+}
+inline consteval const char* right_edge() {
+    return "R";
+}
 
 // Node shapes (consteval for compile-time evaluation)
-inline consteval const char* variable_shape() { return "ellipse"; }
-inline consteval const char* operator_shape() { return "box"; }
+inline consteval const char* variable_shape() {
+    return "ellipse";
+}
+inline consteval const char* operator_shape() {
+    return "box";
+}
 
 // Fill colors (consteval for compile-time evaluation)
-inline consteval const char* variable_color() { return "lightblue"; }
-inline consteval const char* and_color() { return "lightgreen"; }
-inline consteval const char* or_color() { return "lightcoral"; }
-inline consteval const char* not_color() { return "yellow"; }
-inline consteval const char* xor_color() { return "lightpink"; }
-inline consteval const char* default_color() { return "white"; }
+inline consteval const char* variable_color() {
+    return "lightblue";
+}
+inline consteval const char* and_color() {
+    return "lightgreen";
+}
+inline consteval const char* or_color() {
+    return "lightcoral";
+}
+inline consteval const char* not_color() {
+    return "yellow";
+}
+inline consteval const char* xor_color() {
+    return "lightpink";
+}
+inline consteval const char* default_color() {
+    return "white";
+}
 
 // Style (consteval for compile-time evaluation)
-inline consteval const char* filled_style() { return "filled"; }
+inline consteval const char* filled_style() {
+    return "filled";
+}
 
 // Legacy constants for backward compatibility
 inline constexpr const char* AND_LABEL = and_label();

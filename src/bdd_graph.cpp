@@ -19,8 +19,8 @@
 #include <algorithm>
 #include <format>
 #include <functional>
-#include <ranges>
 #include <iostream>
+#include <ranges>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -355,7 +355,7 @@ std::vector<teddy::bdd_manager::diagram_t::node_t*> collect_bdd_nodes_topologica
     result.reserve(nodes_in_order.size());
 
     std::ranges::transform(nodes_in_order, std::back_inserter(result),
-                   [](const auto& node_iter) { return node_iter.get_node(); });
+                           [](const auto& node_iter) { return node_iter.get_node(); });
 
     return result;
 }

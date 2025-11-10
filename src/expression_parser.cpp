@@ -4,8 +4,8 @@
 #include "expression_parser.hpp"
 
 #include <cctype>
-#include <fstream>
 #include <format>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -51,16 +51,7 @@ class Tokenizer {
     }
 
    public:
-    enum class TokenType {
-        VARIABLE,
-        AND,
-        OR,
-        XOR,
-        NOT,
-        LPAREN,
-        RPAREN,
-        EOF_TOKEN
-    };
+    enum class TokenType { VARIABLE, AND, OR, XOR, NOT, LPAREN, RPAREN, EOF_TOKEN };
 
     struct Token {
         TokenType type;
@@ -187,7 +178,8 @@ class Tokenizer {
             }
         }
 
-        throw std::runtime_error(std::format("Unexpected character at position {}: '{}'", pos, text[pos]));
+        throw std::runtime_error(
+            std::format("Unexpected character at position {}: '{}'", pos, text[pos]));
     }
 
     /**
@@ -236,10 +228,9 @@ class Parser {
      */
     void expect(Tokenizer::TokenType expected) {
         if (current_token.type != expected) {
-            throw std::runtime_error(std::format("Expected {} but got {} at position {}", 
-                                     Tokenizer::token_type_to_string(expected),
-                                     Tokenizer::token_type_to_string(current_token.type),
-                                     current_token.position));
+            throw std::runtime_error(std::format(
+                "Expected {} but got {} at position {}", Tokenizer::token_type_to_string(expected),
+                Tokenizer::token_type_to_string(current_token.type), current_token.position));
         }
         advance();
     }
@@ -263,7 +254,8 @@ class Parser {
             expect(Tokenizer::TokenType::RPAREN);
             return expr;
         } else {
-            throw std::runtime_error(std::format("Expected variable or '(' at position {}", current_token.position));
+            throw std::runtime_error(
+                std::format("Expected variable or '(' at position {}", current_token.position));
         }
     }
 
@@ -374,7 +366,8 @@ class Parser {
     my_expression_ptr parse() {
         auto expr = parse_expression();
         if (current_token.type != Tokenizer::TokenType::EOF_TOKEN) {
-            throw std::runtime_error(std::format("Unexpected token after expression at position {}", current_token.position));
+            throw std::runtime_error(std::format("Unexpected token after expression at position {}",
+                                                 current_token.position));
         }
         return expr;
     }
