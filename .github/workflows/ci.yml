@@ -327,11 +327,11 @@ jobs:
 
             # Get base filename for checking generated files
             base_name=$(basename "$expr_file" .txt)
-            
+
             # Check if BDD DOT file was created and is valid
             bdd_dot_file="${base_name}_bdd.dot"
             tree_dot_file="${base_name}_expression_tree.dot"
-            
+
             if [ -f "$bdd_dot_file" ]; then
               dot -Tpng "$bdd_dot_file" -o /tmp/test_bdd.png || {
                 echo "❌ Invalid BDD DOT file: $bdd_dot_file"
@@ -341,7 +341,7 @@ jobs:
             else
               echo "⚠️  No BDD DOT file generated for $expr_file"
             fi
-            
+
             if [ -f "$tree_dot_file" ]; then
               dot -Tpng "$tree_dot_file" -o /tmp/test_tree.png || {
                 echo "❌ Invalid expression tree DOT file: $tree_dot_file"

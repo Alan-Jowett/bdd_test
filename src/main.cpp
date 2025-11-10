@@ -138,7 +138,7 @@ void write_bdd_nodes_to_stream(const teddy::bdd_manager& manager,
  * @param suffix String to append to the base filename
  * @return New filesystem path with the suffix added
  *
- * Example: input_filepath="test/expr.txt", suffix="_bdd" → "test/expr_bdd"
+ * Example: input_filepath="test/expr.txt", suffix="_bdd" -> "test/expr_bdd"
  */
 std::filesystem::path get_output_path(const std::filesystem::path& input_filepath,
                                       const std::string& suffix) {
@@ -166,11 +166,11 @@ std::filesystem::path get_output_path(const std::filesystem::path& input_filepat
  * @throws std::runtime_error If a variable reference is not found during conversion
  *
  * Operator mappings:
- * - AND → BDD AND operation
- * - OR → BDD OR operation
- * - XOR → BDD XOR operation
- * - NOT → XOR with constant 1
- * - Variable → BDD variable node
+ * - AND -> BDD AND operation
+ * - OR -> BDD OR operation
+ * - XOR -> BDD XOR operation
+ * - NOT -> XOR with constant 1
+ * - Variable -> BDD variable node
  */
 teddy::bdd_manager::diagram_t convert_to_bdd(const my_expression& expr, teddy::bdd_manager& mgr) {
     using bdd_t = teddy::bdd_manager::diagram_t;

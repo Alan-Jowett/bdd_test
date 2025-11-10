@@ -74,29 +74,29 @@ $ProjectRoot = Split-Path -Parent $ScriptDir
 Push-Location $ProjectRoot
 
 try {
-    Write-ColorOutput "🔍 Checking clang-format availability..." $Blue
+    Write-ColorOutput "[INFO] Checking clang-format availability..." $Blue
 
     # Check if clang-format is available
     $clangFormat = $null
     try {
         $clangFormat = Get-Command clang-format -ErrorAction Stop
-        Write-VerboseOutput "✓ Found clang-format at: $($clangFormat.Source)" $Green
+        Write-VerboseOutput "[OK] Found clang-format at: $($clangFormat.Source)" $Green
 
         # Check clang-format version
         $versionOutput = & clang-format --version 2>$null
         if ($versionOutput) {
             $version = ($versionOutput -split " ")[2]
-            Write-VerboseOutput "✓ clang-format version: $version" $Green
+            Write-VerboseOutput "[OK] clang-format version: $version" $Green
         }
     } catch {
-        Write-ColorOutput "❌ Error: clang-format not found in PATH" $Red
+        Write-ColorOutput "[ERROR] Error: clang-format not found in PATH" $Red
         Write-ColorOutput "Please install clang-format or add it to your PATH" $Yellow
         Write-ColorOutput "On Windows: Install Visual Studio with C++ tools or LLVM" $Yellow
         exit 1
     }
 
     # Find source files to check
-    Write-ColorOutput "📁 Finding C++ source files..." $Blue
+    Write-ColorOutput "[INFO] Finding C++ source files..." $Blue
     $sourceFiles = @()
 
     if ($Staged) {
@@ -128,14 +128,14 @@ try {
 
     if ($sourceFiles.Count -eq 0) {
         if ($Staged) {
-            Write-ColorOutput "ℹ️  No staged C++ files found to check" $Yellow
+            Write-ColorOutput "[INFO] No staged C++ files found to check" $Yellow
         } else {
-            Write-ColorOutput "⚠️  No C++ source files found" $Yellow
+            Write-ColorOutput "[WARN] No C++ source files found" $Yellow
         }
         exit 0
     }
 
-    Write-ColorOutput "📋 Found $($sourceFiles.Count) source files to check" $Blue
+    Write-ColorOutput "[INFO] Found $($sourceFiles.Count) source files to check" $Blue
 
     if ($Verbose) {
         foreach ($file in $sourceFiles) {
@@ -148,7 +148,7 @@ try {
     $filesWithIssues = @()
     $changeCount = 0
 
-    Write-ColorOutput "🔧 Checking formatting..." $Blue
+    Write-ColorOutput "[INFO] Checking formatting..." $Blue
 
     foreach ($file in $sourceFiles) {
         $relativePath = Resolve-Path -Relative $file.FullName
@@ -158,15 +158,20 @@ try {
             Write-VerboseOutput "  Formatting: $relativePath" $Blue
             & clang-format -i $file.FullName
             if ($LASTEXITCODE -eq 0) {
-                Write-VerboseOutput "  ✓ Formatted: $relativePath" $Green
+                Write-VerboseOutput "  [OK] Formatted: $relativePath" $Green
             } else {
-                Write-ColorOutput "  ❌ Failed to format: $relativePath" $Red
+                Write-ColorOutput "  [FAIL] Failed to format: $relativePath" $Red
                 $issuesFound = $true
             }
         } else {
             # Check formatting
-            $formatted = & clang-format $file.FullName 2>$null
+            $formatted = (& clang-format $file.FullName 2>$null) -join "`n"
             $original = Get-Content $file.FullName -Raw
+            # Normalize line endings and trailing whitespace for comparison
+            $formatted = $formatted -replace "`r`n", "`n"
+            $original = $original -replace "`r`n", "`n"
+            $formatted = $formatted.TrimEnd()
+            $original = $original.TrimEnd()
 
             if ($formatted -ne $original) {
                 $issuesFound = $true
@@ -174,7 +179,7 @@ try {
                 $changeCount++
 
                 if ($WhatIf) {
-                    Write-ColorOutput "❌ Would change: $relativePath" $Yellow
+                    Write-ColorOutput "[FAIL] Would change: $relativePath" $Yellow
                     if ($Verbose) {
                         # Show diff
                         $tempFile = New-TemporaryFile
@@ -182,13 +187,18 @@ try {
                         Write-ColorOutput "--- Expected changes for $relativePath ---" $Yellow
                         try {
                             $diff = Compare-Object (Get-Content $file.FullName) (Get-Content $tempFile.FullName) -IncludeEqual | Where-Object { $_.SideIndicator -ne "==" }
-                            foreach ($line in $diff[0..10]) { # Show first 10 diff lines
-                                $indicator = if ($line.SideIndicator -eq "<=") { "-" } else { "+" }
-                                $color = if ($line.SideIndicator -eq "<=") { $Red } else { $Green }
-                                Write-ColorOutput "$indicator $($line.InputObject)" $color
-                            }
-                            if ($diff.Count -gt 10) {
-                                Write-ColorOutput "... and $($diff.Count - 10) more changes" $Yellow
+                            if ($diff -and $diff.Count -gt 0) {
+                                $showLines = if ($diff.Count -gt 10) { $diff[0..9] } else { $diff }
+                                foreach ($line in $showLines) {
+                                    $indicator = if ($line.SideIndicator -eq "<=") { "-" } else { "+" }
+                                    $color = if ($line.SideIndicator -eq "<=") { $Red } else { $Green }
+                                    Write-ColorOutput "$indicator $($line.InputObject)" $color
+                                }
+                                if ($diff.Count -gt 10) {
+                                    Write-ColorOutput "... ($($diff.Count - 10) more lines)" $Yellow
+                                }
+                            } else {
+                                Write-ColorOutput "No differences found (this might be a line ending issue)" $Yellow
                             }
                         } finally {
                             Remove-Item $tempFile.FullName -Force -ErrorAction SilentlyContinue
@@ -196,26 +206,26 @@ try {
                         Write-ColorOutput "--- End changes for $relativePath ---" $Yellow
                     }
                 } else {
-                    Write-ColorOutput "❌ $relativePath" $Red
+                    Write-ColorOutput "[FAIL] $relativePath" $Red
                 }
             } else {
-                Write-VerboseOutput "✓ $relativePath" $Green
+                Write-VerboseOutput "[OK] $relativePath" $Green
             }
         }
     }
 
     # Report results
     if ($Fix -and -not $WhatIf) {
-        Write-ColorOutput "✅ Formatting complete!" $Green
+        Write-ColorOutput "[SUCCESS] Formatting complete!" $Green
     } elseif ($WhatIf) {
         if ($changeCount -gt 0) {
-            Write-ColorOutput "⚠️  $changeCount files would be changed by formatting" $Yellow
+            Write-ColorOutput "[WARN] $changeCount files would be changed by formatting" $Yellow
         } else {
             Write-ColorOutput "All files are properly formatted!" $Green
         }
     } else {
         if ($issuesFound) {
-            Write-ColorOutput "❌ Formatting issues found!" $Red
+            Write-ColorOutput "[ERROR] Formatting issues found!" $Red
 
             if ($filesWithIssues.Count -gt 0) {
                 Write-ColorOutput "`nFiles with formatting issues:" $Red
@@ -224,14 +234,14 @@ try {
                 }
             }
 
-            Write-ColorOutput "`n💡 To fix these issues automatically, run:" $Yellow
+            Write-ColorOutput "`n[TIP] To fix these issues automatically, run:" $Yellow
             Write-ColorOutput "   .\scripts\check-format.ps1 -Fix" $Yellow
-            Write-ColorOutput "`n💡 Or run clang-format manually:" $Yellow
+            Write-ColorOutput "`n[TIP] Or run clang-format manually:" $Yellow
             Write-ColorOutput "   clang-format -i filename" $Yellow
 
             exit 1
         } else {
-            Write-ColorOutput "✅ All files are properly formatted!" $Green
+            Write-ColorOutput "[SUCCESS] All files are properly formatted!" $Green
         }
     }
 
