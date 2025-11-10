@@ -53,7 +53,7 @@ Patches are automatically applied during CMake configuration using:
 
 ### Creating New Patches
 To create additional patches for dependencies:
-1. Make changes to the fetched source code in `build/_deps/decisiondiagrams-src/`
+1. Make changes to the fetched source code in `<build-directory>/_deps/decisiondiagrams-src/`
 2. Use `git add` and `git commit` to commit changes
 3. Use `git format-patch -1 HEAD` to create a .patch file
 4. Rename the patch with appropriate sequence number (e.g., `0002-Description.patch`)
