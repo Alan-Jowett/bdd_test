@@ -39,11 +39,20 @@ if(EXPRESSION_FILE_DIR)
 else()
     set(OUTPUT_DIR "${TEST_BUILD_DIR}")
 endif()
-set(EXPECTED_NODES_FILE "${TEST_EXPRESSIONS_DIR}/default_ordering/${BASE_NAME}_bdd_nodes.txt")
+
+# Determine which reference files to use based on test type
+if(DEFINED FORCE_REORDER AND FORCE_REORDER)
+    set(REFERENCE_DIR "reordered")
+    message(STATUS "Using reordered reference files for force-reorder test")
+else()
+    set(REFERENCE_DIR "default_ordering")
+endif()
+
+set(EXPECTED_NODES_FILE "${TEST_EXPRESSIONS_DIR}/${REFERENCE_DIR}/${BASE_NAME}_bdd_nodes.txt")
 set(GENERATED_NODES_FILE "${OUTPUT_DIR}/${BASE_NAME}_bdd_nodes.txt")
-set(EXPECTED_BDD_DOT_FILE "${TEST_EXPRESSIONS_DIR}/default_ordering/${BASE_NAME}_bdd.dot")
+set(EXPECTED_BDD_DOT_FILE "${TEST_EXPRESSIONS_DIR}/${REFERENCE_DIR}/${BASE_NAME}_bdd.dot")
 set(GENERATED_BDD_DOT_FILE "${OUTPUT_DIR}/${BASE_NAME}_bdd.dot")
-set(EXPECTED_TREE_DOT_FILE "${TEST_EXPRESSIONS_DIR}/default_ordering/${BASE_NAME}_expression_tree.dot")
+set(EXPECTED_TREE_DOT_FILE "${TEST_EXPRESSIONS_DIR}/${REFERENCE_DIR}/${BASE_NAME}_expression_tree.dot")
 set(GENERATED_TREE_DOT_FILE "${OUTPUT_DIR}/${BASE_NAME}_expression_tree.dot")
 
 message(STATUS "Running test: ${TEST_NAME}")
@@ -80,14 +89,26 @@ file(COPY "${SOURCE_EXPRESSION_FILE}" DESTINATION "${TEST_BUILD_DIR}/${EXPRESSIO
 message(STATUS "Copied expression file to test directory")
 
 # Run the BDD demo executable
-execute_process(
-    COMMAND "${EXECUTABLE}" "${TEST_EXPRESSION_FILE}"
-    WORKING_DIRECTORY "${TEST_BUILD_DIR}"
-    RESULT_VARIABLE EXEC_RESULT
-    OUTPUT_VARIABLE EXEC_OUTPUT
-    ERROR_VARIABLE EXEC_ERROR
-    TIMEOUT 20
-)
+if(DEFINED FORCE_REORDER AND FORCE_REORDER)
+    execute_process(
+        COMMAND "${EXECUTABLE}" "${TEST_EXPRESSION_FILE}" "--force-reorder"
+        WORKING_DIRECTORY "${TEST_BUILD_DIR}"
+        RESULT_VARIABLE EXEC_RESULT
+        OUTPUT_VARIABLE EXEC_OUTPUT
+        ERROR_VARIABLE EXEC_ERROR
+        TIMEOUT 60
+    )
+    message(STATUS "Running with --force-reorder option")
+else()
+    execute_process(
+        COMMAND "${EXECUTABLE}" "${TEST_EXPRESSION_FILE}"
+        WORKING_DIRECTORY "${TEST_BUILD_DIR}"
+        RESULT_VARIABLE EXEC_RESULT
+        OUTPUT_VARIABLE EXEC_OUTPUT
+        ERROR_VARIABLE EXEC_ERROR
+        TIMEOUT 20
+    )
+endif()
 
 # Check if executable ran successfully
 if(NOT EXEC_RESULT EQUAL 0)

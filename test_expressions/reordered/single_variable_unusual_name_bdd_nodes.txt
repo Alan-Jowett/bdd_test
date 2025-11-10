@@ -1,0 +1,5 @@
+Index | Variable | False Child | True Child | Type
+------|----------|-------------|------------|----------
+    0 | variable_with_unusual$characters@123 |           2 |          1 | Variable
+    1 |        - |           - |          - | Terminal(1)
+    2 |        - |           - |          - | Terminal(0)

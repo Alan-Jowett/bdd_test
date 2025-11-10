@@ -74,33 +74,10 @@ enable_testing()
 # Include test function definitions
 include(cmake/test_functions.cmake)
 
-# Add individual tests for BDD generation
-add_bdd_test(test_filter_expression "filter_expression.txt")
-add_bdd_test(test_simple_expression "simple_expression.txt")
-add_bdd_test(test_my_test_expression "my_test_expression.txt")
-add_bdd_test(test_subdir_expression "test_subdir_expression.txt")
-
-# Add new tests to improve coverage
-add_bdd_test(test_single_variable "single_variable.txt")
-add_bdd_test(test_deeply_nested "deeply_nested.txt")
-add_bdd_test(test_multiple_not "multiple_not.txt")
-add_bdd_test(test_all_operators "all_operators.txt")
-add_bdd_test(test_many_variables "many_variables.txt")
-add_bdd_test(test_same_variable "same_variable.txt")
-add_bdd_test(test_xor_chain "xor_chain.txt")
-add_bdd_test(test_underscore_vars "underscore_vars.txt")
-add_bdd_test(test_single_variable_unusual_name "single_variable_unusual_name.txt")
-
-# Stress test with complex constraint satisfaction
-add_bdd_test(test_four_queens "four_queens.txt")
-add_bdd_test(test_six_queens "six_queens.txt")
-add_bdd_test(test_eight_queens "eight_queens.txt")
-
-# Regression tests for PR #22 - robust expression parser fixes
-add_bdd_test(test_boundary_detection_regression "edge_cases/boundary_detection_regression.txt")
-add_bdd_test(test_operator_keywords_in_vars "edge_cases/operator_keywords_in_vars.txt")
-add_bdd_test(test_unicode_chars_regression "edge_cases/unicode_chars_regression.txt")
-add_bdd_test(test_complex_boundary_regression "edge_cases/complex_boundary_regression.txt")
+# Automatically discover and register all BDD test cases
+# This scans test_expressions/ for .txt files and creates both default ordering
+# and force-reorder tests based on available reference files
+register_bdd_tests()
 
 # Command line help tests
 add_cmdline_test(test_help_long
