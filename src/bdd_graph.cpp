@@ -187,11 +187,12 @@ namespace {
  */
 void traverse_bdd_nodes(const bdd_iterator& root_iter,
                         std::function<void(const bdd_iterator&)> visitor) {
-    dag_walker::walk_dag(root_iter, [&](const dag_walker::NodeInfo<bdd_iterator>& node_info) {
-        if (!node_info.is_revisit) {
-            visitor(node_info.node);
-        }
-    });
+    dag_walker::walk_dag_preorder(root_iter,
+                                  [&](const dag_walker::NodeInfo<bdd_iterator>& node_info) {
+                                      if (!node_info.is_revisit) {
+                                          visitor(node_info.node);
+                                      }
+                                  });
 }
 
 /**

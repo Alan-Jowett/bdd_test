@@ -28,18 +28,12 @@
 namespace dag_walker {
 
 /**
- * @brief Helper to detect if an iterator has a should_process method
+ * @brief Concept to detect if an iterator has a should_process method
  */
-template <typename Iterator, typename = void>
-struct has_should_process : std::false_type {};
-
 template <typename Iterator>
-struct has_should_process<Iterator,
-                          std::void_t<decltype(std::declval<Iterator>().should_process())>>
-    : std::true_type {};
-
-template <typename Iterator>
-constexpr bool has_should_process_v = has_should_process<Iterator>::value;
+concept has_should_process = requires(Iterator iter) {
+    { iter.should_process() } -> std::convertible_to<bool>;
+};
 
 /**
  * @brief Configuration for DAG walking behavior
@@ -73,11 +67,12 @@ struct NodeInfo {
 };
 
 /**
- * @brief Walk a DAG or tree structure using a visitor pattern
+ * @brief Walk a DAG or tree structure in pre-order using a visitor pattern
  *
  * This function traverses a tree or DAG structure starting from a root iterator,
- * calling a visitor function for each node. The visitor receives detailed information
- * about each node including its position in the traversal.
+ * calling a visitor function for each node in pre-order (depth-first, visiting
+ * parents before children). The visitor receives detailed information about each
+ * node including its position in the traversal.
  *
  * Required iterator interface:
  * - std::vector<Iterator> get_children() const
@@ -93,13 +88,13 @@ struct NodeInfo {
  * @param config Configuration for the walking behavior
  */
 template <typename Iterator, typename Visitor>
-void walk_dag(const Iterator& root_iterator, Visitor&& visitor,
-              const WalkConfig& config = WalkConfig()) {
+void walk_dag_preorder(const Iterator& root_iterator, Visitor&& visitor,
+                       const WalkConfig& config = WalkConfig()) {
     std::unordered_set<const void*> visited_nodes;
 
     // Helper to check if iterator has should_process method
     auto should_process_impl = [&](const Iterator& iter) -> bool {
-        if constexpr (has_should_process_v<Iterator>) {
+        if constexpr (has_should_process<Iterator>) {
             return iter.should_process();
         } else {
             return true;  // Default behavior if method not provided
@@ -151,6 +146,17 @@ void walk_dag(const Iterator& root_iterator, Visitor&& visitor,
 }
 
 /**
+ * @brief Backward compatibility alias for walk_dag_preorder
+ * @deprecated Use walk_dag_preorder instead for clarity
+ */
+template <typename Iterator, typename Visitor>
+[[deprecated("Use walk_dag_preorder instead for clarity")]]
+void walk_dag(const Iterator& root_iterator, Visitor&& visitor,
+              const WalkConfig& config = WalkConfig()) {
+    walk_dag_preorder(root_iterator, std::forward<Visitor>(visitor), config);
+}
+
+/**
  * @brief Walk a DAG in weak topological order using a visitor pattern
  *
  * This function traverses a tree or DAG structure in weak topological order,
@@ -184,7 +190,7 @@ void walk_dag_topological(const Iterator& root_iterator, Visitor&& visitor,
 
     // Helper to check if iterator has should_process method
     auto should_process_impl = [&](const Iterator& iter) -> bool {
-        if constexpr (has_should_process_v<Iterator>) {
+        if constexpr (has_should_process<Iterator>) {
             return iter.should_process();
         } else {
             return true;  // Default behavior if method not provided
@@ -260,7 +266,7 @@ std::vector<Iterator> collect_unique_nodes(const Iterator& root_iterator,
                                            const WalkConfig& config = WalkConfig()) {
     std::vector<Iterator> unique_nodes;
 
-    walk_dag(
+    walk_dag_preorder(
         root_iterator,
         [&](const NodeInfo<Iterator>& node_info) {
             if (!node_info.is_revisit) {
@@ -304,7 +310,7 @@ std::vector<EdgeInfo<Iterator>> collect_edges(const Iterator& root_iterator,
                                               const WalkConfig& config = WalkConfig()) {
     std::vector<EdgeInfo<Iterator>> edges;
 
-    walk_dag(
+    walk_dag_preorder(
         root_iterator,
         [&](const NodeInfo<Iterator>& node_info) {
             if (node_info.parent && !node_info.is_revisit) {
@@ -332,7 +338,7 @@ size_t count_nodes(const Iterator& root_iterator, bool count_unique_only = true)
     config.track_unique_nodes = count_unique_only;
     config.call_visitor_on_revisit = !count_unique_only;
 
-    walk_dag(
+    walk_dag_preorder(
         root_iterator,
         [&](const NodeInfo<Iterator>& node_info) {
             if (!count_unique_only || !node_info.is_revisit) {
@@ -355,7 +361,7 @@ template <typename Iterator>
 size_t get_max_depth(const Iterator& root_iterator) {
     size_t max_depth = 0;
 
-    walk_dag(root_iterator, [&](const NodeInfo<Iterator>& node_info) {
+    walk_dag_preorder(root_iterator, [&](const NodeInfo<Iterator>& node_info) {
         if (!node_info.is_revisit) {
             max_depth = std::max(max_depth, node_info.depth);
         }

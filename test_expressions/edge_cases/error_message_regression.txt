@@ -1,5 +1,5 @@
 # Regression test for error message clarity
 # This expression has deliberate syntax errors to test error message readability
-# The old parser would show cryptic token numbers, the new parser should show readable messages
+# Expected behavior: show readable error messages with proper context
 
 (incomplete_expression AND
