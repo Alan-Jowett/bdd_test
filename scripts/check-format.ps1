@@ -211,7 +211,7 @@ try {
         if ($changeCount -gt 0) {
             Write-ColorOutput "⚠️  $changeCount files would be changed by formatting" $Yellow
         } else {
-            Write-ColorOutput "✅ All files are properly formatted!" $Green
+            Write-ColorOutput "All files are properly formatted!" $Green
         }
     } else {
         if ($issuesFound) {
@@ -227,7 +227,7 @@ try {
             Write-ColorOutput "`n💡 To fix these issues automatically, run:" $Yellow
             Write-ColorOutput "   .\scripts\check-format.ps1 -Fix" $Yellow
             Write-ColorOutput "`n💡 Or run clang-format manually:" $Yellow
-            Write-ColorOutput "   clang-format -i <filename>" $Yellow
+            Write-ColorOutput "   clang-format -i filename" $Yellow
 
             exit 1
         } else {

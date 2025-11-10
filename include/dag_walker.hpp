@@ -50,6 +50,9 @@ struct WalkConfig {
 
     WalkConfig() = default;
     explicit WalkConfig(bool track_unique) : track_unique_nodes(track_unique) {}
+
+    // C++20 spaceship operator for automatic comparison generation
+    auto operator<=>(const WalkConfig& other) const = default;
 };
 
 /**

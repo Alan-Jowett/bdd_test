@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <concepts>
+#include <format>
 #include <iostream>
 #include <string>
 #include <type_traits>
@@ -30,74 +32,60 @@
 
 namespace dot_graph {
 
-/// @name SFINAE helpers for optional property methods
+/// @name C++20 Concepts for optional property methods
 /// @{
 
-// Node property detection
-template <typename Iterator, typename = void>
-struct has_get_label : std::false_type {};
-template <typename Iterator>
-struct has_get_label<Iterator, std::void_t<decltype(std::declval<Iterator>().get_label())>>
-    : std::true_type {};
+// Node property concepts
+template <typename T>
+concept has_get_label = requires(T t) {
+    { t.get_label() } -> std::convertible_to<std::string>;
+};
 
-template <typename Iterator, typename = void>
-struct has_get_shape : std::false_type {};
-template <typename Iterator>
-struct has_get_shape<Iterator, std::void_t<decltype(std::declval<Iterator>().get_shape())>>
-    : std::true_type {};
+template <typename T>
+concept has_get_shape = requires(T t) {
+    { t.get_shape() } -> std::convertible_to<std::string>;
+};
 
-template <typename Iterator, typename = void>
-struct has_get_style : std::false_type {};
-template <typename Iterator>
-struct has_get_style<Iterator, std::void_t<decltype(std::declval<Iterator>().get_style())>>
-    : std::true_type {};
+template <typename T>
+concept has_get_style = requires(T t) {
+    { t.get_style() } -> std::convertible_to<std::string>;
+};
 
-template <typename Iterator, typename = void>
-struct has_get_fillcolor : std::false_type {};
-template <typename Iterator>
-struct has_get_fillcolor<Iterator, std::void_t<decltype(std::declval<Iterator>().get_fillcolor())>>
-    : std::true_type {};
+template <typename T>
+concept has_get_fillcolor = requires(T t) {
+    { t.get_fillcolor() } -> std::convertible_to<std::string>;
+};
 
-template <typename Iterator, typename = void>
-struct has_get_fontcolor : std::false_type {};
-template <typename Iterator>
-struct has_get_fontcolor<Iterator, std::void_t<decltype(std::declval<Iterator>().get_fontcolor())>>
-    : std::true_type {};
+template <typename T>
+concept has_get_fontcolor = requires(T t) {
+    { t.get_fontcolor() } -> std::convertible_to<std::string>;
+};
 
-template <typename Iterator, typename = void>
-struct has_get_tooltip : std::false_type {};
-template <typename Iterator>
-struct has_get_tooltip<Iterator, std::void_t<decltype(std::declval<Iterator>().get_tooltip())>>
-    : std::true_type {};
+template <typename T>
+concept has_get_tooltip = requires(T t) {
+    { t.get_tooltip() } -> std::convertible_to<std::string>;
+};
 
-// Edge property detection
-template <typename Iterator, typename = void>
-struct has_get_edge_label : std::false_type {};
-template <typename Iterator>
-struct has_get_edge_label<Iterator, std::void_t<decltype(std::declval<Iterator>().get_edge_label(
-                                        std::declval<Iterator>(), std::size_t{}))>>
-    : std::true_type {};
+// Edge property concepts
+template <typename T>
+concept has_get_edge_label = requires(T t, T child, std::size_t index) {
+    { t.get_edge_label(child, index) } -> std::convertible_to<std::string>;
+};
 
-template <typename Iterator, typename = void>
-struct has_get_edge_style : std::false_type {};
-template <typename Iterator>
-struct has_get_edge_style<Iterator, std::void_t<decltype(std::declval<Iterator>().get_edge_style(
-                                        std::declval<Iterator>(), std::size_t{}))>>
-    : std::true_type {};
+template <typename T>
+concept has_get_edge_style = requires(T t, T child, std::size_t index) {
+    { t.get_edge_style(child, index) } -> std::convertible_to<std::string>;
+};
 
-template <typename Iterator, typename = void>
-struct has_get_edge_color : std::false_type {};
-template <typename Iterator>
-struct has_get_edge_color<Iterator, std::void_t<decltype(std::declval<Iterator>().get_edge_color(
-                                        std::declval<Iterator>(), std::size_t{}))>>
-    : std::true_type {};
+template <typename T>
+concept has_get_edge_color = requires(T t, T child, std::size_t index) {
+    { t.get_edge_color(child, index) } -> std::convertible_to<std::string>;
+};
 
-template <typename Iterator, typename = void>
-struct has_get_edge_fontcolor : std::false_type {};
-template <typename Iterator>
-struct has_get_edge_fontcolor<Iterator,
-                              std::void_t<decltype(std::declval<Iterator>().get_edge_fontcolor(
-                                  std::declval<Iterator>(), std::size_t{}))>> : std::true_type {};
+template <typename T>
+concept has_get_edge_fontcolor = requires(T t, T child, std::size_t index) {
+    { t.get_edge_fontcolor(child, index) } -> std::convertible_to<std::string>;
+};
 
 /// @}
 
@@ -113,8 +101,8 @@ struct DotConfig {
     std::string default_edge_style = "solid";   ///< Default style for edges
     bool show_node_ids = false;                 ///< Whether to show internal node IDs
 
-    DotConfig() = default;
-    explicit DotConfig(const std::string& name) : graph_name(name) {}
+    // C++20 spaceship operator for automatic comparison generation
+    auto operator<=>(const DotConfig& other) const = default;
 };
 
 /**
@@ -127,7 +115,7 @@ struct DotConfig {
  * - std::vector<Iterator> get_children() const
  * - const void* get_node_address() const (for unique node identification)
  *
- * Optional node property methods (auto-detected via SFINAE):
+ * Optional node property methods (auto-detected via C++20 concepts):
  * - std::string get_label() const
  * - std::string get_shape() const
  * - std::string get_style() const
@@ -135,7 +123,7 @@ struct DotConfig {
  * - std::string get_fontcolor() const
  * - std::string get_tooltip() const
  *
- * Optional edge property methods (auto-detected via SFINAE):
+ * Optional edge property methods (auto-detected via C++20 concepts):
  * - std::string get_edge_label(const Iterator& child, size_t index) const
  * - std::string get_edge_style(const Iterator& child, size_t index) const
  * - std::string get_edge_color(const Iterator& child, size_t index) const
@@ -195,7 +183,7 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
         if (it != node_id_map.end()) {
             return it->second;
         }
-        std::string id = "node" + std::to_string(next_node_id++);
+        std::string id = std::format("node{}", next_node_id++);
         node_id_map[key] = id;
         return id;
     };
@@ -207,7 +195,7 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
         bool first = true;
 
         // Label (use iterator label or fallback to node_id)
-        if constexpr (has_get_label<Iterator>::value) {
+        if constexpr (has_get_label<Iterator>) {
             attrs += "label = \"" + iter.get_label() + "\"";
         } else {
             attrs += "label = \"" + node_id + "\"";
@@ -215,19 +203,19 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
         first = false;
 
         // Optional node properties
-        if constexpr (has_get_shape<Iterator>::value) {
+        if constexpr (has_get_shape<Iterator>) {
             attrs += ", shape=" + iter.get_shape();
         }
-        if constexpr (has_get_style<Iterator>::value) {
+        if constexpr (has_get_style<Iterator>) {
             attrs += ", style = " + iter.get_style();
         }
-        if constexpr (has_get_fillcolor<Iterator>::value) {
+        if constexpr (has_get_fillcolor<Iterator>) {
             attrs += ", fillcolor = " + iter.get_fillcolor();
         }
-        if constexpr (has_get_fontcolor<Iterator>::value) {
+        if constexpr (has_get_fontcolor<Iterator>) {
             attrs += ", fontcolor = " + iter.get_fontcolor();
         }
-        if constexpr (has_get_tooltip<Iterator>::value) {
+        if constexpr (has_get_tooltip<Iterator>) {
             attrs += ", tooltip = \"" + iter.get_tooltip() + "\"";
         }
 
@@ -241,19 +229,19 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
         std::string attrs;
         std::vector<std::string> properties;
 
-        if constexpr (has_get_edge_label<Iterator>::value) {
+        if constexpr (has_get_edge_label<Iterator>) {
             std::string label = parent.get_edge_label(child, index);
             if (!label.empty()) {
                 properties.push_back("label = \"" + label + "\"");
             }
         }
-        if constexpr (has_get_edge_style<Iterator>::value) {
+        if constexpr (has_get_edge_style<Iterator>) {
             properties.push_back("style = " + parent.get_edge_style(child, index));
         }
-        if constexpr (has_get_edge_color<Iterator>::value) {
+        if constexpr (has_get_edge_color<Iterator>) {
             properties.push_back("color = " + parent.get_edge_color(child, index));
         }
-        if constexpr (has_get_edge_fontcolor<Iterator>::value) {
+        if constexpr (has_get_edge_fontcolor<Iterator>) {
             properties.push_back("fontcolor = " + parent.get_edge_fontcolor(child, index));
         }
 

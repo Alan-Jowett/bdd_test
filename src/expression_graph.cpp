@@ -34,30 +34,77 @@
 // ============================================================================
 
 namespace expression_constants {
-// Operator labels
-inline constexpr const char* AND_LABEL = "AND";
-inline constexpr const char* OR_LABEL = "OR";
-inline constexpr const char* NOT_LABEL = "NOT";
-inline constexpr const char* XOR_LABEL = "XOR";
+// Operator labels (consteval for compile-time evaluation)
+inline consteval const char* and_label() {
+    return "AND";
+}
+inline consteval const char* or_label() {
+    return "OR";
+}
+inline consteval const char* not_label() {
+    return "NOT";
+}
+inline consteval const char* xor_label() {
+    return "XOR";
+}
 
-// Edge labels
-inline constexpr const char* LEFT_EDGE = "L";
-inline constexpr const char* RIGHT_EDGE = "R";
+// Edge labels (consteval for compile-time evaluation)
+inline consteval const char* left_edge() {
+    return "L";
+}
+inline consteval const char* right_edge() {
+    return "R";
+}
 
-// Node shapes
-inline constexpr const char* VARIABLE_SHAPE = "ellipse";
-inline constexpr const char* OPERATOR_SHAPE = "box";
+// Node shapes (consteval for compile-time evaluation)
+inline consteval const char* variable_shape() {
+    return "ellipse";
+}
+inline consteval const char* operator_shape() {
+    return "box";
+}
 
-// Fill colors
-inline constexpr const char* VARIABLE_COLOR = "lightblue";
-inline constexpr const char* AND_COLOR = "lightgreen";
-inline constexpr const char* OR_COLOR = "lightcoral";
-inline constexpr const char* NOT_COLOR = "yellow";
-inline constexpr const char* XOR_COLOR = "lightpink";
-inline constexpr const char* DEFAULT_COLOR = "white";
+// Fill colors (consteval for compile-time evaluation)
+inline consteval const char* variable_color() {
+    return "lightblue";
+}
+inline consteval const char* and_color() {
+    return "lightgreen";
+}
+inline consteval const char* or_color() {
+    return "lightcoral";
+}
+inline consteval const char* not_color() {
+    return "yellow";
+}
+inline consteval const char* xor_color() {
+    return "lightpink";
+}
+inline consteval const char* default_color() {
+    return "white";
+}
 
-// Style
-inline constexpr const char* FILLED_STYLE = "filled";
+// Style (consteval for compile-time evaluation)
+inline consteval const char* filled_style() {
+    return "filled";
+}
+
+// Legacy constants for backward compatibility
+inline constexpr const char* AND_LABEL = and_label();
+inline constexpr const char* OR_LABEL = or_label();
+inline constexpr const char* NOT_LABEL = not_label();
+inline constexpr const char* XOR_LABEL = xor_label();
+inline constexpr const char* LEFT_EDGE = left_edge();
+inline constexpr const char* RIGHT_EDGE = right_edge();
+inline constexpr const char* VARIABLE_SHAPE = variable_shape();
+inline constexpr const char* OPERATOR_SHAPE = operator_shape();
+inline constexpr const char* VARIABLE_COLOR = variable_color();
+inline constexpr const char* AND_COLOR = and_color();
+inline constexpr const char* OR_COLOR = or_color();
+inline constexpr const char* NOT_COLOR = not_color();
+inline constexpr const char* XOR_COLOR = xor_color();
+inline constexpr const char* DEFAULT_COLOR = default_color();
+inline constexpr const char* FILLED_STYLE = filled_style();
 }  // namespace expression_constants
 
 namespace detail {
@@ -336,13 +383,15 @@ void write_expression_to_dot(const my_expression& expr, std::ostream& out,
     expression_iterator root_iter(expr);
 
     // Configure the DOT generation for expression trees to match original format
-    dot_graph::DotConfig config(graph_name);
-    config.rankdir = "TB";           // Top-to-bottom layout
-    config.font_name = "Arial";      // Consistent font
-    config.default_node_shape = "";  // Don't add default shape (overridden anyway)
-    config.default_node_style = "";  // Don't add default style (overridden anyway)
-    config.default_edge_style = "";  // Don't add default edge style
-    config.show_node_ids = false;    // Don't show internal IDs
+    dot_graph::DotConfig config{
+        .graph_name = graph_name,
+        .rankdir = "TB",           // Top-to-bottom layout
+        .font_name = "Arial",      // Consistent font
+        .default_node_shape = "",  // Don't add default shape (overridden anyway)
+        .default_node_style = "",  // Don't add default style (overridden anyway)
+        .default_edge_style = "",  // Don't add default edge style
+        .show_node_ids = false     // Don't show internal IDs
+    };
 
     // Generate the DOT graph using the template system
     dot_graph::generate_dot_graph(root_iter, out, config);

@@ -4,6 +4,7 @@
 #include "expression_parser.hpp"
 
 #include <cctype>
+#include <format>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -50,21 +51,15 @@ class Tokenizer {
     }
 
    public:
-    enum TokenType {
-        TOKEN_VARIABLE,
-        TOKEN_AND,
-        TOKEN_OR,
-        TOKEN_XOR,
-        TOKEN_NOT,
-        TOKEN_LPAREN,
-        TOKEN_RPAREN,
-        TOKEN_EOF
-    };
+    enum class TokenType { VARIABLE, AND, OR, XOR, NOT, LPAREN, RPAREN, EOF_TOKEN };
 
     struct Token {
         TokenType type;
         std::string value;
         size_t position;
+
+        // C++20 spaceship operator for automatic comparison generation
+        auto operator<=>(const Token& other) const = default;
     };
 
     /**
@@ -75,21 +70,21 @@ class Tokenizer {
      */
     static std::string token_type_to_string(TokenType type) {
         switch (type) {
-            case TOKEN_VARIABLE:
+            case TokenType::VARIABLE:
                 return "variable";
-            case TOKEN_AND:
+            case TokenType::AND:
                 return "AND";
-            case TOKEN_OR:
+            case TokenType::OR:
                 return "OR";
-            case TOKEN_XOR:
+            case TokenType::XOR:
                 return "XOR";
-            case TOKEN_NOT:
+            case TokenType::NOT:
                 return "NOT";
-            case TOKEN_LPAREN:
+            case TokenType::LPAREN:
                 return "'('";
-            case TOKEN_RPAREN:
+            case TokenType::RPAREN:
                 return "')'";
-            case TOKEN_EOF:
+            case TokenType::EOF_TOKEN:
                 return "end of input";
             default:
                 return "unknown token";
@@ -116,7 +111,7 @@ class Tokenizer {
         skip_whitespace();
 
         if (pos >= text.length()) {
-            return {TOKEN_EOF, "", pos};
+            return {.type = TokenType::EOF_TOKEN, .value = "", .position = pos};
         }
 
         size_t start_pos = pos;
@@ -142,30 +137,30 @@ class Tokenizer {
         if (pos + 3 <= text.length() && text.compare(pos, 3, "AND") == 0 && has_boundary_before(pos)
             && is_boundary_char(pos + 3)) {
             pos += 3;
-            return {TOKEN_AND, "AND", start_pos};
+            return {.type = TokenType::AND, .value = "AND", .position = start_pos};
         }
         if (pos + 2 <= text.length() && text.compare(pos, 2, "OR") == 0 && has_boundary_before(pos)
             && is_boundary_char(pos + 2)) {
             pos += 2;
-            return {TOKEN_OR, "OR", start_pos};
+            return {.type = TokenType::OR, .value = "OR", .position = start_pos};
         }
         if (pos + 3 <= text.length() && text.compare(pos, 3, "XOR") == 0 && has_boundary_before(pos)
             && is_boundary_char(pos + 3)) {
             pos += 3;
-            return {TOKEN_XOR, "XOR", start_pos};
+            return {.type = TokenType::XOR, .value = "XOR", .position = start_pos};
         }
         if (pos + 3 <= text.length() && text.compare(pos, 3, "NOT") == 0 && has_boundary_before(pos)
             && is_boundary_char(pos + 3)) {
             pos += 3;
-            return {TOKEN_NOT, "NOT", start_pos};
+            return {.type = TokenType::NOT, .value = "NOT", .position = start_pos};
         }
         if (text[pos] == '(') {
             pos++;
-            return {TOKEN_LPAREN, "(", start_pos};
+            return {.type = TokenType::LPAREN, .value = "(", .position = start_pos};
         }
         if (text[pos] == ')') {
             pos++;
-            return {TOKEN_RPAREN, ")", start_pos};
+            return {.type = TokenType::RPAREN, .value = ")", .position = start_pos};
         }
 
         // Parse variable name (any non-whitespace that's not an operator or parentheses)
@@ -179,12 +174,12 @@ class Tokenizer {
             }
 
             if (!var_name.empty()) {
-                return {TOKEN_VARIABLE, var_name, start_pos};
+                return {.type = TokenType::VARIABLE, .value = var_name, .position = start_pos};
             }
         }
 
-        throw std::runtime_error("Unexpected character at position " + std::to_string(pos) + ": '"
-                                 + text[pos] + "'");
+        throw std::runtime_error(
+            std::format("Unexpected character at position {}: '{}'", pos, text[pos]));
     }
 
     /**
@@ -233,10 +228,9 @@ class Parser {
      */
     void expect(Tokenizer::TokenType expected) {
         if (current_token.type != expected) {
-            throw std::runtime_error("Expected " + Tokenizer::token_type_to_string(expected)
-                                     + " but got "
-                                     + Tokenizer::token_type_to_string(current_token.type)
-                                     + " at position " + std::to_string(current_token.position));
+            throw std::runtime_error(std::format(
+                "Expected {} but got {} at position {}", Tokenizer::token_type_to_string(expected),
+                Tokenizer::token_type_to_string(current_token.type), current_token.position));
         }
         advance();
     }
@@ -250,18 +244,18 @@ class Parser {
      * @throws std::runtime_error If neither a variable nor '(' is found
      */
     my_expression_ptr parse_primary() {
-        if (current_token.type == Tokenizer::TOKEN_VARIABLE) {
+        if (current_token.type == Tokenizer::TokenType::VARIABLE) {
             std::string var_name = current_token.value;
             advance();
             return std::make_unique<my_expression>(my_variable{var_name});
-        } else if (current_token.type == Tokenizer::TOKEN_LPAREN) {
+        } else if (current_token.type == Tokenizer::TokenType::LPAREN) {
             advance();  // consume '('
             auto expr = parse_expression();
-            expect(Tokenizer::TOKEN_RPAREN);
+            expect(Tokenizer::TokenType::RPAREN);
             return expr;
         } else {
-            throw std::runtime_error("Expected variable or '(' at position "
-                                     + std::to_string(current_token.position));
+            throw std::runtime_error(
+                std::format("Expected variable or '(' at position {}", current_token.position));
         }
     }
 
@@ -274,7 +268,7 @@ class Parser {
      * @return Pointer to the parsed NOT expression or primary expression
      */
     my_expression_ptr parse_not_expr() {
-        if (current_token.type == Tokenizer::TOKEN_NOT) {
+        if (current_token.type == Tokenizer::TokenType::NOT) {
             advance();                        // consume 'NOT'
             auto operand = parse_not_expr();  // right-associative
             return std::make_unique<my_expression>(my_not{std::move(operand)});
@@ -294,7 +288,7 @@ class Parser {
     my_expression_ptr parse_and_expr() {
         auto left = parse_not_expr();
 
-        while (current_token.type == Tokenizer::TOKEN_AND) {
+        while (current_token.type == Tokenizer::TokenType::AND) {
             advance();  // consume 'AND'
             auto right = parse_not_expr();
             left = std::make_unique<my_expression>(my_and{std::move(left), std::move(right)});
@@ -314,7 +308,7 @@ class Parser {
     my_expression_ptr parse_or_expr() {
         auto left = parse_and_expr();
 
-        while (current_token.type == Tokenizer::TOKEN_OR) {
+        while (current_token.type == Tokenizer::TokenType::OR) {
             advance();  // consume 'OR'
             auto right = parse_and_expr();
             left = std::make_unique<my_expression>(my_or{std::move(left), std::move(right)});
@@ -335,7 +329,7 @@ class Parser {
     my_expression_ptr parse_xor_expr() {
         auto left = parse_or_expr();
 
-        while (current_token.type == Tokenizer::TOKEN_XOR) {
+        while (current_token.type == Tokenizer::TokenType::XOR) {
             advance();  // consume 'XOR'
             auto right = parse_or_expr();
             left = std::make_unique<my_expression>(my_xor{std::move(left), std::move(right)});
@@ -371,9 +365,9 @@ class Parser {
      */
     my_expression_ptr parse() {
         auto expr = parse_expression();
-        if (current_token.type != Tokenizer::TOKEN_EOF) {
-            throw std::runtime_error("Unexpected token after expression at position "
-                                     + std::to_string(current_token.position));
+        if (current_token.type != Tokenizer::TokenType::EOF_TOKEN) {
+            throw std::runtime_error(std::format("Unexpected token after expression at position {}",
+                                                 current_token.position));
         }
         return expr;
     }

@@ -26,12 +26,14 @@
 #include <array>
 #include <cassert>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <functional>
 #include <iomanip>
 #include <iostream>
 #include <libteddy/core.hpp>
 #include <memory>
+#include <ranges>
 #include <sstream>
 #include <stack>
 #include <string>
@@ -106,7 +108,7 @@ void write_bdd_nodes_to_stream(const teddy::bdd_manager& manager,
             int var_index = node->get_index();
             std::string var_name = (var_index < variable_names.size())
                                        ? variable_names[var_index]
-                                       : ("x" + std::to_string(var_index));
+                                       : std::format("x{}", var_index);
             out << std::setw(8) << var_name << " | ";
 
             node_t* false_child = node->get_son(0);
@@ -180,7 +182,7 @@ teddy::bdd_manager::diagram_t convert_to_bdd(const my_expression& expr, teddy::b
 
     // Build variable map with sorted variable names for consistent ordering
     std::vector<std::string> sorted_vars(variable_names.begin(), variable_names.end());
-    std::sort(sorted_vars.begin(), sorted_vars.end());
+    std::ranges::sort(sorted_vars);
 
     std::unordered_map<std::string, int> var_map;
     for (size_t i = 0; i < sorted_vars.size(); ++i) {
@@ -355,7 +357,7 @@ int main(int argc, const char* argv[]) {
 
     // Create sorted variable names for consistent ordering (same as in convert_to_bdd)
     std::vector<std::string> sorted_variable_names(variable_names.begin(), variable_names.end());
-    std::sort(sorted_variable_names.begin(), sorted_variable_names.end());
+    std::ranges::sort(sorted_variable_names);
 
     // Create a BDD manager with the appropriate number of variables
     teddy::bdd_manager manager(static_cast<int>(variable_names.size()), 1'000);
