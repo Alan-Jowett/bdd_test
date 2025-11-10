@@ -57,7 +57,7 @@ if(PATCH_FILES)
     if(GIT_EXECUTABLE)
         foreach(PATCH_FILE ${PATCH_FILES})
             get_filename_component(PATCH_NAME "${PATCH_FILE}" NAME)
-            
+
             # Check if patch is already applied using --check flag
             execute_process(
                 COMMAND ${GIT_EXECUTABLE} apply --check "${PATCH_FILE}"
@@ -66,7 +66,7 @@ if(PATCH_FILES)
                 OUTPUT_QUIET
                 ERROR_QUIET
             )
-            
+
             if(PATCH_CHECK_RESULT EQUAL 0)
                 # Patch can be applied, so apply it
                 message(STATUS "Applying patch: ${PATCH_NAME}")
