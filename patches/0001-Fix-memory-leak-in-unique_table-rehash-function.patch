@@ -1,0 +1,30 @@
+From aac2c0b75e33e5c905e9f9e8a633c9a3ee5f8533 Mon Sep 17 00:00:00 2001
+From: Alan Jowett <alan.jowett@microsoft.com>
+Date: Mon, 10 Nov 2025 14:13:52 -0800
+Subject: [PATCH] Fix memory leak in unique_table rehash function
+
+Add missing std::free(oldBuckets) call to prevent memory leak
+when hash table is resized.
+
+Signed-off-by: Alan Jowett <alan.jowett@microsoft.com>
+---
+ libteddy/details/hash_tables.hpp | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/libteddy/details/hash_tables.hpp b/libteddy/details/hash_tables.hpp
+index 6557921..7f98ab6 100644
+--- a/libteddy/details/hash_tables.hpp
++++ b/libteddy/details/hash_tables.hpp
+@@ -624,6 +624,9 @@ auto unique_table<Data, Degree>::rehash(int64 const newCapacity) -> void
+         }
+     };
+ 
++    // Fix memory leak: free the old buckets array
++    std::free(oldBuckets);
++
+ #ifdef LIBTEDDY_VERBOSE
+     debug::out(", load after ", this->get_load_factor(), "\n");
+ #endif
+-- 
+2.51.2.vfs.0.0
+

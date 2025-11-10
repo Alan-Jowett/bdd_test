@@ -42,6 +42,76 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(DecisionDiagrams)
 
+# Apply patches to TeDDy library
+set(TEDDY_SOURCE_DIR "${CMAKE_BINARY_DIR}/_deps/decisiondiagrams-src")
+set(PATCHES_DIR "${CMAKE_SOURCE_DIR}/patches")
+
+# Find and apply all patch files in order
+file(GLOB PATCH_FILES "${PATCHES_DIR}/*.patch")
+list(SORT PATCH_FILES)
+
+if(PATCH_FILES)
+    list(LENGTH PATCH_FILES PATCH_COUNT)
+    message(STATUS "Found ${PATCH_COUNT} TeDDy patches to apply")
+    find_program(GIT_EXECUTABLE git)
+    if(GIT_EXECUTABLE)
+        foreach(PATCH_FILE ${PATCH_FILES})
+            get_filename_component(PATCH_NAME "${PATCH_FILE}" NAME)
+
+            # Check if patch is already applied using --check flag
+            execute_process(
+                COMMAND ${GIT_EXECUTABLE} apply --check "${PATCH_FILE}"
+                WORKING_DIRECTORY "${TEDDY_SOURCE_DIR}"
+                RESULT_VARIABLE PATCH_CHECK_RESULT
+                OUTPUT_QUIET
+                ERROR_QUIET
+            )
+
+            if(PATCH_CHECK_RESULT EQUAL 0)
+                # Patch can be applied, so apply it
+                message(STATUS "Applying patch: ${PATCH_NAME}")
+                execute_process(
+                    COMMAND ${GIT_EXECUTABLE} apply "${PATCH_FILE}"
+                    WORKING_DIRECTORY "${TEDDY_SOURCE_DIR}"
+                    RESULT_VARIABLE PATCH_RESULT
+                    OUTPUT_VARIABLE PATCH_OUTPUT
+                    ERROR_VARIABLE PATCH_ERROR
+                    OUTPUT_QUIET
+                    ERROR_QUIET
+                )
+                if(PATCH_RESULT EQUAL 0)
+                    message(STATUS "  ✓ ${PATCH_NAME} applied successfully")
+                else()
+                    # Try applying with --ignore-whitespace flag for robustness
+                    execute_process(
+                        COMMAND ${GIT_EXECUTABLE} apply --ignore-whitespace "${PATCH_FILE}"
+                        WORKING_DIRECTORY "${TEDDY_SOURCE_DIR}"
+                        RESULT_VARIABLE PATCH_RESULT_RETRY
+                        OUTPUT_VARIABLE PATCH_OUTPUT_RETRY
+                        ERROR_VARIABLE PATCH_ERROR_RETRY
+                        OUTPUT_QUIET
+                        ERROR_QUIET
+                    )
+                    if(PATCH_RESULT_RETRY EQUAL 0)
+                        message(STATUS "  ✓ ${PATCH_NAME} applied successfully (with whitespace ignore)")
+                    else()
+                        message(WARNING "  ✗ Failed to apply patch ${PATCH_NAME}")
+                        message(WARNING "     First attempt error: ${PATCH_ERROR}")
+                        message(WARNING "     Retry attempt error: ${PATCH_ERROR_RETRY}")
+                    endif()
+                endif()
+            else()
+                # Patch cannot be applied, likely already applied or conflicts
+                message(STATUS "  ○ ${PATCH_NAME} already applied or not applicable")
+            endif()
+        endforeach()
+    else()
+        message(WARNING "Git not found, cannot apply TeDDy patches")
+    endif()
+else()
+    message(STATUS "No TeDDy patches found in ${PATCHES_DIR}")
+endif()
+
 # Create executable with source files and header dependencies
 add_executable(bdd_demo
     src/main.cpp
