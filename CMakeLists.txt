@@ -25,7 +25,6 @@ option(ENABLE_COVERAGE "Enable code coverage reporting" OFF)
 if(ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     message(STATUS "Enabling code coverage")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -fprofile-arcs -ftest-coverage")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage -fprofile-arcs -ftest-coverage")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --coverage")
 endif()
@@ -195,6 +194,10 @@ add_cmdline_test(test_force_reorder
     OUTPUT_CONTAINS "Forcing variable reordering after BDD construction"
     EXPECTED_EXIT_CODE 0
 )
+
+# Note: Force-reorder tests may exhibit non-deterministic output across different environments
+# due to tie-breaking behavior in TeDDy's heapsort implementation when variables have equal node counts.
+# This can cause CI failures where the same logical optimization produces different node orderings.
 
 # Combined option tests
 add_cmdline_test(test_combined_options
