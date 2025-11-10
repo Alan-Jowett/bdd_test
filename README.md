@@ -97,6 +97,19 @@ cd build
 ctest -C Release
 ```
 
+### Advanced Testing
+
+For comprehensive testing including memory safety checks:
+
+**Sanitizer builds** (Linux/WSL only):
+```bash
+# Run all sanitizer combinations
+./scripts/run-sanitizers.sh
+
+# Or on Windows with WSL:
+.\scripts\run-sanitizers.ps1
+```
+
 For visualization examples and advanced usage, see [docs/VISUALIZATIONS.md](docs/VISUALIZATIONS.md).
 
 ## Sample Output
