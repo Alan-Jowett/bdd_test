@@ -59,7 +59,7 @@ include(FetchContent)
 FetchContent_Declare(
     DecisionDiagrams
     GIT_REPOSITORY https://github.com/MichalMrena/DecisionDiagrams.git
-    GIT_TAG v4.1.0
+    GIT_TAG devel
 )
 
 FetchContent_MakeAvailable(DecisionDiagrams)
