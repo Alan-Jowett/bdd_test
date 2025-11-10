@@ -34,77 +34,61 @@
 // ============================================================================
 
 namespace expression_constants {
-// Operator labels (consteval for compile-time evaluation)
-inline consteval const char* and_label() {
+// Operator labels (constexpr for compile-time evaluation)
+inline constexpr const char* and_label() {
     return "AND";
 }
-inline consteval const char* or_label() {
+inline constexpr const char* or_label() {
     return "OR";
 }
-inline consteval const char* not_label() {
+inline constexpr const char* not_label() {
     return "NOT";
 }
-inline consteval const char* xor_label() {
+inline constexpr const char* xor_label() {
     return "XOR";
 }
 
-// Edge labels (consteval for compile-time evaluation)
-inline consteval const char* left_edge() {
+// Edge labels (constexpr for compile-time evaluation)
+inline constexpr const char* left_edge() {
     return "L";
 }
-inline consteval const char* right_edge() {
+inline constexpr const char* right_edge() {
     return "R";
 }
 
-// Node shapes (consteval for compile-time evaluation)
-inline consteval const char* variable_shape() {
+// Node shapes (constexpr for compile-time evaluation)
+inline constexpr const char* variable_shape() {
     return "ellipse";
 }
-inline consteval const char* operator_shape() {
+inline constexpr const char* operator_shape() {
     return "box";
 }
 
-// Fill colors (consteval for compile-time evaluation)
-inline consteval const char* variable_color() {
+// Fill colors (constexpr for compile-time evaluation)
+inline constexpr const char* variable_color() {
     return "lightblue";
 }
-inline consteval const char* and_color() {
+inline constexpr const char* and_color() {
     return "lightgreen";
 }
-inline consteval const char* or_color() {
+inline constexpr const char* or_color() {
     return "lightcoral";
 }
-inline consteval const char* not_color() {
+inline constexpr const char* not_color() {
     return "yellow";
 }
-inline consteval const char* xor_color() {
+inline constexpr const char* xor_color() {
     return "lightpink";
 }
-inline consteval const char* default_color() {
+inline constexpr const char* default_color() {
     return "white";
 }
 
-// Style (consteval for compile-time evaluation)
-inline consteval const char* filled_style() {
+// Style (constexpr for compile-time evaluation)
+inline constexpr const char* filled_style() {
     return "filled";
 }
 
-// Legacy constants for backward compatibility
-inline constexpr const char* AND_LABEL = and_label();
-inline constexpr const char* OR_LABEL = or_label();
-inline constexpr const char* NOT_LABEL = not_label();
-inline constexpr const char* XOR_LABEL = xor_label();
-inline constexpr const char* LEFT_EDGE = left_edge();
-inline constexpr const char* RIGHT_EDGE = right_edge();
-inline constexpr const char* VARIABLE_SHAPE = variable_shape();
-inline constexpr const char* OPERATOR_SHAPE = operator_shape();
-inline constexpr const char* VARIABLE_COLOR = variable_color();
-inline constexpr const char* AND_COLOR = and_color();
-inline constexpr const char* OR_COLOR = or_color();
-inline constexpr const char* NOT_COLOR = not_color();
-inline constexpr const char* XOR_COLOR = xor_color();
-inline constexpr const char* DEFAULT_COLOR = default_color();
-inline constexpr const char* FILLED_STYLE = filled_style();
 }  // namespace expression_constants
 
 namespace detail {
@@ -114,43 +98,43 @@ namespace detail {
 template <typename T>
 struct expression_traits {
     static constexpr const char* label = "";
-    static constexpr const char* shape = expression_constants::OPERATOR_SHAPE;
-    static constexpr const char* fillcolor = expression_constants::DEFAULT_COLOR;
+    static constexpr const char* shape = expression_constants::operator_shape();
+    static constexpr const char* fillcolor = expression_constants::default_color();
 };
 
 template <>
 struct expression_traits<my_variable> {
     static constexpr const char* label = "";  // Will use actual variable name
-    static constexpr const char* shape = expression_constants::VARIABLE_SHAPE;
-    static constexpr const char* fillcolor = expression_constants::VARIABLE_COLOR;
+    static constexpr const char* shape = expression_constants::variable_shape();
+    static constexpr const char* fillcolor = expression_constants::variable_color();
 };
 
 template <>
 struct expression_traits<my_and> {
-    static constexpr const char* label = expression_constants::AND_LABEL;
-    static constexpr const char* shape = expression_constants::OPERATOR_SHAPE;
-    static constexpr const char* fillcolor = expression_constants::AND_COLOR;
+    static constexpr const char* label = expression_constants::and_label();
+    static constexpr const char* shape = expression_constants::operator_shape();
+    static constexpr const char* fillcolor = expression_constants::and_color();
 };
 
 template <>
 struct expression_traits<my_or> {
-    static constexpr const char* label = expression_constants::OR_LABEL;
-    static constexpr const char* shape = expression_constants::OPERATOR_SHAPE;
-    static constexpr const char* fillcolor = expression_constants::OR_COLOR;
+    static constexpr const char* label = expression_constants::or_label();
+    static constexpr const char* shape = expression_constants::operator_shape();
+    static constexpr const char* fillcolor = expression_constants::or_color();
 };
 
 template <>
 struct expression_traits<my_not> {
-    static constexpr const char* label = expression_constants::NOT_LABEL;
-    static constexpr const char* shape = expression_constants::OPERATOR_SHAPE;
-    static constexpr const char* fillcolor = expression_constants::NOT_COLOR;
+    static constexpr const char* label = expression_constants::not_label();
+    static constexpr const char* shape = expression_constants::operator_shape();
+    static constexpr const char* fillcolor = expression_constants::not_color();
 };
 
 template <>
 struct expression_traits<my_xor> {
-    static constexpr const char* label = expression_constants::XOR_LABEL;
-    static constexpr const char* shape = expression_constants::OPERATOR_SHAPE;
-    static constexpr const char* fillcolor = expression_constants::XOR_COLOR;
+    static constexpr const char* label = expression_constants::xor_label();
+    static constexpr const char* shape = expression_constants::operator_shape();
+    static constexpr const char* fillcolor = expression_constants::xor_color();
 };
 }  // namespace detail
 
@@ -285,7 +269,7 @@ class expression_iterator {
      */
     std::string get_shape() const {
         if (!current_expr_)
-            return expression_constants::VARIABLE_SHAPE;
+            return expression_constants::variable_shape();
 
         return std::visit(
             [](const auto& variant_expr) -> std::string {
@@ -300,7 +284,7 @@ class expression_iterator {
      */
     std::string get_fillcolor() const {
         if (!current_expr_)
-            return expression_constants::DEFAULT_COLOR;
+            return expression_constants::default_color();
 
         return std::visit(
             [](const auto& variant_expr) -> std::string {
@@ -314,7 +298,7 @@ class expression_iterator {
      * @brief Gets style for DOT display
      */
     std::string get_style() const {
-        return expression_constants::FILLED_STYLE;
+        return expression_constants::filled_style();
     }
 
     /**
@@ -363,8 +347,8 @@ class expression_iterator {
 
                 if constexpr (std::is_same_v<T, my_and> || std::is_same_v<T, my_or>
                               || std::is_same_v<T, my_xor>) {
-                    return child_index == 0 ? expression_constants::LEFT_EDGE
-                                            : expression_constants::RIGHT_EDGE;
+                    return child_index == 0 ? expression_constants::left_edge()
+                                            : expression_constants::right_edge();
                 } else {
                     return "";
                 }
@@ -382,7 +366,7 @@ void write_expression_to_dot(const my_expression& expr, std::ostream& out,
     // Create an iterator from the expression
     expression_iterator root_iter(expr);
 
-    // Configure the DOT generation for expression trees to match original format
+    // Configure the DOT generation for expression trees
     dot_graph::DotConfig config{
         .graph_name = graph_name,
         .rankdir = "TB",           // Top-to-bottom layout
@@ -405,7 +389,7 @@ void collect_variables_with_dag_walker(const my_expression& expr,
                                        std::unordered_set<std::string>& variables) {
     expression_iterator root_iter(expr);
 
-    dag_walker::walk_dag(
+    dag_walker::walk_dag_preorder(
         root_iter, [&](const dag_walker::NodeInfo<expression_iterator>& node_info) {
             if (!node_info.is_revisit) {
                 // Type-safe variable detection using direct variant access

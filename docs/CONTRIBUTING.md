@@ -80,12 +80,12 @@ The pre-commit hooks will automatically:
 .\scripts\check-format.ps1 -WhatIf
 ```
 
-Legacy commands (still supported):
+Alternative formatting commands:
 ```bash
-# Format all C++ files
+# Format all C++ files (Unix-style)
 find . -name '*.cpp' -o -name '*.hpp' | xargs clang-format -i
 
-# Verify formatting compliance
+# Verify formatting compliance (Unix-style)
 clang-format --dry-run --Werror *.cpp *.h
 ```
 

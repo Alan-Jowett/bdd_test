@@ -1,5 +1,5 @@
 # Regression test for boundary detection issue
 # Variables containing operator keywords should be treated as single tokens
-# This was broken in the original parser - "foo_AND_bar" was split into "foo_", "AND", "_bar"
+# Expected behavior: "foo_AND_bar" should be parsed as a single variable name
 
 foo_AND_bar AND bar_OR_baz AND baz_NOT_qux AND qux_XOR_alpha
