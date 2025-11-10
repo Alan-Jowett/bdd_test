@@ -26,6 +26,38 @@ This complex expression demonstrates all supported operators (AND, OR, NOT, XOR)
 
 ---
 
+## Scalability and Visualization Limits
+
+The system can handle constraint satisfaction problems of varying complexity:
+
+### Four Queens Problem
+- **Variables**: 16 (4×4 grid positions)
+- **BDD Nodes**: 95
+- **Visualization**: Full PNG generation supported
+- **File Size**: ~200 lines DOT format
+
+### Six Queens Problem
+- **Variables**: 36 (6×6 grid positions)
+- **BDD Nodes**: 3,361
+- **Visualization**: DOT format only (PNG generation impractical)
+- **File Size**: ~17,000 lines DOT format
+
+### Eight Queens Problem
+- **Variables**: 64 (8×8 grid positions)
+- **BDD Nodes**: 71,166
+- **Visualization**: DOT format only (PNG generation impractical)
+- **File Size**: ~350,000 lines DOT format
+
+**Note**: For large BDD structures (>1,000 nodes), PNG visualization becomes impractical due to:
+- Extremely large file sizes (potentially >100MB for 8-queens)
+- Complex layouts that are illegible when rendered
+- Memory requirements for image generation
+- Processing time for layout algorithms
+
+The 8-queens problem generates a 71,166-node BDD that, while computationally tractable, would produce an impractically large PNG file. For such cases, the DOT format files provide the complete graph structure that can be analyzed programmatically or with specialized graph analysis tools.
+
+---
+
 ## Negated Expression: `NOT (a OR b) AND c`
 
 **Expression Tree:**

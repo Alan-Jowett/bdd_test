@@ -91,6 +91,11 @@ add_bdd_test(test_xor_chain "xor_chain.txt")
 add_bdd_test(test_underscore_vars "underscore_vars.txt")
 add_bdd_test(test_single_variable_unusual_name "single_variable_unusual_name.txt")
 
+# Stress test with complex constraint satisfaction
+add_bdd_test(test_four_queens "four_queens.txt")
+add_bdd_test(test_six_queens "six_queens.txt")
+add_bdd_test(test_eight_queens "eight_queens.txt")
+
 # Regression tests for PR #22 - robust expression parser fixes
 add_bdd_test(test_boundary_detection_regression "edge_cases/boundary_detection_regression.txt")
 add_bdd_test(test_operator_keywords_in_vars "edge_cases/operator_keywords_in_vars.txt")
