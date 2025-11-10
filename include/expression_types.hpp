@@ -47,6 +47,9 @@ using my_expression_ptr = std::unique_ptr<my_expression>;
  */
 struct my_variable {
     std::string variable_name;  ///< Name of the variable (e.g., "x0", "input_A")
+    
+    // C++20 spaceship operator for automatic comparison generation
+    auto operator<=>(const my_variable& other) const = default;
 };
 
 /**

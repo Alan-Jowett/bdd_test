@@ -66,6 +66,9 @@ class Tokenizer {
         TokenType type;
         std::string value;
         size_t position;
+
+        // C++20 spaceship operator for automatic comparison generation
+        auto operator<=>(const Token& other) const = default;
     };
 
     /**

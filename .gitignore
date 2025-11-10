@@ -10,10 +10,11 @@ docs/xml/
 doxygen_output/
 
 # Generated files
-*.dot
-*.png
+test_expressions/*.dot
+test_expressions/*.png
 *.svg
 *.pdf
+test_expressions/*_bdd_nodes.txt
 
 # Visual Studio files
 .vs/
