@@ -473,7 +473,8 @@ int main(int argc, const char* argv[]) {
     {
         std::ifstream file(input_file);
         if (!file.is_open()) {
-            std::cerr << "Could not open file: " << input_file.string() << "\n";
+            std::cerr << "Error reading expression file: Could not open file: "
+                      << input_file.string() << "\n";
             return 1;
         }
 
