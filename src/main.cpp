@@ -55,7 +55,82 @@
 namespace {
 
 /**
- * @brief Writes BDD node table to any output stream
+ * @brief Core BDD node data structure for table generation
+ */
+struct BddNodeInfo {
+    int index;
+    bool is_terminal;
+    std::string variable_name;
+    int false_child_index;
+    int true_child_index;
+    std::string type;
+    int terminal_value;
+};
+
+/**
+ * @brief Collects BDD node information in topological order
+ *
+ * This function performs the common data extraction logic shared between
+ * write_bdd_nodes_to_stream and write_bdd_nodes_to_markdown.
+ *
+ * @param diagram The BDD diagram to analyze
+ * @param variable_names Ordered list of variable names for display
+ * @return Vector of BddNodeInfo structures in topological order
+ */
+std::vector<BddNodeInfo> collect_bdd_node_info(teddy::bdd_manager::diagram_t diagram,
+                                               const std::vector<std::string>& variable_names) {
+    using node_t = teddy::bdd_manager::diagram_t::node_t;
+
+    // Get nodes in topological order using dag_walker
+    std::vector<node_t*> nodes_in_order = collect_bdd_nodes_topological(diagram, variable_names);
+
+    // Reverse to achieve parents-before-children ordering with terminals at end
+    std::reverse(nodes_in_order.begin(), nodes_in_order.end());
+
+    // Create node-to-index mapping
+    std::unordered_map<node_t*, int> node_to_index;
+    for (int i = 0; i < nodes_in_order.size(); ++i) {
+        node_to_index[nodes_in_order[i]] = i;
+    }
+
+    // Collect node information
+    std::vector<BddNodeInfo> node_info;
+    node_info.reserve(nodes_in_order.size());
+
+    for (int i = 0; i < nodes_in_order.size(); ++i) {
+        node_t* node = nodes_in_order[i];
+        BddNodeInfo info;
+        info.index = i;
+        info.is_terminal = node->is_terminal();
+
+        if (node->is_terminal()) {
+            info.variable_name = "-";
+            info.false_child_index = -1;
+            info.true_child_index = -1;
+            info.type = "Terminal(" + std::to_string(node->get_value()) + ")";
+            info.terminal_value = node->get_value();
+        } else {
+            int var_index = node->get_index();
+            info.variable_name = (var_index < variable_names.size())
+                                     ? variable_names[var_index]
+                                     : std::format("x{}", var_index);
+
+            node_t* false_child = node->get_son(0);
+            node_t* true_child = node->get_son(1);
+            info.false_child_index = node_to_index[false_child];
+            info.true_child_index = node_to_index[true_child];
+            info.type = "Variable";
+            info.terminal_value = 0;  // Not used for variables
+        }
+
+        node_info.push_back(info);
+    }
+
+    return node_info;
+}
+
+/**
+ * @brief Writes BDD node table to output stream
  *
  * This function generates a comprehensive table showing the structure of a BDD,
  * including node indices, variable assignments, and child relationships.
@@ -74,57 +149,32 @@ void write_bdd_nodes_to_stream(const teddy::bdd_manager& manager,
                                teddy::bdd_manager::diagram_t diagram,
                                const std::vector<std::string>& variable_names, std::ostream& out,
                                bool include_headers = true) {
-    using node_t = teddy::bdd_manager::diagram_t::node_t;
+    std::vector<BddNodeInfo> node_info = collect_bdd_node_info(diagram, variable_names);
 
-    // Get nodes in topological order using dag_walker
-    std::vector<node_t*> nodes_in_order = collect_bdd_nodes_topological(diagram, variable_names);
-
-    // Reverse to achieve parents-before-children ordering with terminals at end
-    std::reverse(nodes_in_order.begin(), nodes_in_order.end());
-
-    // Create node-to-index mapping
-    std::unordered_map<node_t*, int> node_to_index;
-    for (int i = 0; i < nodes_in_order.size(); ++i) {
-        node_to_index[nodes_in_order[i]] = i;
-    }
-
-    // Write all nodes in the final order to stream
+    // Write headers
     if (include_headers) {
         out << "BDD Node Table (topological ordering):\n";
     }
     out << "Index | Variable | False Child | True Child | Type\n";
     out << "------|----------|-------------|------------|----------\n";
 
-    for (int i = 0; i < nodes_in_order.size(); ++i) {
-        node_t* node = nodes_in_order[i];
+    // Write table rows
+    for (const auto& info : node_info) {
+        out << std::setw(5) << info.index << " | ";
+        out << std::setw(8) << info.variable_name << " | ";
 
-        out << std::setw(5) << i << " | ";
-
-        if (node->is_terminal()) {
-            out << std::setw(8) << "-" << " | ";
+        if (info.is_terminal) {
             out << std::setw(11) << "-" << " | ";
             out << std::setw(10) << "-" << " | ";
-            out << "Terminal(" << node->get_value() << ")";
         } else {
-            int var_index = node->get_index();
-            std::string var_name = (var_index < variable_names.size())
-                                       ? variable_names[var_index]
-                                       : std::format("x{}", var_index);
-            out << std::setw(8) << var_name << " | ";
-
-            node_t* false_child = node->get_son(0);
-            node_t* true_child = node->get_son(1);
-
-            // Use the final indices
-            out << std::setw(11) << node_to_index[false_child] << " | ";
-            out << std::setw(10) << node_to_index[true_child] << " | ";
-            out << "Variable";
+            out << std::setw(11) << info.false_child_index << " | ";
+            out << std::setw(10) << info.true_child_index << " | ";
         }
-        out << "\n";
+        out << info.type << "\n";
     }
 
     if (include_headers) {
-        out << "\nTotal nodes: " << nodes_in_order.size() << "\n";
+        out << "\nTotal nodes: " << node_info.size() << "\n";
         out << "Note: Topological order reversed for parents-first display.\n";
     }
 }
@@ -144,46 +194,23 @@ void write_bdd_nodes_to_markdown(const teddy::bdd_manager& manager,
                                  teddy::bdd_manager::diagram_t diagram,
                                  const std::vector<std::string>& variable_names,
                                  std::ostream& out) {
-    using node_t = teddy::bdd_manager::diagram_t::node_t;
-
-    // Get nodes in topological order using dag_walker
-    std::vector<node_t*> nodes_in_order = collect_bdd_nodes_topological(diagram, variable_names);
-
-    // Reverse to achieve parents-before-children ordering with terminals at end
-    std::reverse(nodes_in_order.begin(), nodes_in_order.end());
-
-    // Create node-to-index mapping
-    std::unordered_map<node_t*, int> node_to_index;
-    for (int i = 0; i < nodes_in_order.size(); ++i) {
-        node_to_index[nodes_in_order[i]] = i;
-    }
+    std::vector<BddNodeInfo> node_info = collect_bdd_node_info(diagram, variable_names);
 
     // Write Markdown table header
     out << "| Index | Variable | False Child | True Child | Type |\n";
     out << "|-------|----------|-------------|------------|------|\n";
 
     // Write table rows
-    for (int i = 0; i < nodes_in_order.size(); ++i) {
-        node_t* node = nodes_in_order[i];
+    for (const auto& info : node_info) {
+        out << "| " << info.index << " | ";
 
-        out << "| " << i << " | ";
-
-        if (node->is_terminal()) {
-            out << "- | - | - | Terminal(" << node->get_value() << ") |\n";
+        if (info.is_terminal) {
+            out << "- | - | - | " << info.type << " |\n";
         } else {
-            int var_index = node->get_index();
-            std::string var_name = (var_index < variable_names.size())
-                                       ? variable_names[var_index]
-                                       : "x" + std::to_string(var_index);
-            out << var_name << " | ";
-
-            node_t* false_child = node->get_son(0);
-            node_t* true_child = node->get_son(1);
-
-            // Use the final indices
-            out << node_to_index[false_child] << " | ";
-            out << node_to_index[true_child] << " | ";
-            out << "Variable |\n";
+            out << info.variable_name << " | ";
+            out << info.false_child_index << " | ";
+            out << info.true_child_index << " | ";
+            out << info.type << " |\n";
         }
     }
 }
