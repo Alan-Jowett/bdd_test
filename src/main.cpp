@@ -290,7 +290,7 @@ teddy::bdd_manager::diagram_t convert_to_bdd_with_teddy_adapter(const my_express
  * Options:
  * - `--enable-reordering` : Enable automatic variable reordering for optimization
  * - `--disable-reordering` : Disable variable reordering (default)
- * - `--force-reorder` : Force immediate reordering and reduce after BDD construction
+ * - `--force-reorder` : Force immediate reordering after BDD construction
  * - `--method=custom` : Use custom recursive conversion method (default)
  * - `--method=teddy` : Use TeDDy's from_expression_tree method
  * - `--quiet` or `-q` : Suppress console output of BDD structure and DOT graph (default)
