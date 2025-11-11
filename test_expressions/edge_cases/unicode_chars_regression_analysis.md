@@ -38,11 +38,11 @@ flowchart TD
     class N6 variable
     class N7 variable
 
-    classDef variable fill:lightblue,stroke:#333,stroke-width:2px
-    classDef andOp fill:lightgreen,stroke:#333,stroke-width:2px
-    classDef orOp fill:lightcoral,stroke:#333,stroke-width:2px
-    classDef notOp fill:yellow,stroke:#333,stroke-width:2px
-    classDef xorOp fill:lightpink,stroke:#333,stroke-width:2px
+    classDef variable fill:lightblue,stroke:#333,stroke-width:2px,color:#000
+    classDef andOp fill:lightgreen,stroke:#333,stroke-width:2px,color:#000
+    classDef orOp fill:lightcoral,stroke:#333,stroke-width:2px,color:#000
+    classDef notOp fill:yellow,stroke:#333,stroke-width:2px,color:#000
+    classDef xorOp fill:lightpink,stroke:#333,stroke-width:2px,color:#000
 ```
 
 ## Binary Decision Diagram (BDD)
@@ -89,8 +89,8 @@ flowchart TD
     class N7 bddVariable
     class N8 bddVariable
 
-    classDef bddVariable fill:lightblue,stroke:#333,stroke-width:2px
-    classDef terminal fill:lightgray,stroke:#333,stroke-width:2px
+    classDef bddVariable fill:lightblue,stroke:#333,stroke-width:2px,color:#000
+    classDef terminal fill:lightgray,stroke:#333,stroke-width:2px,color:#000
 ```
 
 ## Analysis Summary

@@ -537,13 +537,13 @@ void write_expression_to_mermaid(const my_expression& expr, std::ostream& out,
     // Add CSS class definitions for colors (matching DOT color scheme)
     out << "\n";
     out << "    classDef variable fill:" << expression_constants::variable_color()
-        << ",stroke:#333,stroke-width:2px\n";
+        << ",stroke:#333,stroke-width:2px,color:#000\n";
     out << "    classDef andOp fill:" << expression_constants::and_color()
-        << ",stroke:#333,stroke-width:2px\n";
+        << ",stroke:#333,stroke-width:2px,color:#000\n";
     out << "    classDef orOp fill:" << expression_constants::or_color()
-        << ",stroke:#333,stroke-width:2px\n";
+        << ",stroke:#333,stroke-width:2px,color:#000\n";
     out << "    classDef notOp fill:" << expression_constants::not_color()
-        << ",stroke:#333,stroke-width:2px\n";
+        << ",stroke:#333,stroke-width:2px,color:#000\n";
     out << "    classDef xorOp fill:" << expression_constants::xor_color()
-        << ",stroke:#333,stroke-width:2px\n";
+        << ",stroke:#333,stroke-width:2px,color:#000\n";
 }

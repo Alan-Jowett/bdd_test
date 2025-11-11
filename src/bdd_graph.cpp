@@ -450,6 +450,6 @@ void write_bdd_to_mermaid(const teddy::bdd_manager& manager, teddy::bdd_manager:
 
     // Add CSS class definitions for BDD node colors
     out << "\n";
-    out << "    classDef bddVariable fill:lightblue,stroke:#333,stroke-width:2px\n";
-    out << "    classDef terminal fill:lightgray,stroke:#333,stroke-width:2px\n";
+    out << "    classDef bddVariable fill:lightblue,stroke:#333,stroke-width:2px,color:#000\n";
+    out << "    classDef terminal fill:lightgray,stroke:#333,stroke-width:2px,color:#000\n";
 }
