@@ -28,34 +28,55 @@ endif()
 # Define paths
 set(TEST_EXPRESSIONS_DIR "${SOURCE_DIR}/test_expressions")
 set(TEST_BUILD_DIR "${BINARY_DIR}/test_output")
-set(SOURCE_EXPRESSION_FILE "${TEST_EXPRESSIONS_DIR}/${EXPRESSION_FILE}")
-set(TEST_EXPRESSION_FILE "${TEST_BUILD_DIR}/${EXPRESSION_FILE}")
+
+# Handle different path formats for EXPRESSION_FILE
+if(IS_ABSOLUTE "${EXPRESSION_FILE}")
+    # For absolute paths (like mermaid tests), create test-specific directory
+    set(SOURCE_EXPRESSION_FILE "${EXPRESSION_FILE}")
+    get_filename_component(EXPRESSION_FILENAME "${EXPRESSION_FILE}" NAME)
+    set(TEST_CASE_DIR "${TEST_BUILD_DIR}/${TEST_NAME}")
+    set(TEST_EXPRESSION_FILE "${TEST_CASE_DIR}/${EXPRESSION_FILENAME}")
+    set(OUTPUT_DIR "${TEST_CASE_DIR}")
+else()
+    # For relative paths (legacy format)
+    set(SOURCE_EXPRESSION_FILE "${TEST_EXPRESSIONS_DIR}/${EXPRESSION_FILE}")
+    set(TEST_EXPRESSION_FILE "${TEST_BUILD_DIR}/${EXPRESSION_FILE}")
+    # Get base name for output files
+    get_filename_component(EXPRESSION_FILE_DIR "${EXPRESSION_FILE}" DIRECTORY)
+    if(EXPRESSION_FILE_DIR)
+        set(OUTPUT_DIR "${TEST_BUILD_DIR}/${EXPRESSION_FILE_DIR}")
+    else()
+        set(OUTPUT_DIR "${TEST_BUILD_DIR}")
+    endif()
+endif()
 
 # Get base name for output files
 get_filename_component(BASE_NAME "${EXPRESSION_FILE}" NAME_WE)
-get_filename_component(EXPRESSION_FILE_DIR "${EXPRESSION_FILE}" DIRECTORY)
-if(EXPRESSION_FILE_DIR)
-    set(OUTPUT_DIR "${TEST_BUILD_DIR}/${EXPRESSION_FILE_DIR}")
-else()
-    set(OUTPUT_DIR "${TEST_BUILD_DIR}")
-endif()
 
 # Determine which reference files to use based on test type
-if(DEFINED FORCE_REORDER AND FORCE_REORDER)
-    set(REFERENCE_DIR "reordered")
+if(DEFINED MERMAID_TEST AND MERMAID_TEST)
+    # For mermaid tests, use the passed REFERENCE_DIR parameter
+    if(NOT DEFINED REFERENCE_DIR)
+        message(FATAL_ERROR "REFERENCE_DIR not defined for mermaid test")
+    endif()
+    # REFERENCE_DIR is already an absolute path for mermaid tests
+    set(REFERENCE_FILES_DIR "${REFERENCE_DIR}")
+    message(STATUS "Running Mermaid generation test")
+elseif(DEFINED FORCE_REORDER AND FORCE_REORDER)
+    set(REFERENCE_FILES_DIR "${TEST_EXPRESSIONS_DIR}/reordered")
     message(STATUS "Using reordered reference files for force-reorder test")
 elseif(DEFINED TEDDY_METHOD AND TEDDY_METHOD)
-    set(REFERENCE_DIR "default_ordering")
+    set(REFERENCE_FILES_DIR "${TEST_EXPRESSIONS_DIR}/default_ordering")
     message(STATUS "Using default ordering reference files for TeDDy method test")
 else()
-    set(REFERENCE_DIR "default_ordering")
+    set(REFERENCE_FILES_DIR "${TEST_EXPRESSIONS_DIR}/default_ordering")
 endif()
 
-set(EXPECTED_NODES_FILE "${TEST_EXPRESSIONS_DIR}/${REFERENCE_DIR}/${BASE_NAME}_bdd_nodes.txt")
+set(EXPECTED_NODES_FILE "${REFERENCE_FILES_DIR}/${BASE_NAME}_bdd_nodes.txt")
 set(GENERATED_NODES_FILE "${OUTPUT_DIR}/${BASE_NAME}_bdd_nodes.txt")
-set(EXPECTED_BDD_DOT_FILE "${TEST_EXPRESSIONS_DIR}/${REFERENCE_DIR}/${BASE_NAME}_bdd.dot")
+set(EXPECTED_BDD_DOT_FILE "${REFERENCE_FILES_DIR}/${BASE_NAME}_bdd.dot")
 set(GENERATED_BDD_DOT_FILE "${OUTPUT_DIR}/${BASE_NAME}_bdd.dot")
-set(EXPECTED_TREE_DOT_FILE "${TEST_EXPRESSIONS_DIR}/${REFERENCE_DIR}/${BASE_NAME}_expression_tree.dot")
+set(EXPECTED_TREE_DOT_FILE "${REFERENCE_FILES_DIR}/${BASE_NAME}_expression_tree.dot")
 set(GENERATED_TREE_DOT_FILE "${OUTPUT_DIR}/${BASE_NAME}_expression_tree.dot")
 
 message(STATUS "Running test: ${TEST_NAME}")
@@ -70,29 +91,49 @@ if(NOT EXISTS "${SOURCE_EXPRESSION_FILE}")
     message(FATAL_ERROR "Source expression file not found: ${SOURCE_EXPRESSION_FILE}")
 endif()
 
-# Check if expected output files exist
-if(NOT EXISTS "${EXPECTED_NODES_FILE}")
-    message(FATAL_ERROR "Expected BDD nodes file not found: ${EXPECTED_NODES_FILE}")
-endif()
+# Skip traditional file checks for mermaid tests
+if(NOT DEFINED MERMAID_TEST OR NOT MERMAID_TEST)
+    # Check if expected output files exist
+    if(NOT EXISTS "${EXPECTED_NODES_FILE}")
+        message(FATAL_ERROR "Expected BDD nodes file not found: ${EXPECTED_NODES_FILE}")
+    endif()
 
-if(NOT EXISTS "${EXPECTED_BDD_DOT_FILE}")
-    message(FATAL_ERROR "Expected BDD DOT file not found: ${EXPECTED_BDD_DOT_FILE}")
-endif()
+    if(NOT EXISTS "${EXPECTED_BDD_DOT_FILE}")
+        message(FATAL_ERROR "Expected BDD DOT file not found: ${EXPECTED_BDD_DOT_FILE}")
+    endif()
 
-if(NOT EXISTS "${EXPECTED_TREE_DOT_FILE}")
-    message(FATAL_ERROR "Expected expression tree DOT file not found: ${EXPECTED_TREE_DOT_FILE}")
+    if(NOT EXISTS "${EXPECTED_TREE_DOT_FILE}")
+        message(FATAL_ERROR "Expected expression tree DOT file not found: ${EXPECTED_TREE_DOT_FILE}")
+    endif()
 endif()
 
 # Copy expression file to test directory, preserving directory structure
-get_filename_component(EXPRESSION_FILE_DIR "${EXPRESSION_FILE}" DIRECTORY)
-if(EXPRESSION_FILE_DIR)
-    file(MAKE_DIRECTORY "${TEST_BUILD_DIR}/${EXPRESSION_FILE_DIR}")
+if(IS_ABSOLUTE "${EXPRESSION_FILE}")
+    # For absolute paths, create test-specific directory and copy there
+    file(MAKE_DIRECTORY "${TEST_CASE_DIR}")
+    file(COPY "${SOURCE_EXPRESSION_FILE}" DESTINATION "${TEST_CASE_DIR}")
+else()
+    # For relative paths, preserve directory structure
+    get_filename_component(EXPRESSION_FILE_DIR "${EXPRESSION_FILE}" DIRECTORY)
+    if(EXPRESSION_FILE_DIR)
+        file(MAKE_DIRECTORY "${TEST_BUILD_DIR}/${EXPRESSION_FILE_DIR}")
+    endif()
+    file(COPY "${SOURCE_EXPRESSION_FILE}" DESTINATION "${TEST_BUILD_DIR}/${EXPRESSION_FILE_DIR}")
 endif()
-file(COPY "${SOURCE_EXPRESSION_FILE}" DESTINATION "${TEST_BUILD_DIR}/${EXPRESSION_FILE_DIR}")
 message(STATUS "Copied expression file to test directory")
 
 # Run the BDD demo executable
-if(DEFINED FORCE_REORDER AND FORCE_REORDER)
+if(DEFINED MERMAID_TEST AND MERMAID_TEST)
+    execute_process(
+        COMMAND "${EXECUTABLE}" "${TEST_EXPRESSION_FILE}" "--mermaid"
+        WORKING_DIRECTORY "${TEST_BUILD_DIR}"
+        RESULT_VARIABLE EXEC_RESULT
+        OUTPUT_VARIABLE EXEC_OUTPUT
+        ERROR_VARIABLE EXEC_ERROR
+        TIMEOUT 30
+    )
+    message(STATUS "Running with --mermaid option")
+elseif(DEFINED FORCE_REORDER AND FORCE_REORDER)
     execute_process(
         COMMAND "${EXECUTABLE}" "${TEST_EXPRESSION_FILE}" "--force-reorder"
         WORKING_DIRECTORY "${TEST_BUILD_DIR}"
@@ -130,7 +171,38 @@ endif()
 
 message(STATUS "BDD demo executed successfully")
 
-# Check if generated files exist
+# Handle Mermaid test verification (different from regular tests)
+if(DEFINED MERMAID_TEST AND MERMAID_TEST)
+    # For mermaid tests, compare the generated analysis markdown file against reference
+    set(GENERATED_ANALYSIS_FILE "${OUTPUT_DIR}/${BASE_NAME}_analysis.md")
+    set(REFERENCE_ANALYSIS_FILE "${REFERENCE_DIR}/${BASE_NAME}_analysis.md")
+
+    if(NOT EXISTS "${GENERATED_ANALYSIS_FILE}")
+        message(FATAL_ERROR "Generated analysis markdown file not found: ${GENERATED_ANALYSIS_FILE}")
+    endif()
+
+    if(NOT EXISTS "${REFERENCE_ANALYSIS_FILE}")
+        message(FATAL_ERROR "Reference analysis markdown file not found: ${REFERENCE_ANALYSIS_FILE}")
+    endif()
+
+    # Read both files for comparison
+    file(READ "${GENERATED_ANALYSIS_FILE}" GENERATED_CONTENT)
+    file(READ "${REFERENCE_ANALYSIS_FILE}" REFERENCE_CONTENT)
+
+    # Compare the files
+    if(NOT "${GENERATED_CONTENT}" STREQUAL "${REFERENCE_CONTENT}")
+        message(FATAL_ERROR "Generated analysis file differs from reference:\n"
+                           "Generated: ${GENERATED_ANALYSIS_FILE}\n"
+                           "Reference: ${REFERENCE_ANALYSIS_FILE}\n"
+                           "Files are not identical.")
+    endif()
+
+    message(STATUS "✓ Mermaid analysis file matches reference")
+    message(STATUS "✓ Test ${TEST_NAME} completed successfully - analysis file is identical to reference")
+    return()
+endif()
+
+# Check if generated files exist (non-mermaid tests)
 if(NOT EXISTS "${GENERATED_NODES_FILE}")
     message(FATAL_ERROR "Generated BDD nodes file not found: ${GENERATED_NODES_FILE}")
 endif()

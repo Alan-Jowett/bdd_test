@@ -17,6 +17,7 @@ For detailed documentation, see the [docs/](docs/) directory:
 - **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
 - **[Contributing](docs/CONTRIBUTING.md)** - Development guidelines and code style
 - **[API Documentation](docs/DOCUMENTATION.md)** - Online docs and Doxygen setup
+- **[Reference Analysis Files](test_expressions/reference_outputs/index.md)** - BDD analysis examples with visual diagrams
 - **[Complete Documentation Index](docs/README.md)** - Full documentation overview
 
 ## Features
@@ -157,6 +158,7 @@ bdd_test/
 │   ├── TROUBLESHOOTING.md             # Common issues and solutions
 │   └── CONTRIBUTING.md                # Development guidelines
 ├── test_expressions/                  # Test expression files and outputs
+│   └── reference_outputs/             # BDD analysis examples (see index.md)
 └── build/                             # Build artifacts and executables
 ```
 

@@ -104,6 +104,29 @@ function(add_bdd_teddy_test TEST_NAME EXPRESSION_FILE)
     )
 endfunction()
 
+# Define test helper function for Mermaid generation tests
+function(add_mermaid_test TEST_NAME EXPRESSION_FILE)
+    # Create a test that uses --mermaid and verifies the analysis markdown file
+    add_test(
+        NAME ${TEST_NAME}
+        COMMAND ${CMAKE_COMMAND}
+            -DTEST_NAME=${TEST_NAME}
+            -DEXPRESSION_FILE=${EXPRESSION_FILE}
+            -DEXECUTABLE=$<TARGET_FILE:bdd_demo>
+            -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+            -DBINARY_DIR=${CMAKE_BINARY_DIR}
+            -DREFERENCE_DIR=${CMAKE_SOURCE_DIR}/test_expressions/reference_outputs
+            -DMERMAID_TEST=TRUE
+            -P ${CMAKE_SOURCE_DIR}/cmake/run_bdd_test.cmake
+    )
+
+    # Set test properties
+    set_tests_properties(${TEST_NAME} PROPERTIES
+        TIMEOUT 30
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+endfunction()
+
 # Function to automatically discover and register BDD test cases
 # This function scans for .txt files in test_expressions/ and creates both
 # default ordering tests and force-reorder tests where applicable
@@ -179,6 +202,65 @@ function(register_bdd_tests)
                 # Add TeDDy method test for edge cases (should produce identical results)
                 add_bdd_teddy_test("${TEST_NAME}_teddy" "${REL_PATH}")
                 message(STATUS "Added TeDDy method edge case test: ${TEST_NAME}_teddy")
+            endif()
+        endif()
+    endforeach()
+endfunction()
+
+# Function to automatically discover and register Mermaid analysis tests
+# This function scans for expression .txt files and creates mermaid tests
+# for those that have corresponding reference analysis files
+function(register_mermaid_tests)
+    message(STATUS "Discovering Mermaid analysis tests...")
+
+    # Get all .txt files in test_expressions directory (excluding subdirectories for now)
+    file(GLOB TEST_EXPRESSION_FILES "${CMAKE_SOURCE_DIR}/test_expressions/*.txt")
+
+    foreach(EXPRESSION_FILE ${TEST_EXPRESSION_FILES})
+        # Get the relative filename
+        file(RELATIVE_PATH REL_PATH "${CMAKE_SOURCE_DIR}/test_expressions" "${EXPRESSION_FILE}")
+        get_filename_component(BASE_NAME "${REL_PATH}" NAME_WE)
+
+        # Skip generated files (those with _bdd_nodes or _expression_tree in name)
+        if(NOT "${BASE_NAME}" MATCHES ".*_(bdd_nodes|expression_tree|bdd)$")
+            # Check if reference analysis file exists
+            set(REFERENCE_ANALYSIS_FILE "${CMAKE_SOURCE_DIR}/test_expressions/reference_outputs/${BASE_NAME}_analysis.md")
+            if(EXISTS "${REFERENCE_ANALYSIS_FILE}")
+                # Create test name, handling cases where BASE_NAME already starts with "test_"
+                if("${BASE_NAME}" MATCHES "^test_.*")
+                    set(TEST_NAME "test_mermaid_${BASE_NAME}")
+                    # Remove redundant "test_" prefix to avoid "test_mermaid_test_"
+                    string(REGEX REPLACE "^test_mermaid_test_" "test_mermaid_" TEST_NAME "${TEST_NAME}")
+                else()
+                    set(TEST_NAME "test_mermaid_${BASE_NAME}")
+                endif()
+
+                # Add mermaid test
+                add_mermaid_test("${TEST_NAME}" "${CMAKE_SOURCE_DIR}/test_expressions/${REL_PATH}")
+                message(STATUS "Added mermaid test: ${TEST_NAME}")
+            endif()
+        endif()
+    endforeach()
+
+    # Handle edge cases subdirectory separately
+    file(GLOB EDGE_CASE_FILES "${CMAKE_SOURCE_DIR}/test_expressions/edge_cases/*.txt")
+
+    foreach(EXPRESSION_FILE ${EDGE_CASE_FILES})
+        # Get the base filename
+        get_filename_component(BASE_NAME "${EXPRESSION_FILE}" NAME_WE)
+
+        # Skip generated files and error cases (files that are meant to fail)
+        if(NOT "${BASE_NAME}" MATCHES ".*_(bdd_nodes|expression_tree|bdd)$" AND
+           NOT "${BASE_NAME}" MATCHES "(^|_)(error|empty|invalid|missing|comments_only|lenient_parsing)($|_)")
+            # Check if reference analysis file exists
+            set(REFERENCE_ANALYSIS_FILE "${CMAKE_SOURCE_DIR}/test_expressions/reference_outputs/${BASE_NAME}_analysis.md")
+            if(EXISTS "${REFERENCE_ANALYSIS_FILE}")
+                # Create test name
+                set(TEST_NAME "test_mermaid_${BASE_NAME}")
+
+                # Add mermaid test with full path
+                add_mermaid_test("${TEST_NAME}" "${EXPRESSION_FILE}")
+                message(STATUS "Added edge case mermaid test: ${TEST_NAME}")
             endif()
         endif()
     endforeach()

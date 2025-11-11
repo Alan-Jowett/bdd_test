@@ -324,3 +324,6 @@ add_cmdline_test(test_error_message_regression
     ERROR_CONTAINS "Expected ')' but got end of input"
     EXPECTED_EXIT_CODE 1
 )
+
+# Mermaid analysis file generation regression tests
+register_mermaid_tests()

@@ -55,7 +55,82 @@
 namespace {
 
 /**
- * @brief Writes BDD node table to any output stream
+ * @brief Core BDD node data structure for table generation
+ */
+struct BddNodeInfo {
+    int index;
+    bool is_terminal;
+    std::string variable_name;
+    int false_child_index;
+    int true_child_index;
+    std::string type;
+    int terminal_value;
+};
+
+/**
+ * @brief Collects BDD node information in topological order
+ *
+ * This function performs the common data extraction logic shared between
+ * write_bdd_nodes_to_stream and write_bdd_nodes_to_markdown.
+ *
+ * @param diagram The BDD diagram to analyze
+ * @param variable_names Ordered list of variable names for display
+ * @return Vector of BddNodeInfo structures in topological order
+ */
+std::vector<BddNodeInfo> collect_bdd_node_info(teddy::bdd_manager::diagram_t diagram,
+                                               const std::vector<std::string>& variable_names) {
+    using node_t = teddy::bdd_manager::diagram_t::node_t;
+
+    // Get nodes in topological order using dag_walker
+    std::vector<node_t*> nodes_in_order = collect_bdd_nodes_topological(diagram, variable_names);
+
+    // Reverse to achieve parents-before-children ordering with terminals at end
+    std::reverse(nodes_in_order.begin(), nodes_in_order.end());
+
+    // Create node-to-index mapping
+    std::unordered_map<node_t*, int> node_to_index;
+    for (int i = 0; i < nodes_in_order.size(); ++i) {
+        node_to_index[nodes_in_order[i]] = i;
+    }
+
+    // Collect node information
+    std::vector<BddNodeInfo> node_info;
+    node_info.reserve(nodes_in_order.size());
+
+    for (int i = 0; i < nodes_in_order.size(); ++i) {
+        node_t* node = nodes_in_order[i];
+        BddNodeInfo info;
+        info.index = i;
+        info.is_terminal = node->is_terminal();
+
+        if (node->is_terminal()) {
+            info.variable_name = "-";
+            info.false_child_index = -1;
+            info.true_child_index = -1;
+            info.type = "Terminal(" + std::to_string(node->get_value()) + ")";
+            info.terminal_value = node->get_value();
+        } else {
+            int var_index = node->get_index();
+            info.variable_name = (var_index < variable_names.size())
+                                     ? variable_names[var_index]
+                                     : std::format("x{}", var_index);
+
+            node_t* false_child = node->get_son(0);
+            node_t* true_child = node->get_son(1);
+            info.false_child_index = node_to_index[false_child];
+            info.true_child_index = node_to_index[true_child];
+            info.type = "Variable";
+            info.terminal_value = 0;  // Not used for variables
+        }
+
+        node_info.push_back(info);
+    }
+
+    return node_info;
+}
+
+/**
+ * @brief Writes BDD node table to output stream
  *
  * This function generates a comprehensive table showing the structure of a BDD,
  * including node indices, variable assignments, and child relationships.
@@ -74,58 +149,69 @@ void write_bdd_nodes_to_stream(const teddy::bdd_manager& manager,
                                teddy::bdd_manager::diagram_t diagram,
                                const std::vector<std::string>& variable_names, std::ostream& out,
                                bool include_headers = true) {
-    using node_t = teddy::bdd_manager::diagram_t::node_t;
+    std::vector<BddNodeInfo> node_info = collect_bdd_node_info(diagram, variable_names);
 
-    // Get nodes in topological order using dag_walker
-    std::vector<node_t*> nodes_in_order = collect_bdd_nodes_topological(diagram, variable_names);
-
-    // Reverse to achieve parents-before-children ordering with terminals at end
-    std::reverse(nodes_in_order.begin(), nodes_in_order.end());
-
-    // Create node-to-index mapping
-    std::unordered_map<node_t*, int> node_to_index;
-    for (int i = 0; i < nodes_in_order.size(); ++i) {
-        node_to_index[nodes_in_order[i]] = i;
-    }
-
-    // Write all nodes in the final order to stream
+    // Write headers
     if (include_headers) {
         out << "BDD Node Table (topological ordering):\n";
     }
     out << "Index | Variable | False Child | True Child | Type\n";
     out << "------|----------|-------------|------------|----------\n";
 
-    for (int i = 0; i < nodes_in_order.size(); ++i) {
-        node_t* node = nodes_in_order[i];
+    // Write table rows
+    for (const auto& info : node_info) {
+        out << std::setw(5) << info.index << " | ";
+        out << std::setw(8) << info.variable_name << " | ";
 
-        out << std::setw(5) << i << " | ";
-
-        if (node->is_terminal()) {
-            out << std::setw(8) << "-" << " | ";
+        if (info.is_terminal) {
             out << std::setw(11) << "-" << " | ";
             out << std::setw(10) << "-" << " | ";
-            out << "Terminal(" << node->get_value() << ")";
         } else {
-            int var_index = node->get_index();
-            std::string var_name = (var_index < variable_names.size())
-                                       ? variable_names[var_index]
-                                       : std::format("x{}", var_index);
-            out << std::setw(8) << var_name << " | ";
-
-            node_t* false_child = node->get_son(0);
-            node_t* true_child = node->get_son(1);
-
-            // Use the final indices
-            out << std::setw(11) << node_to_index[false_child] << " | ";
-            out << std::setw(10) << node_to_index[true_child] << " | ";
-            out << "Variable";
+            out << std::setw(11) << info.false_child_index << " | ";
+            out << std::setw(10) << info.true_child_index << " | ";
         }
-        out << "\n";
+        out << info.type << "\n";
     }
 
     if (include_headers) {
-        out << "\nTotal nodes: " << nodes_in_order.size() << "\n";
+        out << "\nTotal nodes: " << node_info.size() << "\n";
         out << "Note: Topological order reversed for parents-first display.\n";
+    }
+}
+
+/**
+ * @brief Writes BDD node table in Markdown format
+ *
+ * Generates a Markdown table showing BDD nodes with their relationships.
+ * Uses the same data as write_bdd_nodes_to_stream but formats for Markdown.
+ *
+ * @param manager The BDD manager for accessing node properties
+ * @param diagram The BDD diagram to analyze
+ * @param variable_names Ordered list of variable names for display
+ * @param out Output stream to write the Markdown table to
+ */
+void write_bdd_nodes_to_markdown(const teddy::bdd_manager& manager,
+                                 teddy::bdd_manager::diagram_t diagram,
+                                 const std::vector<std::string>& variable_names,
+                                 std::ostream& out) {
+    std::vector<BddNodeInfo> node_info = collect_bdd_node_info(diagram, variable_names);
+
+    // Write Markdown table header
+    out << "| Index | Variable | False Child | True Child | Type |\n";
+    out << "|-------|----------|-------------|------------|------|\n";
+
+    // Write table rows
+    for (const auto& info : node_info) {
+        out << "| " << info.index << " | ";
+
+        if (info.is_terminal) {
+            out << "- | - | - | " << info.type << " |\n";
+        } else {
+            out << info.variable_name << " | ";
+            out << info.false_child_index << " | ";
+            out << info.true_child_index << " | ";
+            out << info.type << " |\n";
+        }
     }
 }
 
@@ -295,12 +381,15 @@ teddy::bdd_manager::diagram_t convert_to_bdd_with_teddy_adapter(const my_express
  * - `--method=teddy` : Use TeDDy's from_expression_tree method
  * - `--quiet` or `-q` : Suppress console output of BDD structure and DOT graph (default)
  * - `--verbose` or `-v` : Show detailed console output of BDD structure and DOT graph
+ * - `--mermaid` or `-m` : Generate Mermaid format graphs for Markdown embedding
  * - `--help` or `-h` : Show help message
  *
  * Generated outputs (in same directory as input file):
  * - `*_expression_tree.dot` : DOT graph of the original expression tree
  * - `*_bdd.dot` : DOT graph of the resulting BDD
  * - `*_bdd_nodes.txt` : Detailed table of BDD nodes and structure
+ * - `*_expression_tree.md` : Mermaid graph of expression tree (with --mermaid)
+ * - `*_bdd.md` : Mermaid graph of BDD structure (with --mermaid)
  *
  * The program automatically:
  * 1. Parses the input expression file
@@ -325,6 +414,7 @@ int main(int argc, const char* argv[]) {
     bool quiet_mode = true;
     bool show_help = false;
     bool help_due_to_error = false;
+    bool generate_mermaid = false;
 
     // Parse command line arguments
     for (int i = 1; i < argc; ++i) {
@@ -344,6 +434,8 @@ int main(int argc, const char* argv[]) {
             quiet_mode = true;
         } else if (arg == "--verbose" || arg == "-v") {
             quiet_mode = false;
+        } else if (arg == "--mermaid" || arg == "-m") {
+            generate_mermaid = true;
         } else if (arg == "--help" || arg == "-h") {
             show_help = true;
             break;
@@ -381,6 +473,8 @@ int main(int argc, const char* argv[]) {
                      "graph (default)\n";
         std::cout << "  --verbose, -v         Show detailed console output of BDD structure and "
                      "DOT graph\n";
+        std::cout
+            << "  --mermaid, -m         Generate Mermaid format graphs for Markdown embedding\n";
         std::cout << "  --help, -h            Show this help message\n\n";
         std::cout << "Example expression file format:\n";
         std::cout << "  # This is a comment\n";
@@ -400,6 +494,29 @@ int main(int argc, const char* argv[]) {
     std::cout << "TeDDy BDD Demo - Building BDD from Filter Expression File\n";
     std::cout << "========================================================\n\n";
     std::cout << "Reading filter expression from: " << input_file << "\n";
+
+    // Read the original expression text first for later use in Mermaid output
+    std::string original_expression;
+    {
+        std::ifstream file(input_file);
+        if (!file.is_open()) {
+            std::cerr << "Error reading expression file: Could not open file: "
+                      << input_file.string() << "\n";
+            return 1;
+        }
+
+        std::string line;
+        while (std::getline(file, line)) {
+            line.erase(line.find_last_not_of(" \t\r\n") + 1);  // rtrim
+            line.erase(0, line.find_first_not_of(" \t\r\n"));  // ltrim
+            if (!line.empty() && line[0] != '#') {
+                if (!original_expression.empty()) {
+                    original_expression += " ";
+                }
+                original_expression += line;
+            }
+        }
+    }
 
     my_expression_ptr expr;
     try {
@@ -485,6 +602,57 @@ int main(int argc, const char* argv[]) {
                   << " -o " << get_output_path(input_file, "_expression_tree.png") << "\n\n";
     } else {
         std::cerr << "Error: Could not create output file '" << expr_dot_filename << "'\n";
+    }
+
+    // Output expression tree as Mermaid file if requested
+    if (generate_mermaid) {
+        std::string combined_mermaid_filename =
+            get_output_path(input_file, "_analysis.md").string();
+        std::ofstream combined_file(combined_mermaid_filename);
+        if (combined_file.is_open()) {
+            // Write comprehensive Markdown document with original expression and diagrams
+            combined_file << "# BDD Analysis Report\n\n";
+            combined_file << "## Original Expression\n\n";
+            combined_file << "```\n" << original_expression << "\n```\n\n";
+
+            combined_file << "## Expression Tree\n\n";
+            combined_file
+                << "The following diagram shows the parse tree of the logical expression:\n\n";
+            combined_file << "```mermaid\n";
+            write_expression_to_mermaid(*expr, combined_file);  // No title
+            combined_file << "```\n\n";
+
+            combined_file << "## Binary Decision Diagram (BDD)\n\n";
+            combined_file << "The following diagram shows the optimized BDD representation:\n\n";
+            combined_file << "```mermaid\n";
+            write_bdd_to_mermaid(manager, f, sorted_variable_names, combined_file);  // No title
+            combined_file << "```\n\n";
+
+            combined_file << "## Analysis Summary\n\n";
+            combined_file << "- **Variables**: " << sorted_variable_names.size() << "\n";
+
+            // Calculate BDD node count
+            auto nodes_in_order = collect_bdd_nodes_topological(f, sorted_variable_names);
+            combined_file << "- **BDD Nodes**: " << nodes_in_order.size() << "\n";
+            combined_file << "- **Expression**: " << original_expression << "\n\n";
+
+            // Add BDD Node Table
+            combined_file << "## BDD Node Table\n\n";
+            combined_file << "The following table shows the internal structure of the BDD with "
+                             "node relationships:\n\n";
+            write_bdd_nodes_to_markdown(manager, f, sorted_variable_names, combined_file);
+            combined_file << "\n";
+            combined_file << "**Note**: Nodes are ordered topologically (parents before children) "
+                             "with terminal nodes at the end.\n";
+
+            combined_file.close();
+            std::cout << "Combined BDD analysis saved to '" << combined_mermaid_filename << "'\n";
+            std::cout << "You can view this Markdown file with embedded Mermaid diagrams on "
+                         "GitHub/GitLab\n\n";
+        } else {
+            std::cerr << "Error: Could not create output file '" << combined_mermaid_filename
+                      << "'\n";
+        }
     }
 
     if (!quiet_mode) {
