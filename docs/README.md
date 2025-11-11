@@ -4,6 +4,9 @@ This directory contains detailed documentation for the BDD Expression Converter 
 
 ## Documentation Structure
 
+### Project Analysis
+- **[LESSONS_LEARNED.md](LESSONS_LEARNED.md)** - Comprehensive analysis of TeDDy BDD PoC insights, scalability findings, and production recommendations
+
 ### Core Documentation
 - **[BUILDING.md](BUILDING.md)** - Detailed build instructions, prerequisites, and platform-specific notes
 - **[COVERAGE.md](COVERAGE.md)** - Code coverage configuration, local generation, and CI/CD integration
@@ -22,6 +25,7 @@ This directory contains detailed documentation for the BDD Expression Converter 
 
 ### For Users
 - **Getting Started**: Start with the main [README.md](../README.md)
+- **Project Insights**: Read [LESSONS_LEARNED.md](LESSONS_LEARNED.md) for comprehensive PoC analysis
 - **Building**: See [BUILDING.md](BUILDING.md) for compilation instructions
 - **Visualizations**: Check [VISUALIZATIONS.md](VISUALIZATIONS.md) for examples
 - **Problems**: Consult [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for solutions
