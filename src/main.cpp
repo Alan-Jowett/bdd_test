@@ -287,11 +287,10 @@ teddy::bdd_manager::diagram_t convert_to_bdd_with_teddy_adapter(const my_express
  * - `program` : Uses default file "test_expressions/filter_expression.txt"
  * - `program <filename>` : Processes the specified expression file
  * - `program <filename> [options]` : Processes file with specified options
- *
  * Options:
  * - `--enable-reordering` : Enable automatic variable reordering for optimization
  * - `--disable-reordering` : Disable variable reordering (default)
- * - `--force-reorder` : Force immediate reordering after BDD construction
+ * - `--force-reorder` : Force immediate reordering and reduce after BDD construction
  * - `--method=custom` : Use custom recursive conversion method (default)
  * - `--method=teddy` : Use TeDDy's from_expression_tree method
  * - `--quiet` or `-q` : Suppress console output of BDD structure and DOT graph (default)
@@ -374,7 +373,8 @@ int main(int argc, const char* argv[]) {
         std::cout << "  --enable-reordering   Enable automatic variable reordering for BDD "
                      "optimization\n";
         std::cout << "  --disable-reordering  Disable variable reordering (default)\n";
-        std::cout << "  --force-reorder       Force immediate reordering after BDD construction\n";
+        std::cout << "  --force-reorder       Force immediate reordering and reduce after BDD "
+                     "construction\n";
         std::cout << "  --method=custom       Use custom recursive conversion method (default)\n";
         std::cout << "  --method=teddy        Use TeDDy's from_expression_tree method\n";
         std::cout << "  --quiet, -q           Suppress console output of BDD structure and DOT "
@@ -458,6 +458,11 @@ int main(int argc, const char* argv[]) {
         std::cout << "Forcing variable reordering after BDD construction...\n";
         manager.force_reorder();
         std::cout << "Variable reordering completed\n";
+
+        // Apply reduce() method after reordering for additional optimization
+        std::cout << "Applying reduce() method after reordering...\n";
+        f = manager.reduce(f);  // Call reduce() with the diagram
+        std::cout << "Reduce method completed successfully\n";
     }
 
     std::cout << "Function created successfully!\n";
