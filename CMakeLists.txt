@@ -326,8 +326,9 @@ add_cmdline_test(test_error_message_regression
 )
 
 # Mermaid analysis file generation regression tests
-message(STATUS "Adding Mermaid regression tests")
+message(STATUS "Adding comprehensive Mermaid regression tests")
 
+# Main expression files
 add_mermaid_test(test_mermaid_simple_expression
     "${CMAKE_SOURCE_DIR}/test_expressions/simple_expression.txt"
 )
@@ -346,4 +347,53 @@ add_mermaid_test(test_mermaid_deeply_nested
 
 add_mermaid_test(test_mermaid_my_test_expression
     "${CMAKE_SOURCE_DIR}/test_expressions/my_test_expression.txt"
+)
+
+add_mermaid_test(test_mermaid_many_variables
+    "${CMAKE_SOURCE_DIR}/test_expressions/many_variables.txt"
+)
+
+add_mermaid_test(test_mermaid_multiple_not
+    "${CMAKE_SOURCE_DIR}/test_expressions/multiple_not.txt"
+)
+
+add_mermaid_test(test_mermaid_same_variable
+    "${CMAKE_SOURCE_DIR}/test_expressions/same_variable.txt"
+)
+
+add_mermaid_test(test_mermaid_single_variable
+    "${CMAKE_SOURCE_DIR}/test_expressions/single_variable.txt"
+)
+
+add_mermaid_test(test_mermaid_single_variable_unusual_name
+    "${CMAKE_SOURCE_DIR}/test_expressions/single_variable_unusual_name.txt"
+)
+
+add_mermaid_test(test_mermaid_test_subdir_expression
+    "${CMAKE_SOURCE_DIR}/test_expressions/test_subdir_expression.txt"
+)
+
+add_mermaid_test(test_mermaid_underscore_vars
+    "${CMAKE_SOURCE_DIR}/test_expressions/underscore_vars.txt"
+)
+
+add_mermaid_test(test_mermaid_xor_chain
+    "${CMAKE_SOURCE_DIR}/test_expressions/xor_chain.txt"
+)
+
+# Edge case expression files
+add_mermaid_test(test_mermaid_boundary_detection_regression
+    "${CMAKE_SOURCE_DIR}/test_expressions/edge_cases/boundary_detection_regression.txt"
+)
+
+add_mermaid_test(test_mermaid_complex_boundary_regression
+    "${CMAKE_SOURCE_DIR}/test_expressions/edge_cases/complex_boundary_regression.txt"
+)
+
+add_mermaid_test(test_mermaid_operator_keywords_in_vars
+    "${CMAKE_SOURCE_DIR}/test_expressions/edge_cases/operator_keywords_in_vars.txt"
+)
+
+add_mermaid_test(test_mermaid_unicode_chars_regression
+    "${CMAKE_SOURCE_DIR}/test_expressions/edge_cases/unicode_chars_regression.txt"
 )
