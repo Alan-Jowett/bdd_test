@@ -82,6 +82,28 @@ function(add_bdd_force_reorder_test TEST_NAME EXPRESSION_FILE)
     )
 endfunction()
 
+# Define test helper function for TeDDy method BDD generation tests
+function(add_bdd_teddy_test TEST_NAME EXPRESSION_FILE)
+    # Create a test that uses --method=teddy and compares against default reference files
+    add_test(
+        NAME ${TEST_NAME}
+        COMMAND ${CMAKE_COMMAND}
+            -DTEST_NAME=${TEST_NAME}
+            -DEXPRESSION_FILE=${EXPRESSION_FILE}
+            -DEXECUTABLE=$<TARGET_FILE:bdd_demo>
+            -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+            -DBINARY_DIR=${CMAKE_BINARY_DIR}
+            -DTEDDY_METHOD=TRUE
+            -P ${CMAKE_SOURCE_DIR}/cmake/run_bdd_test.cmake
+    )
+
+    # Set test properties
+    set_tests_properties(${TEST_NAME} PROPERTIES
+        TIMEOUT 30
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+endfunction()
+
 # Function to automatically discover and register BDD test cases
 # This function scans for .txt files in test_expressions/ and creates both
 # default ordering tests and force-reorder tests where applicable
@@ -109,6 +131,10 @@ function(register_bdd_tests)
                 # Add default ordering test
                 add_bdd_test("${TEST_NAME}" "${REL_PATH}")
                 message(STATUS "Added default ordering test: ${TEST_NAME}")
+
+                # Add TeDDy method test (should produce identical results)
+                add_bdd_teddy_test("${TEST_NAME}_teddy" "${REL_PATH}")
+                message(STATUS "Added TeDDy method test: ${TEST_NAME}_teddy")
 
                 # Check if reordered reference files exist
                 set(REORDERED_NODES_FILE "${CMAKE_SOURCE_DIR}/test_expressions/reordered/${BASE_NAME}_bdd_nodes.txt")
@@ -149,6 +175,10 @@ function(register_bdd_tests)
                 # Add default ordering test
                 add_bdd_test("${TEST_NAME}" "${REL_PATH}")
                 message(STATUS "Added edge case test: ${TEST_NAME}")
+
+                # Add TeDDy method test for edge cases (should produce identical results)
+                add_bdd_teddy_test("${TEST_NAME}_teddy" "${REL_PATH}")
+                message(STATUS "Added TeDDy method edge case test: ${TEST_NAME}_teddy")
             endif()
         endif()
     endforeach()

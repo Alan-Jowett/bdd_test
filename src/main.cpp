@@ -44,6 +44,7 @@
 
 #include "bdd_graph.hpp"
 #include "dag_walker.hpp"
+#include "expression_adapter.hpp"
 #include "expression_graph.hpp"
 #include "expression_parser.hpp"
 
@@ -227,6 +228,48 @@ teddy::bdd_manager::diagram_t convert_to_bdd(const my_expression& expr, teddy::b
     return convert_recursive(expr);
 }
 
+/**
+ * @brief Alternative conversion using TeDDy's built-in from_expression_tree method
+ *
+ * This function demonstrates using TeDDy's native from_expression_tree method
+ * by wrapping our custom expression types with an adapter that conforms to
+ * the expression_node concept.
+ *
+ * The conversion process:
+ * 1. Collects all unique variable names using dag_walker
+ * 2. Creates a sorted variable mapping for consistent BDD ordering
+ * 3. Wraps the root expression with an adapter
+ * 4. Uses TeDDy's from_expression_tree method for conversion
+ *
+ * @param expr The root expression to convert
+ * @param mgr Reference to the BDD manager for creating BDD nodes
+ * @return BDD diagram representing the logical function
+ *
+ * @throws std::runtime_error If a variable reference is not found during conversion
+ *
+ * @note This is an experimental alternative to compare performance and behavior
+ *       with our custom recursive conversion approach.
+ */
+teddy::bdd_manager::diagram_t convert_to_bdd_with_teddy_adapter(const my_expression& expr,
+                                                                teddy::bdd_manager& mgr) {
+    // First pass: collect all unique variable names using dag_walker
+    std::unordered_set<std::string> variable_names;
+    collect_variables_with_dag_walker(expr, variable_names);
+
+    // Build variable map with sorted variable names for consistent ordering
+    std::vector<std::string> sorted_vars(variable_names.begin(), variable_names.end());
+    std::ranges::sort(sorted_vars);
+
+    std::unordered_map<std::string, int> var_map;
+    for (size_t i = 0; i < sorted_vars.size(); ++i) {
+        var_map[sorted_vars[i]] = static_cast<int>(i);
+    }
+
+    // Create adapter and use TeDDy's from_expression_tree
+    expression_adapter adapter(expr, var_map);
+    return mgr.from_expression_tree(adapter);
+}
+
 }  // end anonymous namespace
 
 // ============================================================================
@@ -244,11 +287,14 @@ teddy::bdd_manager::diagram_t convert_to_bdd(const my_expression& expr, teddy::b
  * - `program` : Uses default file "test_expressions/filter_expression.txt"
  * - `program <filename>` : Processes the specified expression file
  * - `program <filename> [options]` : Processes file with specified options
- *
  * Options:
  * - `--enable-reordering` : Enable automatic variable reordering for optimization
  * - `--disable-reordering` : Disable variable reordering (default)
  * - `--force-reorder` : Force immediate reordering and reduce after BDD construction
+ * - `--method=custom` : Use custom recursive conversion method (default)
+ * - `--method=teddy` : Use TeDDy's from_expression_tree method
+ * - `--quiet` or `-q` : Suppress console output of BDD structure and DOT graph (default)
+ * - `--verbose` or `-v` : Show detailed console output of BDD structure and DOT graph
  * - `--help` or `-h` : Show help message
  *
  * Generated outputs (in same directory as input file):
@@ -275,6 +321,8 @@ int main(int argc, const char* argv[]) {
     std::filesystem::path input_file = "";
     bool enable_auto_reordering = false;
     bool force_reorder_after_build = false;
+    enum class ConversionMethod { Custom, TeDDy } conversion_method = ConversionMethod::Custom;
+    bool quiet_mode = true;
     bool show_help = false;
     bool help_due_to_error = false;
 
@@ -288,6 +336,14 @@ int main(int argc, const char* argv[]) {
             enable_auto_reordering = false;
         } else if (arg == "--force-reorder") {
             force_reorder_after_build = true;
+        } else if (arg == "--method=custom") {
+            conversion_method = ConversionMethod::Custom;
+        } else if (arg == "--method=teddy") {
+            conversion_method = ConversionMethod::TeDDy;
+        } else if (arg == "--quiet" || arg == "-q") {
+            quiet_mode = true;
+        } else if (arg == "--verbose" || arg == "-v") {
+            quiet_mode = false;
         } else if (arg == "--help" || arg == "-h") {
             show_help = true;
             break;
@@ -319,6 +375,12 @@ int main(int argc, const char* argv[]) {
         std::cout << "  --disable-reordering  Disable variable reordering (default)\n";
         std::cout << "  --force-reorder       Force immediate reordering and reduce after BDD "
                      "construction\n";
+        std::cout << "  --method=custom       Use custom recursive conversion method (default)\n";
+        std::cout << "  --method=teddy        Use TeDDy's from_expression_tree method\n";
+        std::cout << "  --quiet, -q           Suppress console output of BDD structure and DOT "
+                     "graph (default)\n";
+        std::cout << "  --verbose, -v         Show detailed console output of BDD structure and "
+                     "DOT graph\n";
         std::cout << "  --help, -h            Show this help message\n\n";
         std::cout << "Example expression file format:\n";
         std::cout << "  # This is a comment\n";
@@ -377,8 +439,19 @@ int main(int argc, const char* argv[]) {
     // Import operator namespace for cleaner syntax
     using namespace teddy::ops;
 
-    // Convert the expression tree to BDD (variable map built dynamically)
-    bdd_t f = convert_to_bdd(*expr, manager);
+    // Convert the expression tree to BDD using selected method
+    bdd_t f;
+    switch (conversion_method) {
+        case ConversionMethod::Custom:
+            std::cout << "Converting expression to BDD using custom recursive method...\n";
+            f = convert_to_bdd(*expr, manager);
+            break;
+        case ConversionMethod::TeDDy:
+            std::cout
+                << "Converting expression to BDD using TeDDy's from_expression_tree method...\n";
+            f = convert_to_bdd_with_teddy_adapter(*expr, manager);
+            break;
+    }
 
     // Force variable reordering if requested
     if (force_reorder_after_build) {
@@ -386,8 +459,17 @@ int main(int argc, const char* argv[]) {
         manager.force_reorder();
         std::cout << "Variable reordering completed\n";
 
-        f = manager.reorder(f);  // Update diagram after reordering
-        std::cout << "Reordering applied to BDD diagram\n";
+        // Apply reduce() method after reordering for additional optimization
+        std::cout << "Applying reduce() method after reordering...\n";
+        try {
+            bdd_t reduced_f = manager.reduce(f);  // Call reduce() with the diagram
+            f = reduced_f;                        // Use the reduced version
+            std::cout << "Reduce method completed successfully\n";
+        } catch (const std::exception& e) {
+            std::cout << "Warning: Error calling reduce(): " << e.what() << "\n";
+        } catch (...) {
+            std::cout << "Warning: Unknown error calling reduce() - continuing without reduction\n";
+        }
     }
 
     std::cout << "Function created successfully!\n";
@@ -412,17 +494,19 @@ int main(int argc, const char* argv[]) {
         std::cerr << "Error: Could not create output file '" << expr_dot_filename << "'\n";
     }
 
-    // Print BDD node structure
-    std::cout << "BDD Node Structure:\n";
-    std::cout << "==================\n";
-    write_bdd_nodes_to_stream(manager, f, sorted_variable_names, std::cout, true);
-    std::cout << "\n";
+    if (!quiet_mode) {
+        // Print BDD node structure
+        std::cout << "BDD Node Structure:\n";
+        std::cout << "==================\n";
+        write_bdd_nodes_to_stream(manager, f, sorted_variable_names, std::cout, true);
+        std::cout << "\n";
 
-    // Output DOT representation to console
-    std::cout << "DOT representation of the BDD:\n";
-    std::cout << "==============================\n";
-    write_bdd_to_dot(manager, f, sorted_variable_names, std::cout);
-    std::cout << "\n\n";
+        // Output DOT representation to console
+        std::cout << "DOT representation of the BDD:\n";
+        std::cout << "==============================\n";
+        write_bdd_to_dot(manager, f, sorted_variable_names, std::cout);
+        std::cout << "\n\n";
+    }
 
     // Output DOT representation to file
     std::ofstream dot_file(bdd_dot_filename);
