@@ -409,6 +409,28 @@ int main(int argc, const char* argv[]) {
     std::cout << "========================================================\n\n";
     std::cout << "Reading filter expression from: " << input_file << "\n";
 
+    // Read the original expression text first for later use in Mermaid output
+    std::string original_expression;
+    {
+        std::ifstream file(input_file);
+        if (!file.is_open()) {
+            std::cerr << "Could not open file: " << input_file.string() << "\n";
+            return 1;
+        }
+
+        std::string line;
+        while (std::getline(file, line)) {
+            line.erase(line.find_last_not_of(" \t\r\n") + 1);  // rtrim
+            line.erase(0, line.find_first_not_of(" \t\r\n"));  // ltrim
+            if (!line.empty() && line[0] != '#') {
+                if (!original_expression.empty()) {
+                    original_expression += " ";
+                }
+                original_expression += line;
+            }
+        }
+    }
+
     my_expression_ptr expr;
     try {
         expr = read_expression_from_file(input_file.string());
@@ -502,17 +524,43 @@ int main(int argc, const char* argv[]) {
 
     // Output expression tree as Mermaid file if requested
     if (generate_mermaid) {
-        std::ofstream expr_mermaid_file(expr_mermaid_filename);
-        if (expr_mermaid_file.is_open()) {
-            // Generate complete Mermaid graph representation
-            write_expression_to_mermaid(*expr, expr_mermaid_file, "Expression Tree");
+        std::string combined_mermaid_filename =
+            get_output_path(input_file, "_analysis.md").string();
+        std::ofstream combined_file(combined_mermaid_filename);
+        if (combined_file.is_open()) {
+            // Write comprehensive Markdown document with original expression and diagrams
+            combined_file << "# BDD Analysis Report\n\n";
+            combined_file << "## Original Expression\n\n";
+            combined_file << "```\n" << original_expression << "\n```\n\n";
 
-            expr_mermaid_file.close();
-            std::cout << "Expression tree Mermaid representation saved to '"
-                      << expr_mermaid_filename << "'\n";
-            std::cout << "You can embed it in Markdown documents or view on GitHub/GitLab\n\n";
+            combined_file << "## Expression Tree\n\n";
+            combined_file
+                << "The following diagram shows the parse tree of the logical expression:\n\n";
+            combined_file << "```mermaid\n";
+            write_expression_to_mermaid(*expr, combined_file);  // No title
+            combined_file << "```\n\n";
+
+            combined_file << "## Binary Decision Diagram (BDD)\n\n";
+            combined_file << "The following diagram shows the optimized BDD representation:\n\n";
+            combined_file << "```mermaid\n";
+            write_bdd_to_mermaid(manager, f, sorted_variable_names, combined_file);  // No title
+            combined_file << "```\n\n";
+
+            combined_file << "## Analysis Summary\n\n";
+            combined_file << "- **Variables**: " << sorted_variable_names.size() << "\n";
+
+            // Calculate BDD node count
+            auto nodes_in_order = collect_bdd_nodes_topological(f, sorted_variable_names);
+            combined_file << "- **BDD Nodes**: " << nodes_in_order.size() << "\n";
+            combined_file << "- **Expression**: " << original_expression << "\n";
+
+            combined_file.close();
+            std::cout << "Combined BDD analysis saved to '" << combined_mermaid_filename << "'\n";
+            std::cout << "You can view this Markdown file with embedded Mermaid diagrams on "
+                         "GitHub/GitLab\n\n";
         } else {
-            std::cerr << "Error: Could not create output file '" << expr_mermaid_filename << "'\n";
+            std::cerr << "Error: Could not create output file '" << combined_mermaid_filename
+                      << "'\n";
         }
     }
 
@@ -541,22 +589,6 @@ int main(int argc, const char* argv[]) {
     } else {
         std::cerr << "Error: Could not create output file '" << bdd_dot_filename << "'\n";
         return 1;
-    }
-
-    // Output BDD as Mermaid file if requested
-    if (generate_mermaid) {
-        std::ofstream bdd_mermaid_file(bdd_mermaid_filename);
-        if (bdd_mermaid_file.is_open()) {
-            // Generate complete Mermaid graph representation
-            write_bdd_to_mermaid(manager, f, sorted_variable_names, bdd_mermaid_file, "BDD");
-
-            bdd_mermaid_file.close();
-            std::cout << "BDD Mermaid representation saved to '" << bdd_mermaid_filename << "'\n";
-            std::cout << "You can embed it in Markdown documents or view on GitHub/GitLab\n";
-        } else {
-            std::cerr << "Error: Could not create output file '" << bdd_mermaid_filename << "'\n";
-            return 1;
-        }
     }
 
     // Output BDD node table to file
