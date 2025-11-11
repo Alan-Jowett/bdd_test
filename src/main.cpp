@@ -615,7 +615,7 @@ int main(int argc, const char* argv[]) {
             write_bdd_nodes_to_markdown(manager, f, sorted_variable_names, combined_file);
             combined_file << "\n";
             combined_file << "**Note**: Nodes are ordered topologically (parents before children) "
-                             "with terminal nodes at the end.\n\n";
+                             "with terminal nodes at the end.\n";
 
             combined_file.close();
             std::cout << "Combined BDD analysis saved to '" << combined_mermaid_filename << "'\n";
