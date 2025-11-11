@@ -17,7 +17,9 @@ For detailed documentation, see the [docs/](docs/) directory:
 - **[Contributing](docs/CONTRIBUTING.md)** - Development guidelines and code style
 - **[API Documentation](docs/DOCUMENTATION.md)** - Online docs and Doxygen setup
 - **[Reference Analysis Files](test_expressions/reference_outputs/index.md)** - BDD analysis examples with visual diagrams
-- **[Complete Documentation Index](docs/README.md)** - Full documentation overview## Features
+- **[Complete Documentation Index](docs/README.md)** - Full documentation overview
+
+## Features
 
 ### Core Functionality
 - **Expression Parsing**: Reads logical expressions from text files with support for AND, OR, NOT, XOR operators

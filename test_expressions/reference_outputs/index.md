@@ -1,6 +1,6 @@
 # Reference Analysis Files
 
-This directory contains reference analysis files used for mermaid regression testing. Each file includes comprehensive BDD analysis with visual diagrams and structured data tables.
+This directory contains reference analysis files used for Mermaid regression testing. Each file includes comprehensive BDD analysis with visual diagrams and structured data tables.
 
 ## 📊 Analysis File Structure
 
@@ -15,7 +15,7 @@ Each analysis file contains:
 
 ### Basic Expressions
 - **[simple_expression_analysis.md](simple_expression_analysis.md)** - `(a AND b) OR (c AND d)`
-- **[my_test_expression_analysis.md](my_test_expression_analysis.md)** - Simple test expression
+- **[my_test_expression_analysis.md](my_test_expression_analysis.md)** - `NOT (a OR b) AND c`
 - **[single_variable_analysis.md](single_variable_analysis.md)** - Single variable expression
 - **[single_variable_unusual_name_analysis.md](single_variable_unusual_name_analysis.md)** - Variable with special characters
 

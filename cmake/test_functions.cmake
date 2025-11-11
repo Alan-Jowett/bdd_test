@@ -251,7 +251,7 @@ function(register_mermaid_tests)
 
         # Skip generated files and error cases (files that are meant to fail)
         if(NOT "${BASE_NAME}" MATCHES ".*_(bdd_nodes|expression_tree|bdd)$" AND
-           NOT "${BASE_NAME}" MATCHES ".*(error|empty|invalid|missing|comments_only|lenient_parsing).*")
+           NOT "${BASE_NAME}" MATCHES "(^|_)(error|empty|invalid|missing|comments_only|lenient_parsing)($|_)")
             # Check if reference analysis file exists
             set(REFERENCE_ANALYSIS_FILE "${CMAKE_SOURCE_DIR}/test_expressions/reference_outputs/${BASE_NAME}_analysis.md")
             if(EXISTS "${REFERENCE_ANALYSIS_FILE}")

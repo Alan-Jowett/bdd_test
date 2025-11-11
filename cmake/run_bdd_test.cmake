@@ -31,22 +31,17 @@ set(TEST_BUILD_DIR "${BINARY_DIR}/test_output")
 
 # Handle different path formats for EXPRESSION_FILE
 if(IS_ABSOLUTE "${EXPRESSION_FILE}")
-    # For absolute paths (like mermaid tests)
+    # For absolute paths (like mermaid tests), create test-specific directory
     set(SOURCE_EXPRESSION_FILE "${EXPRESSION_FILE}")
     get_filename_component(EXPRESSION_FILENAME "${EXPRESSION_FILE}" NAME)
-    set(TEST_EXPRESSION_FILE "${TEST_BUILD_DIR}/${EXPRESSION_FILENAME}")
+    set(TEST_CASE_DIR "${TEST_BUILD_DIR}/${TEST_NAME}")
+    set(TEST_EXPRESSION_FILE "${TEST_CASE_DIR}/${EXPRESSION_FILENAME}")
+    set(OUTPUT_DIR "${TEST_CASE_DIR}")
 else()
     # For relative paths (legacy format)
     set(SOURCE_EXPRESSION_FILE "${TEST_EXPRESSIONS_DIR}/${EXPRESSION_FILE}")
     set(TEST_EXPRESSION_FILE "${TEST_BUILD_DIR}/${EXPRESSION_FILE}")
-endif()
-
-# Get base name for output files
-if(IS_ABSOLUTE "${EXPRESSION_FILE}")
-    get_filename_component(BASE_NAME "${EXPRESSION_FILE}" NAME_WE)
-    set(OUTPUT_DIR "${TEST_BUILD_DIR}")
-else()
-    get_filename_component(BASE_NAME "${EXPRESSION_FILE}" NAME_WE)
+    # Get base name for output files
     get_filename_component(EXPRESSION_FILE_DIR "${EXPRESSION_FILE}" DIRECTORY)
     if(EXPRESSION_FILE_DIR)
         set(OUTPUT_DIR "${TEST_BUILD_DIR}/${EXPRESSION_FILE_DIR}")
@@ -54,6 +49,9 @@ else()
         set(OUTPUT_DIR "${TEST_BUILD_DIR}")
     endif()
 endif()
+
+# Get base name for output files
+get_filename_component(BASE_NAME "${EXPRESSION_FILE}" NAME_WE)
 
 # Determine which reference files to use based on test type
 if(DEFINED MERMAID_TEST AND MERMAID_TEST)
@@ -111,8 +109,9 @@ endif()
 
 # Copy expression file to test directory, preserving directory structure
 if(IS_ABSOLUTE "${EXPRESSION_FILE}")
-    # For absolute paths, just copy to test directory root
-    file(COPY "${SOURCE_EXPRESSION_FILE}" DESTINATION "${TEST_BUILD_DIR}")
+    # For absolute paths, create test-specific directory and copy there
+    file(MAKE_DIRECTORY "${TEST_CASE_DIR}")
+    file(COPY "${SOURCE_EXPRESSION_FILE}" DESTINATION "${TEST_CASE_DIR}")
 else()
     # For relative paths, preserve directory structure
     get_filename_component(EXPRESSION_FILE_DIR "${EXPRESSION_FILE}" DIRECTORY)
@@ -175,8 +174,7 @@ message(STATUS "BDD demo executed successfully")
 # Handle Mermaid test verification (different from regular tests)
 if(DEFINED MERMAID_TEST AND MERMAID_TEST)
     # For mermaid tests, compare the generated analysis markdown file against reference
-    get_filename_component(BASE_NAME "${EXPRESSION_FILE}" NAME_WE)
-    set(GENERATED_ANALYSIS_FILE "${BINARY_DIR}/test_output/${BASE_NAME}_analysis.md")
+    set(GENERATED_ANALYSIS_FILE "${OUTPUT_DIR}/${BASE_NAME}_analysis.md")
     set(REFERENCE_ANALYSIS_FILE "${REFERENCE_DIR}/${BASE_NAME}_analysis.md")
 
     if(NOT EXISTS "${GENERATED_ANALYSIS_FILE}")
