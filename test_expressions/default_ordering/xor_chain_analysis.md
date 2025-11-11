@@ -33,6 +33,22 @@ flowchart TD
     N3 --> N7
     N2 --> N8
     N1 --> N9
+
+    class N1 xorOp
+    class N2 xorOp
+    class N3 xorOp
+    class N4 xorOp
+    class N5 variable
+    class N6 variable
+    class N7 variable
+    class N8 variable
+    class N9 variable
+
+    classDef variable fill:lightblue,stroke:#333,stroke-width:2px
+    classDef andOp fill:lightgreen,stroke:#333,stroke-width:2px
+    classDef orOp fill:lightcoral,stroke:#333,stroke-width:2px
+    classDef notOp fill:yellow,stroke:#333,stroke-width:2px
+    classDef xorOp fill:lightpink,stroke:#333,stroke-width:2px
 ```
 
 ## Binary Decision Diagram (BDD)
@@ -74,6 +90,21 @@ flowchart TD
     N9 --> N6
     N10 -.-> N8
     N10 --> N9
+
+    class N0 terminal
+    class N1 terminal
+    class N2 bddVariable
+    class N3 bddVariable
+    class N4 bddVariable
+    class N5 bddVariable
+    class N6 bddVariable
+    class N7 bddVariable
+    class N8 bddVariable
+    class N9 bddVariable
+    class N10 bddVariable
+
+    classDef bddVariable fill:lightblue,stroke:#333,stroke-width:2px
+    classDef terminal fill:lightgray,stroke:#333,stroke-width:2px
 ```
 
 ## Analysis Summary

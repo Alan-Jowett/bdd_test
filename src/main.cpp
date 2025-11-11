@@ -130,6 +130,65 @@ void write_bdd_nodes_to_stream(const teddy::bdd_manager& manager,
 }
 
 /**
+ * @brief Writes BDD node table in Markdown format
+ *
+ * Generates a Markdown table showing BDD nodes with their relationships.
+ * Uses the same data as write_bdd_nodes_to_stream but formats for Markdown.
+ *
+ * @param manager The BDD manager for accessing node properties
+ * @param diagram The BDD diagram to analyze
+ * @param variable_names Ordered list of variable names for display
+ * @param out Output stream to write the Markdown table to
+ */
+void write_bdd_nodes_to_markdown(const teddy::bdd_manager& manager,
+                                 teddy::bdd_manager::diagram_t diagram,
+                                 const std::vector<std::string>& variable_names,
+                                 std::ostream& out) {
+    using node_t = teddy::bdd_manager::diagram_t::node_t;
+
+    // Get nodes in topological order using dag_walker
+    std::vector<node_t*> nodes_in_order = collect_bdd_nodes_topological(diagram, variable_names);
+
+    // Reverse to achieve parents-before-children ordering with terminals at end
+    std::reverse(nodes_in_order.begin(), nodes_in_order.end());
+
+    // Create node-to-index mapping
+    std::unordered_map<node_t*, int> node_to_index;
+    for (int i = 0; i < nodes_in_order.size(); ++i) {
+        node_to_index[nodes_in_order[i]] = i;
+    }
+
+    // Write Markdown table header
+    out << "| Index | Variable | False Child | True Child | Type |\n";
+    out << "|-------|----------|-------------|------------|------|\n";
+
+    // Write table rows
+    for (int i = 0; i < nodes_in_order.size(); ++i) {
+        node_t* node = nodes_in_order[i];
+
+        out << "| " << i << " | ";
+
+        if (node->is_terminal()) {
+            out << "- | - | - | Terminal(" << node->get_value() << ") |\n";
+        } else {
+            int var_index = node->get_index();
+            std::string var_name = (var_index < variable_names.size())
+                                       ? variable_names[var_index]
+                                       : "x" + std::to_string(var_index);
+            out << var_name << " | ";
+
+            node_t* false_child = node->get_son(0);
+            node_t* true_child = node->get_son(1);
+
+            // Use the final indices
+            out << node_to_index[false_child] << " | ";
+            out << node_to_index[true_child] << " | ";
+            out << "Variable |\n";
+        }
+    }
+}
+
+/**
  * @brief Constructs output file path with suffix in same directory as input file
  *
  * Takes an input file path and generates a new path in the same directory
@@ -547,7 +606,16 @@ int main(int argc, const char* argv[]) {
             // Calculate BDD node count
             auto nodes_in_order = collect_bdd_nodes_topological(f, sorted_variable_names);
             combined_file << "- **BDD Nodes**: " << nodes_in_order.size() << "\n";
-            combined_file << "- **Expression**: " << original_expression << "\n";
+            combined_file << "- **Expression**: " << original_expression << "\n\n";
+
+            // Add BDD Node Table
+            combined_file << "## BDD Node Table\n\n";
+            combined_file << "The following table shows the internal structure of the BDD with "
+                             "node relationships:\n\n";
+            write_bdd_nodes_to_markdown(manager, f, sorted_variable_names, combined_file);
+            combined_file << "\n";
+            combined_file << "**Note**: Nodes are ordered topologically (parents before children) "
+                             "with terminal nodes at the end.\n\n";
 
             combined_file.close();
             std::cout << "Combined BDD analysis saved to '" << combined_mermaid_filename << "'\n";

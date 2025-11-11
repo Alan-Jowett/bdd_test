@@ -138,3 +138,25 @@ flowchart TD
 - **Variables**: 7
 - **BDD Nodes**: 13
 - **Expression**: (var1 AND var2) OR (NOT var3) XOR (var4 OR var5) AND (NOT (var6 XOR var7))
+
+## BDD Node Table
+
+The following table shows the internal structure of the BDD with node relationships:
+
+| Index | Variable | False Child | True Child | Type |
+|-------|----------|-------------|------------|------|
+| 0 | var1 | 2 | 1 | Variable |
+| 1 | var2 | 2 | 6 | Variable |
+| 2 | var3 | 6 | 3 | Variable |
+| 3 | var4 | 4 | 5 | Variable |
+| 4 | var5 | 11 | 5 | Variable |
+| 5 | var6 | 9 | 10 | Variable |
+| 6 | var4 | 7 | 8 | Variable |
+| 7 | var5 | 12 | 8 | Variable |
+| 8 | var6 | 10 | 9 | Variable |
+| 9 | var7 | 12 | 11 | Variable |
+| 10 | var7 | 11 | 12 | Variable |
+| 11 | - | - | - | Terminal(0) |
+| 12 | - | - | - | Terminal(1) |
+
+**Note**: Nodes are ordered topologically (parents before children) with terminal nodes at the end.
