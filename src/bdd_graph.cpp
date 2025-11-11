@@ -408,13 +408,8 @@ void write_bdd_to_mermaid(const teddy::bdd_manager& manager, teddy::bdd_manager:
     }
 
     // Add separator between nodes and edges if we have both
-    bool has_edges = false;
-    for (node_t* node : nodes) {
-        if (!node->is_terminal()) {
-            has_edges = true;
-            break;
-        }
-    }
+    bool has_edges = std::any_of(nodes.begin(), nodes.end(),
+                                 [](const node_t* node) { return !node->is_terminal(); });
 
     if (!nodes.empty() && has_edges) {
         out << "\n";
