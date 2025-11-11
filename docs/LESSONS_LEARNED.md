@@ -112,7 +112,7 @@ teddy::bdd_manager::diagram_t convert_to_bdd_with_teddy_adapter(const my_express
 | Problem Size | Variables | BDD Nodes | Generation Time | Memory Usage | Status |
 |--------------|-----------|-----------|----------------|--------------|---------|
 | 4-Queens | 16 | 95 | <1s | Minimal | ✅ Production Ready |
-| 6-Queens | 36 | 3,361 | ~5s | Moderate | ✅ Practical Limit |
+| 6-Queens | 36 | 3,361 | ~1.3s | Moderate | ✅ Practical Limit |
 | 8-Queens | 64 | 71,166 | 1.83s | High but Manageable | ✅ Advanced Testing |
 
 **Scalability Insights**:
