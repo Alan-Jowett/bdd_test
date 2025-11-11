@@ -188,8 +188,9 @@ class expression_adapter {
                     if (variant_expr.expr) {
                         left_adapter_ =
                             std::make_unique<expression_adapter>(*variant_expr.expr, var_map_);
-                        // For NOT operations, create a dummy right adapter with the same expression
-                        // since TeDDy expects binary operations
+                        // For NOT operations, TeDDy's from_expression_tree expects binary
+                        // operations. Create a dummy right adapter with the same expression to
+                        // satisfy this requirement.
                         right_adapter_ =
                             std::make_unique<expression_adapter>(*variant_expr.expr, var_map_);
                     }
@@ -198,7 +199,6 @@ class expression_adapter {
             expr_);
     }
 
-   private:
     const my_expression& expr_;                            ///< Reference to the wrapped expression
     const std::unordered_map<std::string, int>& var_map_;  ///< Reference to variable mapping
     std::unique_ptr<expression_adapter> left_adapter_;     ///< Left child adapter

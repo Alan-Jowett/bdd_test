@@ -25,7 +25,6 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <chrono>
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -483,16 +482,14 @@ int main(int argc, const char* argv[]) {
         std::cerr << "Error: Could not create output file '" << expr_dot_filename << "'\n";
     }
 
-    // Print BDD node structure
     if (!quiet_mode) {
+        // Print BDD node structure
         std::cout << "BDD Node Structure:\n";
         std::cout << "==================\n";
         write_bdd_nodes_to_stream(manager, f, sorted_variable_names, std::cout, true);
         std::cout << "\n";
-    }
 
-    // Output DOT representation to console
-    if (!quiet_mode) {
+        // Output DOT representation to console
         std::cout << "DOT representation of the BDD:\n";
         std::cout << "==============================\n";
         write_bdd_to_dot(manager, f, sorted_variable_names, std::cout);
