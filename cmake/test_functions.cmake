@@ -104,6 +104,29 @@ function(add_bdd_teddy_test TEST_NAME EXPRESSION_FILE)
     )
 endfunction()
 
+# Define test helper function for Mermaid generation tests
+function(add_mermaid_test TEST_NAME EXPRESSION_FILE)
+    # Create a test that uses --mermaid and verifies the analysis markdown file
+    add_test(
+        NAME ${TEST_NAME}
+        COMMAND ${CMAKE_COMMAND}
+            -DTEST_NAME=${TEST_NAME}
+            -DEXPRESSION_FILE=${EXPRESSION_FILE}
+            -DEXECUTABLE=$<TARGET_FILE:bdd_demo>
+            -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+            -DBINARY_DIR=${CMAKE_BINARY_DIR}
+            -DREFERENCE_DIR=${CMAKE_SOURCE_DIR}/test_expressions/reference_outputs
+            -DMERMAID_TEST=TRUE
+            -P ${CMAKE_SOURCE_DIR}/cmake/run_bdd_test.cmake
+    )
+
+    # Set test properties
+    set_tests_properties(${TEST_NAME} PROPERTIES
+        TIMEOUT 30
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+endfunction()
+
 # Function to automatically discover and register BDD test cases
 # This function scans for .txt files in test_expressions/ and creates both
 # default ordering tests and force-reorder tests where applicable

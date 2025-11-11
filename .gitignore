@@ -12,6 +12,7 @@ doxygen_output/
 # Generated files
 test_expressions/*.dot
 test_expressions/*.png
+test_expressions/*.md
 *.svg
 *.pdf
 test_expressions/*_bdd_nodes.txt

@@ -324,3 +324,26 @@ add_cmdline_test(test_error_message_regression
     ERROR_CONTAINS "Expected ')' but got end of input"
     EXPECTED_EXIT_CODE 1
 )
+
+# Mermaid analysis file generation regression tests
+message(STATUS "Adding Mermaid regression tests")
+
+add_mermaid_test(test_mermaid_simple_expression
+    "${CMAKE_SOURCE_DIR}/test_expressions/simple_expression.txt"
+)
+
+add_mermaid_test(test_mermaid_filter_expression
+    "${CMAKE_SOURCE_DIR}/test_expressions/filter_expression.txt"
+)
+
+add_mermaid_test(test_mermaid_all_operators
+    "${CMAKE_SOURCE_DIR}/test_expressions/all_operators.txt"
+)
+
+add_mermaid_test(test_mermaid_deeply_nested
+    "${CMAKE_SOURCE_DIR}/test_expressions/deeply_nested.txt"
+)
+
+add_mermaid_test(test_mermaid_my_test_expression
+    "${CMAKE_SOURCE_DIR}/test_expressions/my_test_expression.txt"
+)
