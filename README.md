@@ -10,6 +10,7 @@ This project provides a comprehensive Binary Decision Diagram (BDD) conversion t
 ## 📚 Documentation
 
 For detailed documentation, see the [docs/](docs/) directory:
+- **[Lessons Learned](docs/LESSONS_LEARNED.md)** - Comprehensive analysis of TeDDy BDD PoC insights and production recommendations
 - **[Building Guide](docs/BUILDING.md)** - Detailed build instructions and prerequisites
 - **[Visualization Examples](docs/VISUALIZATIONS.md)** - BDD visualization examples and Graphviz setup
 - **[Advanced Features](docs/ADVANCED.md)** - Performance optimization and advanced usage
