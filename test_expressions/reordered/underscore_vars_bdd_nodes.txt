@@ -1,8 +1,7 @@
 Index | Variable | False Child | True Child | Type
 ------|----------|-------------|------------|----------
     0 |    var_1 |           2 |          1 | Variable
-    1 |    var_2 |           3 |          4 | Variable
-    2 |    var_2 |           3 |          3 | Variable
-    3 |    var_3 |           5 |          4 | Variable
-    4 |        - |           - |          - | Terminal(1)
-    5 |        - |           - |          - | Terminal(0)
+    1 |    var_2 |           2 |          3 | Variable
+    2 |    var_3 |           4 |          3 | Variable
+    3 |        - |           - |          - | Terminal(1)
+    4 |        - |           - |          - | Terminal(0)

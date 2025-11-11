@@ -248,7 +248,7 @@ teddy::bdd_manager::diagram_t convert_to_bdd(const my_expression& expr, teddy::b
  * Options:
  * - `--enable-reordering` : Enable automatic variable reordering for optimization
  * - `--disable-reordering` : Disable variable reordering (default)
- * - `--force-reorder` : Force immediate reordering after BDD construction
+ * - `--force-reorder` : Force immediate reordering and reduce after BDD construction
  * - `--help` or `-h` : Show help message
  *
  * Generated outputs (in same directory as input file):
@@ -317,7 +317,8 @@ int main(int argc, const char* argv[]) {
         std::cout << "  --enable-reordering   Enable automatic variable reordering for BDD "
                      "optimization\n";
         std::cout << "  --disable-reordering  Disable variable reordering (default)\n";
-        std::cout << "  --force-reorder       Force immediate reordering after BDD construction\n";
+        std::cout << "  --force-reorder       Force immediate reordering and reduce after BDD "
+                     "construction\n";
         std::cout << "  --help, -h            Show this help message\n\n";
         std::cout << "Example expression file format:\n";
         std::cout << "  # This is a comment\n";
@@ -384,6 +385,9 @@ int main(int argc, const char* argv[]) {
         std::cout << "Forcing variable reordering after BDD construction...\n";
         manager.force_reorder();
         std::cout << "Variable reordering completed\n";
+
+        f = manager.reorder(f);  // Update diagram after reordering
+        std::cout << "Reordering applied to BDD diagram\n";
     }
 
     std::cout << "Function created successfully!\n";
