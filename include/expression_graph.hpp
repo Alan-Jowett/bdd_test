@@ -51,6 +51,42 @@ void write_expression_to_dot(const my_expression& expr, std::ostream& out,
                              const std::string& graph_name);
 
 /**
+ * @brief Writes expression tree as Mermaid graph
+ *
+ * This function generates Mermaid format graphs from expression trees for
+ * embedding in Markdown documents. Mermaid provides a simple syntax for
+ * creating diagrams that can be rendered directly in GitHub, GitLab, and
+ * many documentation tools.
+ *
+ * Generated Mermaid format includes:
+ * - Flowchart syntax using TD (top-down) direction
+ * - Node styling: rectangles for operators, circles for variables
+ * - Clean labels: operator symbols and variable names
+ * - Proper parent-child relationships
+ *
+ * @param expr Expression tree to process
+ * @param out Output stream for Mermaid content
+ * @param graph_title Title for the generated Mermaid graph
+ *
+ * Example usage:
+ * @code
+ * write_expression_to_mermaid(my_expr, std::cout, "Expression Tree");
+ * @endcode
+ *
+ * Example output:
+ * @code
+ * flowchart TD
+ *     N1["AND"]
+ *     N2(("a"))
+ *     N3(("b"))
+ *     N1 --> N2
+ *     N1 --> N3
+ * @endcode
+ */
+void write_expression_to_mermaid(const my_expression& expr, std::ostream& out,
+                                 const std::string& graph_title = "Expression Tree");
+
+/**
  * @brief Collects variable names using dag_walker traversal
  *
  * Alternative implementation of variable collection that uses the

@@ -410,3 +410,107 @@ void collect_variables_with_dag_walker(const my_expression& expr,
             }
         });
 }
+
+// ============================================================================
+// Mermaid Graph Generation
+// ============================================================================
+
+void write_expression_to_mermaid(const my_expression& expr, std::ostream& out,
+                                 const std::string& graph_title) {
+    out << "---\n";
+    out << "title: " << graph_title << "\n";
+    out << "---\n";
+    out << "flowchart TD\n";
+
+    // Simple recursive approach for Mermaid generation
+    std::unordered_map<const void*, std::string> node_ids;
+    std::vector<std::string> node_definitions;
+    std::vector<std::string> edges;
+    int next_id = 1;
+
+    // Helper function to get/create node ID
+    auto get_node_id = [&](const my_expression* expr_ptr) -> std::string {
+        const void* ptr = static_cast<const void*>(expr_ptr);
+        auto it = node_ids.find(ptr);
+        if (it != node_ids.end()) {
+            return it->second;
+        }
+        std::string id = "N" + std::to_string(next_id++);
+        node_ids[ptr] = id;
+        return id;
+    };
+
+    // Recursive function to process expressions
+    std::function<void(const my_expression*)> process_expr = [&](const my_expression* expr_ptr) {
+        if (!expr_ptr)
+            return;
+
+        std::string node_id = get_node_id(expr_ptr);
+
+        // Generate node definition based on expression type
+        std::string node_def = std::visit(
+            [&](const auto& variant_expr) -> std::string {
+                using T = std::decay_t<decltype(variant_expr)>;
+                if constexpr (std::is_same_v<T, my_variable>) {
+                    // Variables as circles: N1(("var_name"))
+                    return node_id + "((\"" + variant_expr.variable_name + "\"))";
+                } else if constexpr (std::is_same_v<T, my_and>) {
+                    // Operators as rectangles: N1["AND"]
+                    return node_id + "[\"AND\"]";
+                } else if constexpr (std::is_same_v<T, my_or>) {
+                    return node_id + "[\"OR\"]";
+                } else if constexpr (std::is_same_v<T, my_not>) {
+                    return node_id + "[\"NOT\"]";
+                } else if constexpr (std::is_same_v<T, my_xor>) {
+                    return node_id + "[\"XOR\"]";
+                }
+                return "";
+            },
+            *expr_ptr);
+
+        node_definitions.push_back("    " + node_def);
+
+        // Process children and create edges
+        std::visit(
+            [&](const auto& variant_expr) {
+                using T = std::decay_t<decltype(variant_expr)>;
+                if constexpr (std::is_same_v<T, my_and> || std::is_same_v<T, my_or>
+                              || std::is_same_v<T, my_xor>) {
+                    // Binary operators have two children
+                    if (variant_expr.left) {
+                        std::string left_id = get_node_id(variant_expr.left.get());
+                        edges.push_back("    " + node_id + " --> " + left_id);
+                        process_expr(variant_expr.left.get());
+                    }
+                    if (variant_expr.right) {
+                        std::string right_id = get_node_id(variant_expr.right.get());
+                        edges.push_back("    " + node_id + " --> " + right_id);
+                        process_expr(variant_expr.right.get());
+                    }
+                } else if constexpr (std::is_same_v<T, my_not>) {
+                    // Unary operator has one child
+                    if (variant_expr.expr) {
+                        std::string child_id = get_node_id(variant_expr.expr.get());
+                        edges.push_back("    " + node_id + " --> " + child_id);
+                        process_expr(variant_expr.expr.get());
+                    }
+                }
+                // Variables have no children
+            },
+            *expr_ptr);
+    };
+
+    // Start processing from the root
+    process_expr(&expr);
+
+    // Output nodes first, then edges
+    for (const auto& node_def : node_definitions) {
+        out << node_def << "\n";
+    }
+    if (!node_definitions.empty() && !edges.empty()) {
+        out << "\n";
+    }
+    for (const auto& edge : edges) {
+        out << edge << "\n";
+    }
+}

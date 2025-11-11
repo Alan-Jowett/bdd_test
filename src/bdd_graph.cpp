@@ -360,3 +360,77 @@ std::vector<teddy::bdd_manager::diagram_t::node_t*> collect_bdd_nodes_topologica
 
     return result;
 }
+
+// ============================================================================
+// Mermaid Graph Generation
+// ============================================================================
+
+void write_bdd_to_mermaid(const teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram,
+                          const std::vector<std::string>& variable_names, std::ostream& out,
+                          const std::string& graph_title) {
+    using node_t = teddy::bdd_manager::diagram_t::node_t;
+
+    out << "---\n";
+    out << "title: " << graph_title << "\n";
+    out << "---\n";
+    out << "flowchart TD\n";
+
+    // Get all nodes using the existing topological collection
+    std::vector<node_t*> nodes = collect_bdd_nodes_topological(diagram, variable_names);
+
+    // Create node ID mapping
+    std::unordered_map<node_t*, std::string> node_to_id;
+    for (size_t i = 0; i < nodes.size(); ++i) {
+        node_to_id[nodes[i]] = "N" + std::to_string(i);
+    }
+
+    // Generate node definitions
+    for (node_t* node : nodes) {
+        std::string node_id = node_to_id[node];
+
+        if (node->is_terminal()) {
+            // Terminals as squares: N1["0"] or N1["1"]
+            out << "    " << node_id << "[\"" << node->get_value() << "\"]\n";
+        } else {
+            // Variables as circles: N1(("var_name"))
+            int var_index = node->get_index();
+            std::string var_name = (var_index < variable_names.size())
+                                       ? variable_names[var_index]
+                                       : "x" + std::to_string(var_index);
+            out << "    " << node_id << "((\"" << var_name << "\"))\n";
+        }
+    }
+
+    // Add separator between nodes and edges if we have both
+    bool has_edges = false;
+    for (node_t* node : nodes) {
+        if (!node->is_terminal()) {
+            has_edges = true;
+            break;
+        }
+    }
+
+    if (!nodes.empty() && has_edges) {
+        out << "\n";
+    }
+
+    // Generate edges
+    for (node_t* node : nodes) {
+        if (!node->is_terminal()) {
+            std::string node_id = node_to_id[node];
+
+            node_t* false_child = node->get_son(0);
+            node_t* true_child = node->get_son(1);
+
+            // False edge (dashed): N1 -.-> N2
+            if (false_child && node_to_id.find(false_child) != node_to_id.end()) {
+                out << "    " << node_id << " -.-> " << node_to_id[false_child] << "\n";
+            }
+
+            // True edge (solid): N1 --> N2
+            if (true_child && node_to_id.find(true_child) != node_to_id.end()) {
+                out << "    " << node_id << " --> " << node_to_id[true_child] << "\n";
+            }
+        }
+    }
+}

@@ -295,12 +295,15 @@ teddy::bdd_manager::diagram_t convert_to_bdd_with_teddy_adapter(const my_express
  * - `--method=teddy` : Use TeDDy's from_expression_tree method
  * - `--quiet` or `-q` : Suppress console output of BDD structure and DOT graph (default)
  * - `--verbose` or `-v` : Show detailed console output of BDD structure and DOT graph
+ * - `--mermaid` or `-m` : Generate Mermaid format graphs for Markdown embedding
  * - `--help` or `-h` : Show help message
  *
  * Generated outputs (in same directory as input file):
  * - `*_expression_tree.dot` : DOT graph of the original expression tree
  * - `*_bdd.dot` : DOT graph of the resulting BDD
  * - `*_bdd_nodes.txt` : Detailed table of BDD nodes and structure
+ * - `*_expression_tree.md` : Mermaid graph of expression tree (with --mermaid)
+ * - `*_bdd.md` : Mermaid graph of BDD structure (with --mermaid)
  *
  * The program automatically:
  * 1. Parses the input expression file
@@ -325,6 +328,7 @@ int main(int argc, const char* argv[]) {
     bool quiet_mode = true;
     bool show_help = false;
     bool help_due_to_error = false;
+    bool generate_mermaid = false;
 
     // Parse command line arguments
     for (int i = 1; i < argc; ++i) {
@@ -344,6 +348,8 @@ int main(int argc, const char* argv[]) {
             quiet_mode = true;
         } else if (arg == "--verbose" || arg == "-v") {
             quiet_mode = false;
+        } else if (arg == "--mermaid" || arg == "-m") {
+            generate_mermaid = true;
         } else if (arg == "--help" || arg == "-h") {
             show_help = true;
             break;
@@ -381,6 +387,8 @@ int main(int argc, const char* argv[]) {
                      "graph (default)\n";
         std::cout << "  --verbose, -v         Show detailed console output of BDD structure and "
                      "DOT graph\n";
+        std::cout
+            << "  --mermaid, -m         Generate Mermaid format graphs for Markdown embedding\n";
         std::cout << "  --help, -h            Show this help message\n\n";
         std::cout << "Example expression file format:\n";
         std::cout << "  # This is a comment\n";
@@ -473,6 +481,11 @@ int main(int argc, const char* argv[]) {
     std::filesystem::path bdd_dot_filename = get_output_path(input_file, "_bdd.dot");
     std::filesystem::path bdd_nodes_filename = get_output_path(input_file, "_bdd_nodes.txt");
 
+    // Additional Mermaid filenames if requested
+    std::filesystem::path expr_mermaid_filename =
+        get_output_path(input_file, "_expression_tree.md");
+    std::filesystem::path bdd_mermaid_filename = get_output_path(input_file, "_bdd.md");
+
     // Output expression tree as DOT file
     std::ofstream expr_dot_file(expr_dot_filename);
     if (expr_dot_file.is_open()) {
@@ -485,6 +498,22 @@ int main(int argc, const char* argv[]) {
                   << " -o " << get_output_path(input_file, "_expression_tree.png") << "\n\n";
     } else {
         std::cerr << "Error: Could not create output file '" << expr_dot_filename << "'\n";
+    }
+
+    // Output expression tree as Mermaid file if requested
+    if (generate_mermaid) {
+        std::ofstream expr_mermaid_file(expr_mermaid_filename);
+        if (expr_mermaid_file.is_open()) {
+            // Generate complete Mermaid graph representation
+            write_expression_to_mermaid(*expr, expr_mermaid_file, "Expression Tree");
+
+            expr_mermaid_file.close();
+            std::cout << "Expression tree Mermaid representation saved to '"
+                      << expr_mermaid_filename << "'\n";
+            std::cout << "You can embed it in Markdown documents or view on GitHub/GitLab\n\n";
+        } else {
+            std::cerr << "Error: Could not create output file '" << expr_mermaid_filename << "'\n";
+        }
     }
 
     if (!quiet_mode) {
@@ -512,6 +541,22 @@ int main(int argc, const char* argv[]) {
     } else {
         std::cerr << "Error: Could not create output file '" << bdd_dot_filename << "'\n";
         return 1;
+    }
+
+    // Output BDD as Mermaid file if requested
+    if (generate_mermaid) {
+        std::ofstream bdd_mermaid_file(bdd_mermaid_filename);
+        if (bdd_mermaid_file.is_open()) {
+            // Generate complete Mermaid graph representation
+            write_bdd_to_mermaid(manager, f, sorted_variable_names, bdd_mermaid_file, "BDD");
+
+            bdd_mermaid_file.close();
+            std::cout << "BDD Mermaid representation saved to '" << bdd_mermaid_filename << "'\n";
+            std::cout << "You can embed it in Markdown documents or view on GitHub/GitLab\n";
+        } else {
+            std::cerr << "Error: Could not create output file '" << bdd_mermaid_filename << "'\n";
+            return 1;
+        }
     }
 
     // Output BDD node table to file

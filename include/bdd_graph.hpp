@@ -62,6 +62,45 @@ void write_bdd_to_dot(const teddy::bdd_manager& manager, teddy::bdd_manager::dia
                       const std::string& graph_name = "DD");
 
 /**
+ * @brief Writes BDD as Mermaid graph
+ *
+ * This function generates Mermaid format graphs from Binary Decision Diagrams
+ * for embedding in Markdown documents. Mermaid provides clean, readable
+ * diagrams that render directly in GitHub, GitLab, and documentation tools.
+ *
+ * Generated Mermaid format includes:
+ * - Flowchart syntax using TD (top-down) direction
+ * - Node styling: circles for variables, squares for terminals
+ * - Edge styling: solid lines for true edges, dashed lines for false edges
+ * - Clean labels: variable names and terminal values (0/1)
+ * - Proper DAG handling: shared nodes represented correctly
+ *
+ * @param manager BDD manager (currently unused but kept for compatibility)
+ * @param diagram BDD diagram to process
+ * @param variable_names Vector of variable names for labeling
+ * @param out Output stream for Mermaid content
+ * @param graph_title Title for the generated Mermaid graph
+ *
+ * Example usage:
+ * @code
+ * write_bdd_to_mermaid(manager, diagram, variable_names, std::cout, "BDD");
+ * @endcode
+ *
+ * Example output:
+ * @code
+ * flowchart TD
+ *     N0(("x0"))
+ *     N1["0"]
+ *     N2["1"]
+ *     N0 -.-> N1
+ *     N0 --> N2
+ * @endcode
+ */
+void write_bdd_to_mermaid(const teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t diagram,
+                          const std::vector<std::string>& variable_names, std::ostream& out,
+                          const std::string& graph_title = "BDD");
+
+/**
  * @brief Collect BDD nodes in topological order using dag_walker
  *
  * Alternative implementation that uses the generic dag_walker system
