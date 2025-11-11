@@ -154,6 +154,91 @@ jobs:
           LICENSE
         retention-days: 30
 
+  sanitizer-tests:
+    name: Sanitizer Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [asan, ubsan, asan+ubsan]
+        compiler: [gcc, clang]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        submodules: recursive
+
+    - name: Setup C++ environment
+      run: |
+        sudo apt-get update
+        if [ "${{ matrix.compiler }}" = "gcc" ]; then
+          sudo apt-get install -y gcc g++ cmake
+        elif [ "${{ matrix.compiler }}" = "clang" ]; then
+          sudo apt-get install -y clang cmake
+        fi
+
+    - name: Set compiler environment variables
+      run: |
+        if [ "${{ matrix.compiler }}" = "gcc" ]; then
+          echo "CC=gcc" >> $GITHUB_ENV
+          echo "CXX=g++" >> $GITHUB_ENV
+        elif [ "${{ matrix.compiler }}" = "clang" ]; then
+          echo "CC=clang" >> $GITHUB_ENV
+          echo "CXX=clang++" >> $GITHUB_ENV
+        fi
+
+    - name: Configure sanitizer options
+      run: |
+        case "${{ matrix.sanitizer }}" in
+          "asan")
+            echo "CMAKE_SANITIZER_FLAGS=-DENABLE_ASAN=ON" >> $GITHUB_ENV
+            echo "ASAN_OPTIONS=detect_leaks=1:abort_on_error=1:halt_on_error=1:check_initialization_order=1" >> $GITHUB_ENV
+            ;;
+          "ubsan")
+            echo "CMAKE_SANITIZER_FLAGS=-DENABLE_UBSAN=ON" >> $GITHUB_ENV
+            echo "UBSAN_OPTIONS=print_stacktrace=1:abort_on_error=1:halt_on_error=1" >> $GITHUB_ENV
+            ;;
+          "asan+ubsan")
+            echo "CMAKE_SANITIZER_FLAGS=-DENABLE_ASAN=ON -DENABLE_UBSAN=ON" >> $GITHUB_ENV
+            echo "ASAN_OPTIONS=detect_leaks=1:abort_on_error=1:halt_on_error=1:check_initialization_order=1" >> $GITHUB_ENV
+            echo "UBSAN_OPTIONS=print_stacktrace=1:abort_on_error=1:halt_on_error=1" >> $GITHUB_ENV
+            ;;
+        esac
+
+    - name: Create build directory
+      run: cmake -E make_directory ${{github.workspace}}/build
+
+    - name: Configure CMake with sanitizers
+      working-directory: ${{github.workspace}}/build
+      run: |
+        cmake .. \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DCMAKE_C_COMPILER=$CC \
+          -DCMAKE_CXX_COMPILER=$CXX \
+          $CMAKE_SANITIZER_FLAGS
+
+    - name: Build with sanitizers
+      working-directory: ${{github.workspace}}/build
+      run: cmake --build . --config Debug --parallel
+
+    - name: Run tests with sanitizers
+      working-directory: ${{github.workspace}}/build
+      run: |
+        # Run tests with verbose output and proper error handling
+        echo "Running tests with ${{ matrix.sanitizer }} using ${{ matrix.compiler }}..."
+        ctest -C Debug --output-on-failure --verbose --timeout 300
+
+    - name: Check for sanitizer reports
+      if: always()
+      run: |
+        # Look for any sanitizer output files or crash dumps
+        find ${{github.workspace}} -name "*.asan" -o -name "*.msan" -o -name "*.tsan" -o -name "*.ubsan" -o -name "core.*" | while read file; do
+          echo "❌ Found sanitizer report: $file"
+          cat "$file" || true
+        done
+
   code-quality:
     name: Code Quality Checks
     runs-on: ubuntu-latest
