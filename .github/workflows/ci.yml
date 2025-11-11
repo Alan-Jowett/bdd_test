@@ -226,10 +226,6 @@ jobs:
     - name: Run tests with sanitizers
       working-directory: ${{github.workspace}}/build
       run: |
-        # Set additional sanitizer environment variables for runtime
-        export MSAN_OPTIONS="poison_heap_after_free=1:poison_in_dtor=1"
-        export TSAN_OPTIONS="history_size=7"
-
         # Run tests with verbose output and proper error handling
         echo "Running tests with ${{ matrix.sanitizer }} using ${{ matrix.compiler }}..."
         ctest -C Debug --output-on-failure --verbose --timeout 300

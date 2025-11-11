@@ -47,12 +47,12 @@ function Write-Success {
     Write-Host "[SUCCESS] $Message" -ForegroundColor Green
 }
 
-function Write-Error {
+function Write-ErrorMsg {
     param([string]$Message)
     Write-Host "[ERROR] $Message" -ForegroundColor Red
 }
 
-function Write-Warning {
+function Write-WarningMsg {
     param([string]$Message)
     Write-Host "[WARNING] $Message" -ForegroundColor Yellow
 }
@@ -88,7 +88,7 @@ Write-Info "============================================="
 
 # Check if WSL is available
 if (-not (Test-WSL)) {
-    Write-Error "Windows Subsystem for Linux (WSL) is not installed or configured."
+    Write-ErrorMsg "Windows Subsystem for Linux (WSL) is not installed or configured."
     Write-Info "To install WSL, run the following commands as Administrator:"
     Write-Info "  wsl --install"
     Write-Info "  wsl --install -d Ubuntu"
@@ -119,7 +119,7 @@ if ($Compiler -eq "gcc") {
 }
 
 if ($missingTools.Count -gt 0) {
-    Write-Error "Missing required tools in WSL: $($missingTools -join ', ')"
+    Write-ErrorMsg "Missing required tools in WSL: $($missingTools -join ', ')"
     Write-Info "Install them with:"
     Write-Info "  wsl sudo apt-get update"
     Write-Info "  wsl sudo apt-get install -y build-essential cmake gcc g++ clang"
@@ -135,7 +135,7 @@ $projectRoot = Split-Path $PSScriptRoot -Parent
 $wslProjectRoot = wsl wslpath "'$projectRoot'"
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "Failed to convert Windows path to WSL path"
+    Write-ErrorMsg "Failed to convert Windows path to WSL path"
     exit 1
 }
 
@@ -144,7 +144,7 @@ Write-Info "Project root (WSL): $wslProjectRoot"
 # Check if the sanitizer script exists
 $sanitizerScript = Join-Path $PSScriptRoot "run-sanitizers.sh"
 if (-not (Test-Path $sanitizerScript)) {
-    Write-Error "Sanitizer script not found: $sanitizerScript"
+    Write-ErrorMsg "Sanitizer script not found: $sanitizerScript"
     exit 1
 }
 
@@ -169,11 +169,11 @@ try {
     if ($LASTEXITCODE -eq 0) {
         Write-Success "Sanitizer tests completed successfully!"
     } else {
-        Write-Error "Sanitizer tests failed with exit code $LASTEXITCODE"
+        Write-ErrorMsg "Sanitizer tests failed with exit code $LASTEXITCODE"
         exit $LASTEXITCODE
     }
 } catch {
-    Write-Error "Failed to run sanitizer tests: $($_.Exception.Message)"
+    Write-ErrorMsg "Failed to run sanitizer tests: $($_.Exception.Message)"
     exit 1
 }
 

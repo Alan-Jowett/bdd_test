@@ -86,7 +86,9 @@ run_sanitizer_build() {
 
     # Build
     print_info "Building with sanitizers..."
-    cmake --build . --config Debug --parallel "$(nproc)"
+    local jobs
+    jobs="$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)"
+    cmake --build . --config Debug --parallel "$jobs"
 
     # Set runtime environment for tests
     if [ -n "$asan_options" ]; then
@@ -110,11 +112,11 @@ run_sanitizer_build() {
 
     # Check for any sanitizer reports
     local reports_found=false
-    find "$build_dir" -name "*.asan" -o -name "*.msan" -o -name "*.tsan" -o -name "*.ubsan" -o -name "core.*" | while read -r file; do
+    while IFS= read -r file; do
         print_warning "Found sanitizer report: $file"
         cat "$file" || true
         reports_found=true
-    done
+    done < <(find "$build_dir" \( -name "*.asan" -o -name "*.msan" -o -name "*.tsan" -o -name "*.ubsan" -o -name "core.*" \))
 
     if [ "$reports_found" = "false" ]; then
         print_success "No sanitizer reports found"
