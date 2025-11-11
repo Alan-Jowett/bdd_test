@@ -503,11 +503,6 @@ int main(int argc, const char* argv[]) {
     std::filesystem::path bdd_dot_filename = get_output_path(input_file, "_bdd.dot");
     std::filesystem::path bdd_nodes_filename = get_output_path(input_file, "_bdd_nodes.txt");
 
-    // Additional Mermaid filenames if requested
-    std::filesystem::path expr_mermaid_filename =
-        get_output_path(input_file, "_expression_tree.md");
-    std::filesystem::path bdd_mermaid_filename = get_output_path(input_file, "_bdd.md");
-
     // Output expression tree as DOT file
     std::ofstream expr_dot_file(expr_dot_filename);
     if (expr_dot_file.is_open()) {
