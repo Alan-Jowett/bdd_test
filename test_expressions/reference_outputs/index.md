@@ -40,14 +40,16 @@ Each analysis file contains:
 
 ## 🎨 Visualization Features
 
-The analysis files include **color-coded Mermaid diagrams** that match the PNG visualization outputs:
-- **Variables**: Light blue circles
-- **AND Operations**: Light green rectangles
-- **OR Operations**: Light coral rectangles
-- **NOT Operations**: Yellow rectangles
-- **XOR Operations**: Light pink rectangles
-- **BDD Variables**: Light blue rectangles
-- **Terminal Nodes**: Light gray rectangles
+The analysis files include **color-coded Mermaid diagrams** that match the PNG visualization outputs and are **compatible with both light and dark GitHub themes**:
+- **Variables**: Light blue circles with black text
+- **AND Operations**: Light green rectangles with black text
+- **OR Operations**: Light coral rectangles with black text
+- **NOT Operations**: Yellow rectangles with black text
+- **XOR Operations**: Light pink rectangles with black text
+- **BDD Variables**: Light blue rectangles with black text
+- **Terminal Nodes**: Light gray rectangles with black text
+
+All diagrams use explicit `color:#000` styling to ensure readability in GitHub's dark mode.
 
 ## 🧪 Usage in Testing
 
