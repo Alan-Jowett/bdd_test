@@ -426,6 +426,7 @@ void write_expression_to_mermaid(const my_expression& expr, std::ostream& out,
     std::unordered_map<const void*, std::string> node_ids;
     std::vector<std::string> node_definitions;
     std::vector<std::string> edges;
+    std::vector<std::string> class_assignments;
     int next_id = 1;
 
     // Helper function to get/create node ID
@@ -446,6 +447,7 @@ void write_expression_to_mermaid(const my_expression& expr, std::ostream& out,
             return;
 
         std::string node_id = get_node_id(expr_ptr);
+        std::string css_class;
 
         // Generate node definition based on expression type
         std::string node_def = std::visit(
@@ -453,15 +455,20 @@ void write_expression_to_mermaid(const my_expression& expr, std::ostream& out,
                 using T = std::decay_t<decltype(variant_expr)>;
                 if constexpr (std::is_same_v<T, my_variable>) {
                     // Variables as circles: N1(("var_name"))
+                    css_class = "variable";
                     return node_id + "((\"" + variant_expr.variable_name + "\"))";
                 } else if constexpr (std::is_same_v<T, my_and>) {
                     // Operators as rectangles: N1["AND"]
+                    css_class = "andOp";
                     return node_id + "[\"AND\"]";
                 } else if constexpr (std::is_same_v<T, my_or>) {
+                    css_class = "orOp";
                     return node_id + "[\"OR\"]";
                 } else if constexpr (std::is_same_v<T, my_not>) {
+                    css_class = "notOp";
                     return node_id + "[\"NOT\"]";
                 } else if constexpr (std::is_same_v<T, my_xor>) {
+                    css_class = "xorOp";
                     return node_id + "[\"XOR\"]";
                 }
                 return "";
@@ -469,6 +476,11 @@ void write_expression_to_mermaid(const my_expression& expr, std::ostream& out,
             *expr_ptr);
 
         node_definitions.push_back("    " + node_def);
+
+        // Add CSS class assignment for this node
+        if (!css_class.empty()) {
+            class_assignments.push_back("    class " + node_id + " " + css_class);
+        }
 
         // Process children and create edges
         std::visit(
@@ -503,7 +515,7 @@ void write_expression_to_mermaid(const my_expression& expr, std::ostream& out,
     // Start processing from the root
     process_expr(&expr);
 
-    // Output nodes first, then edges
+    // Output nodes first, then edges, then class assignments
     for (const auto& node_def : node_definitions) {
         out << node_def << "\n";
     }
@@ -513,4 +525,25 @@ void write_expression_to_mermaid(const my_expression& expr, std::ostream& out,
     for (const auto& edge : edges) {
         out << edge << "\n";
     }
+
+    // Add CSS class assignments
+    if (!class_assignments.empty()) {
+        out << "\n";
+        for (const auto& class_assign : class_assignments) {
+            out << class_assign << "\n";
+        }
+    }
+
+    // Add CSS class definitions for colors (matching DOT color scheme)
+    out << "\n";
+    out << "    classDef variable fill:" << expression_constants::variable_color()
+        << ",stroke:#333,stroke-width:2px\n";
+    out << "    classDef andOp fill:" << expression_constants::and_color()
+        << ",stroke:#333,stroke-width:2px\n";
+    out << "    classDef orOp fill:" << expression_constants::or_color()
+        << ",stroke:#333,stroke-width:2px\n";
+    out << "    classDef notOp fill:" << expression_constants::not_color()
+        << ",stroke:#333,stroke-width:2px\n";
+    out << "    classDef xorOp fill:" << expression_constants::xor_color()
+        << ",stroke:#333,stroke-width:2px\n";
 }

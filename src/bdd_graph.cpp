@@ -378,8 +378,10 @@ void write_bdd_to_mermaid(const teddy::bdd_manager& manager, teddy::bdd_manager:
     // Get all nodes using the existing topological collection
     std::vector<node_t*> nodes = collect_bdd_nodes_topological(diagram, variable_names);
 
-    // Create node ID mapping
+    // Create node ID mapping and class assignments
     std::unordered_map<node_t*, std::string> node_to_id;
+    std::vector<std::string> class_assignments;
+
     for (size_t i = 0; i < nodes.size(); ++i) {
         node_to_id[nodes[i]] = "N" + std::to_string(i);
     }
@@ -391,6 +393,8 @@ void write_bdd_to_mermaid(const teddy::bdd_manager& manager, teddy::bdd_manager:
         if (node->is_terminal()) {
             // Terminals as squares: N1["0"] or N1["1"]
             out << "    " << node_id << "[\"" << node->get_value() << "\"]\n";
+            // Add CSS class for terminals
+            class_assignments.push_back("    class " + node_id + " terminal");
         } else {
             // Variables as circles: N1(("var_name"))
             int var_index = node->get_index();
@@ -398,6 +402,8 @@ void write_bdd_to_mermaid(const teddy::bdd_manager& manager, teddy::bdd_manager:
                                        ? variable_names[var_index]
                                        : "x" + std::to_string(var_index);
             out << "    " << node_id << "((\"" << var_name << "\"))\n";
+            // Add CSS class for variables
+            class_assignments.push_back("    class " + node_id + " bddVariable");
         }
     }
 
@@ -433,4 +439,17 @@ void write_bdd_to_mermaid(const teddy::bdd_manager& manager, teddy::bdd_manager:
             }
         }
     }
+
+    // Add CSS class assignments
+    if (!class_assignments.empty()) {
+        out << "\n";
+        for (const auto& class_assign : class_assignments) {
+            out << class_assign << "\n";
+        }
+    }
+
+    // Add CSS class definitions for BDD node colors
+    out << "\n";
+    out << "    classDef bddVariable fill:lightblue,stroke:#333,stroke-width:2px\n";
+    out << "    classDef terminal fill:lightgray,stroke:#333,stroke-width:2px\n";
 }
