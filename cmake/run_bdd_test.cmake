@@ -44,6 +44,9 @@ endif()
 if(DEFINED FORCE_REORDER AND FORCE_REORDER)
     set(REFERENCE_DIR "reordered")
     message(STATUS "Using reordered reference files for force-reorder test")
+elseif(DEFINED TEDDY_METHOD AND TEDDY_METHOD)
+    set(REFERENCE_DIR "default_ordering")
+    message(STATUS "Using default ordering reference files for TeDDy method test")
 else()
     set(REFERENCE_DIR "default_ordering")
 endif()
@@ -99,6 +102,16 @@ if(DEFINED FORCE_REORDER AND FORCE_REORDER)
         TIMEOUT 60
     )
     message(STATUS "Running with --force-reorder option")
+elseif(DEFINED TEDDY_METHOD AND TEDDY_METHOD)
+    execute_process(
+        COMMAND "${EXECUTABLE}" "${TEST_EXPRESSION_FILE}" "--method=teddy"
+        WORKING_DIRECTORY "${TEST_BUILD_DIR}"
+        RESULT_VARIABLE EXEC_RESULT
+        OUTPUT_VARIABLE EXEC_OUTPUT
+        ERROR_VARIABLE EXEC_ERROR
+        TIMEOUT 30
+    )
+    message(STATUS "Running with --method=teddy option")
 else()
     execute_process(
         COMMAND "${EXECUTABLE}" "${TEST_EXPRESSION_FILE}"
