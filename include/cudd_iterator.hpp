@@ -47,23 +47,32 @@ class cudd_iterator {
     /**
      * @brief Get child iterators for this node
      * @return Vector of child iterators (THEN, ELSE for BDD nodes)
+     *
+     * Properly expands CUDD's complement edges to match TeDDy's explicit node structure.
+     * When accessing a complemented node, the children are complemented to implement NOT semantics.
      */
     std::vector<cudd_iterator> get_children() const {
         std::vector<cudd_iterator> children;
 
+        // Get the regular (non-complemented) physical node
+        DdNode* regular_node = Cudd_Regular(node_);
+
         // Only non-constant nodes have children
-        if (!Cudd_IsConstant(node_)) {
-            // Get ELSE child (low edge) - FALSE child (first, to match TeDDy convention)
-            DdNode* else_node = Cudd_E(node_);
-            children.emplace_back(*cudd_manager_, else_node, variable_names_);
+        if (!Cudd_IsConstant(regular_node)) {
+            // Get children from the regular node
+            DdNode* else_child = Cudd_E(regular_node);
+            DdNode* then_child = Cudd_T(regular_node);
 
-            // Get THEN child (high edge) - TRUE child (second, to match TeDDy convention)
-            DdNode* then_node = Cudd_T(node_);
-            children.emplace_back(*cudd_manager_, then_node, variable_names_);
+            // If this node is accessed through a complement edge, negate the children
+            // This implements NOT(f) = f with negated children, expanding complement edges
+            if (Cudd_IsComplement(node_)) {
+                else_child = Cudd_Not(else_child);
+                then_child = Cudd_Not(then_child);
+            }
 
-            // Note: Do NOT swap children for complemented nodes - this breaks the BDD structure
-            // The complement bit is already handled properly in get_terminal_value() and
-            // get_node_address()
+            // Return children in TeDDy convention order: FALSE (else) first, TRUE (then) second
+            children.emplace_back(*cudd_manager_, else_child, variable_names_);
+            children.emplace_back(*cudd_manager_, then_child, variable_names_);
         }
 
         return children;
@@ -71,23 +80,18 @@ class cudd_iterator {
 
     /**
      * @brief Get unique address for this node (for equality comparisons)
-     * @return Pointer value as const void*
+     * @return Pointer value as const void* (with complement bit preserved)
      *
-     * For terminals, preserves complement bit to distinguish terminal 0 from terminal 1.
-     * For non-terminals, removes complement bit to count each physical node once.
-     * This ensures CUDD's complement-edge representation produces the same node count
-     * as TeDDy's explicit-node representation.
+     * Preserves the complement bit for all nodes (both terminals and non-terminals).
+     * This expands CUDD's complement-edge representation into explicit nodes,
+     * matching TeDDy's structure where each logical node access is a separate node.
+     * A node accessed through a complement edge is treated as a distinct node
+     * from the same node accessed directly.
      */
     const void* get_node_address() const {
-        if (Cudd_IsConstant(Cudd_Regular(node_))) {
-            // For terminals, preserve the complement bit so terminal 0 and terminal 1
-            // are counted as separate nodes (matching TeDDy's representation)
-            return reinterpret_cast<const void*>(node_);
-        } else {
-            // For non-terminals, use the regular node so that regular and complemented
-            // accesses to the same variable node are counted as one node
-            return reinterpret_cast<const void*>(Cudd_Regular(node_));
-        }
+        // Preserve the complement bit so that node and ~node are treated as distinct nodes
+        // This matches TeDDy's representation where negation creates explicit nodes
+        return reinterpret_cast<const void*>(node_);
     }
 
     /**

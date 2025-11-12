@@ -22,15 +22,15 @@ digraph DD {
     node4 -> node5 [style = dashed];
     node4 -> node6 [style = solid];
     node3 -> node7 [style = solid];
-    node7 -> node5 [style = dashed];
-    node7 -> node6 [style = solid];
+    node7 -> node6 [style = dashed];
+    node7 -> node5 [style = solid];
     node2 -> node8 [style = solid];
-    node8 -> node4 [style = dashed];
-    node8 -> node7 [style = solid];
+    node8 -> node7 [style = dashed];
+    node8 -> node4 [style = solid];
     node1 -> node9 [style = solid];
-    node9 -> node3 [style = dashed];
-    node9 -> node8 [style = solid];
+    node9 -> node8 [style = dashed];
+    node9 -> node3 [style = solid];
     node0 -> node10 [style = solid];
-    node10 -> node2 [style = dashed];
-    node10 -> node9 [style = solid];
+    node10 -> node9 [style = dashed];
+    node10 -> node2 [style = solid];
 }
