@@ -1,0 +1,10 @@
+Index | Variable | False Child | True Child | Type
+------|----------|-------------|------------|----------
+    0 | café_münü |           2 |          1 | Variable
+    1 | résumé_naïve |           7 |          6 | Variable
+    2 | résumé_naïve |           4 |          3 | Variable
+    3 | var_with_éxtended_chars |           7 |          5 | Variable
+    4 | var_with_éxtended_chars |           7 |          5 | Variable
+    5 | ñoñ_ascii_123 |           7 |          6 | Variable
+    6 |        - |           - |          - | Terminal(1)
+    7 |        - |           - |          - | Terminal(0)

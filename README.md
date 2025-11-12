@@ -12,12 +12,13 @@ This project provides a comprehensive Binary Decision Diagram (BDD) conversion t
 For detailed documentation, see the [docs/](docs/) directory:
 - **[Lessons Learned](docs/LESSONS_LEARNED.md)** - Comprehensive analysis of TeDDy BDD PoC insights and production recommendations
 - **[Building Guide](docs/BUILDING.md)** - Detailed build instructions and prerequisites
+- **[Unit Testing Guide](docs/UNIT_TESTING.md)** - Catch2-based unit testing system setup and usage
 - **[Visualization Examples](docs/VISUALIZATIONS.md)** - BDD visualization examples and Graphviz setup
 - **[Advanced Features](docs/ADVANCED.md)** - Performance optimization and advanced usage
 - **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
 - **[Contributing](docs/CONTRIBUTING.md)** - Development guidelines and code style
 - **[API Documentation](docs/DOCUMENTATION.md)** - Online docs and Doxygen setup
-- **[Reference Analysis Files](test_expressions/reference_outputs/index.md)** - BDD analysis examples with visual diagrams
+- **[Reference Analysis Files](test_expressions/teddy_reference_outputs/index.md)** - BDD analysis examples with visual diagrams
 - **[Complete Documentation Index](docs/README.md)** - Full documentation overview
 
 ## Features
@@ -138,7 +139,7 @@ Index | Variable | False Child | True Child | Type
     5 |        - |           - |          - | Terminal(0)
 
 Total nodes: 6
-BDD node table saved to "test_expressions\default_ordering\simple_expression_bdd_nodes.txt"
+BDD node table saved to "test_expressions\teddy_expected_output\simple_expression_bdd_nodes.txt"
 Demo completed successfully!
 ```
 
@@ -158,7 +159,7 @@ bdd_test/
 │   ├── TROUBLESHOOTING.md             # Common issues and solutions
 │   └── CONTRIBUTING.md                # Development guidelines
 ├── test_expressions/                  # Test expression files and outputs
-│   └── reference_outputs/             # BDD analysis examples (see index.md)
+│   └── teddy_reference_outputs/       # BDD analysis examples (see index.md)
 └── build/                             # Build artifacts and executables
 ```
 

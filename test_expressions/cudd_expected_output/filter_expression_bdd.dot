@@ -1,0 +1,36 @@
+digraph DD {
+
+    node [shape = square] node5 node6;
+    node [shape = circle];
+
+    node0 [label = "x0", tooltip = "0"];
+    node1 [label = "x2", tooltip = "2"];
+    node2 [label = "x3", tooltip = "3"];
+    node3 [label = "x5", tooltip = "5"];
+    node4 [label = "x6", tooltip = "6"];
+    node5 [label = "0", tooltip = "0"];
+    node6 [label = "1", tooltip = "1"];
+    node7 [label = "x6", tooltip = "6"];
+    node8 [label = "x4", tooltip = "4"];
+    node9 [label = "x3", tooltip = "3"];
+    node10 [label = "x1", tooltip = "1"];
+
+    node0 -> node1 [style = dashed];
+    node1 -> node2 [style = dashed];
+    node2 -> node3 [style = dashed];
+    node3 -> node4 [style = dashed];
+    node4 -> node5 [style = dashed];
+    node4 -> node6 [style = solid];
+    node3 -> node7 [style = solid];
+    node7 -> node5 [style = dashed];
+    node7 -> node6 [style = solid];
+    node2 -> node8 [style = solid];
+    node8 -> node5 [style = dashed];
+    node8 -> node3 [style = solid];
+    node1 -> node9 [style = solid];
+    node9 -> node3 [style = dashed];
+    node9 -> node8 [style = solid];
+    node0 -> node10 [style = solid];
+    node10 -> node1 [style = dashed];
+    node10 -> node9 [style = solid];
+}
