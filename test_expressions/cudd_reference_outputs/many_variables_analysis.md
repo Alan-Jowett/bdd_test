@@ -144,7 +144,7 @@ flowchart TD
 ## Analysis Summary
 
 - **Variables**: 10
-- **BDD Nodes**: 11
+- **BDD Nodes**: 12
 - **Expression**: x1 OR x2 OR x3 OR x4 OR x5 OR x6 OR x7 OR x8 OR x9 OR x10
 
 ## BDD Node Table

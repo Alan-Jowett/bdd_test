@@ -110,7 +110,7 @@ flowchart TD
 ## Analysis Summary
 
 - **Variables**: 5
-- **BDD Nodes**: 6
+- **BDD Nodes**: 11
 - **Expression**: a XOR b XOR c XOR d XOR e
 
 ## BDD Node Table

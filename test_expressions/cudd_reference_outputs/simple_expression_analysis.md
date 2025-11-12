@@ -84,7 +84,7 @@ flowchart TD
 ## Analysis Summary
 
 - **Variables**: 4
-- **BDD Nodes**: 5
+- **BDD Nodes**: 6
 - **Expression**: (a AND b) OR (c AND d)
 
 ## BDD Node Table

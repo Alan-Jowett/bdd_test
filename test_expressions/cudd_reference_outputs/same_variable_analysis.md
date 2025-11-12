@@ -60,7 +60,7 @@ flowchart TD
 ## Analysis Summary
 
 - **Variables**: 1
-- **BDD Nodes**: 2
+- **BDD Nodes**: 3
 - **Expression**: x0 AND x0
 
 ## BDD Node Table

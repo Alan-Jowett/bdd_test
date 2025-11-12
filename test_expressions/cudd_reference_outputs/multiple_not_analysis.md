@@ -63,7 +63,7 @@ flowchart TD
 ## Analysis Summary
 
 - **Variables**: 1
-- **BDD Nodes**: 2
+- **BDD Nodes**: 3
 - **Expression**: NOT NOT NOT x
 
 ## BDD Node Table

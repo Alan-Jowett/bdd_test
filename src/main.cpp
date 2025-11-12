@@ -403,7 +403,9 @@ int main(int argc, const char* argv[]) {
             // Calculate BDD node count
             size_t node_count;
             if (using_cudd) {
-                node_count = cudd_bdd.nodeCount();
+                auto nodes_in_order =
+                    collect_cudd_nodes_topological(*cudd_mgr_ptr, cudd_bdd, sorted_variable_names);
+                node_count = nodes_in_order.size();
             } else {
                 auto nodes_in_order = collect_teddy_nodes_topological(f, sorted_variable_names);
                 node_count = nodes_in_order.size();

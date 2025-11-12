@@ -53,7 +53,7 @@ flowchart TD
 ## Analysis Summary
 
 - **Variables**: 1
-- **BDD Nodes**: 2
+- **BDD Nodes**: 3
 - **Expression**: variable_with_unusual$characters@123
 
 ## BDD Node Table

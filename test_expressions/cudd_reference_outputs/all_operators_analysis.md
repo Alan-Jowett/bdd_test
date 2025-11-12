@@ -133,7 +133,7 @@ flowchart TD
 ## Analysis Summary
 
 - **Variables**: 7
-- **BDD Nodes**: 8
+- **BDD Nodes**: 13
 - **Expression**: (var1 AND var2) OR (NOT var3) XOR (var4 OR var5) AND (NOT (var6 XOR var7))
 
 ## BDD Node Table
