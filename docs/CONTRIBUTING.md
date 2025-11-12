@@ -19,7 +19,7 @@ To add new test expressions:
 ### Example Test Addition
 
 1. Create `test_expressions/network_filter.txt`:
-   ```
+   ```text
    (bandwidth_high AND latency_low) OR emergency_override
    ```
 
@@ -30,7 +30,7 @@ To add new test expressions:
 
 3. Copy the generated node file:
    ```powershell
-   cp test_expressions\teddy_expected_output\network_filter_bdd_nodes.txt test_expressions\teddy_expected_output\
+   cp test_expressions\network_filter_bdd_nodes.txt test_expressions\teddy_expected_output\
    ```
 
 4. Add test to `CMakeLists.txt`:

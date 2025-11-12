@@ -111,7 +111,7 @@ catch_discover_tests(unit_tests)
 
 # Create a custom target to run only unit tests
 add_custom_target(run_unit_tests
-    COMMAND ${CMAKE_BINARY_DIR}/bin/tests/unit_tests
+    COMMAND $<TARGET_FILE:unit_tests>
     DEPENDS unit_tests
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     COMMENT "Running unit tests with Catch2"
@@ -119,7 +119,7 @@ add_custom_target(run_unit_tests
 
 # Create a custom target to run unit tests with verbose output
 add_custom_target(run_unit_tests_verbose
-    COMMAND ${CMAKE_BINARY_DIR}/bin/tests/unit_tests -s
+    COMMAND $<TARGET_FILE:unit_tests> -s
     DEPENDS unit_tests
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     COMMENT "Running unit tests with Catch2 (verbose)"

@@ -51,7 +51,7 @@ void test_expression_to_cudd_and_teddy(const std::string& file_name) {
     REQUIRE(!cudd_nodes.empty());
 
     // Print each node label in order
-    std::cout << "CUDD BDD nodes in topological order:" << std ::endl;
+    std::cout << "CUDD BDD nodes in topological order:" << std::endl;
     for (const auto iter : cudd_nodes) {
         std::cout << "Node ID: " << iter.get_label() << std::endl;
     }
@@ -69,5 +69,5 @@ void test_expression_to_cudd_and_teddy(const std::string& file_name) {
         test_expression_to_cudd_and_teddy(file); \
     }
 
-// DECLARE_TEST_CASE("test_expressions/simple_expression.txt")
-// DECLARE_TEST_CASE("test_expressions/all_operators.txt")
+DECLARE_TEST_CASE("test_expressions/simple_expression.txt")
+DECLARE_TEST_CASE("test_expressions/all_operators.txt")

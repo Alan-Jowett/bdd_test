@@ -45,7 +45,7 @@
  * @param variable_names The set of variable names used in the expression
  * @return Pair containing the CUDD manager and the root BDD
  */
-std::pair<std::unique_ptr<Cudd>, BDD> convert_to_cudd_bdd(
+inline std::pair<std::unique_ptr<Cudd>, BDD> convert_to_cudd_bdd(
     const my_expression& expr, const std::unordered_set<std::string>& variable_names) {
     // Create CUDD manager
     auto cudd_mgr = std::make_unique<Cudd>();

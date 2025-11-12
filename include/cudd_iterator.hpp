@@ -127,8 +127,7 @@ class cudd_iterator {
 
         if (Cudd_IsConstant(regular_node)) {
             // Terminal nodes are squares
-            bool is_one_terminal = get_terminal_value() == 1;
-            bool final_value = is_one_terminal ^ Cudd_IsComplement(node_);
+            bool final_value = get_terminal_value() == 1;
             std::string color = final_value ? "lightgreen" : "lightcoral";
             return std::format("shape=box,style=filled,fillcolor={}", color);
         } else {
@@ -168,11 +167,11 @@ class cudd_iterator {
      */
     std::string get_dot_edge_attributes(const cudd_iterator& child, size_t child_index) const {
         if (child_index == 0) {
-            // THEN edge (high)
-            return "label=\"1\",style=solid";
-        } else {
             // ELSE edge (low)
             return "label=\"0\",style=dashed";
+        } else {
+            // THEN edge (high)
+            return "label=\"1\",style=solid";
         }
     }
 
@@ -208,7 +207,7 @@ class cudd_iterator {
      * @brief Get Mermaid edge declaration to a child
      */
     std::string get_mermaid_edge_declaration(const cudd_iterator& child, size_t child_index) const {
-        std::string edge_label = (child_index == 0) ? "1" : "0";
+        std::string edge_label = (child_index == 0) ? "0" : "1";
         return std::format("{} -->|{}| {}", get_mermaid_node_id(), edge_label,
                            child.get_mermaid_node_id());
     }

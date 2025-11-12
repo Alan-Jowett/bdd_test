@@ -77,7 +77,9 @@ endif()
 
 # Check if this is an edge case and adjust reference path accordingly
 if("${EXPRESSION_FILE}" MATCHES "^edge_cases/")
-    if(DEFINED CUDD_METHOD AND CUDD_METHOD)
+    if(DEFINED FORCE_REORDER AND FORCE_REORDER)
+        set(REFERENCE_FILES_DIR "${TEST_EXPRESSIONS_DIR}/reordered/edge_cases")
+    elseif(DEFINED CUDD_METHOD AND CUDD_METHOD)
         set(REFERENCE_FILES_DIR "${TEST_EXPRESSIONS_DIR}/cudd_expected_output/edge_cases")
     else()
         set(REFERENCE_FILES_DIR "${TEST_EXPRESSIONS_DIR}/teddy_expected_output/edge_cases")
