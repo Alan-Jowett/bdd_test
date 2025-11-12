@@ -95,7 +95,7 @@ jobs:
           --directory . \
           --output-file coverage.info \
           --rc branch_coverage=1 \
-          --ignore-errors graph,gcov,unused,mismatch
+          --ignore-errors graph,gcov,unused,mismatch,source
 
         # Remove external libraries and system files from coverage
         lcov --remove coverage.info \
@@ -105,9 +105,11 @@ jobs:
           '*/_deps/*' \
           '*/tests/unit/*' \
           '*/patches/*' \
+          '*/catch2*' \
+          '*/Catch2*' \
           --output-file coverage_filtered.info \
           --rc branch_coverage=1 \
-          --ignore-errors unused,mismatch
+          --ignore-errors unused,mismatch,source
 
         # Generate HTML report for debugging
         genhtml coverage_filtered.info \
