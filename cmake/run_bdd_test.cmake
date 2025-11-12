@@ -66,10 +66,24 @@ elseif(DEFINED FORCE_REORDER AND FORCE_REORDER)
     set(REFERENCE_FILES_DIR "${TEST_EXPRESSIONS_DIR}/reordered")
     message(STATUS "Using reordered reference files for force-reorder test")
 elseif(DEFINED TEDDY_METHOD AND TEDDY_METHOD)
-    set(REFERENCE_FILES_DIR "${TEST_EXPRESSIONS_DIR}/default_ordering")
-    message(STATUS "Using default ordering reference files for TeDDy method test")
+    set(REFERENCE_FILES_DIR "${TEST_EXPRESSIONS_DIR}/teddy_expected_output")
+    message(STATUS "Using teddy_expected_output reference files for TeDDy method test")
+elseif(DEFINED CUDD_METHOD AND CUDD_METHOD)
+    set(REFERENCE_FILES_DIR "${TEST_EXPRESSIONS_DIR}/cudd_expected_output")
+    message(STATUS "Using cudd_expected_output reference files for CUDD method test")
 else()
-    set(REFERENCE_FILES_DIR "${TEST_EXPRESSIONS_DIR}/default_ordering")
+    set(REFERENCE_FILES_DIR "${TEST_EXPRESSIONS_DIR}/teddy_expected_output")
+endif()
+
+# Check if this is an edge case and adjust reference path accordingly
+if("${EXPRESSION_FILE}" MATCHES "^edge_cases/")
+    if(DEFINED FORCE_REORDER AND FORCE_REORDER)
+        set(REFERENCE_FILES_DIR "${TEST_EXPRESSIONS_DIR}/reordered/edge_cases")
+    elseif(DEFINED CUDD_METHOD AND CUDD_METHOD)
+        set(REFERENCE_FILES_DIR "${TEST_EXPRESSIONS_DIR}/cudd_expected_output/edge_cases")
+    else()
+        set(REFERENCE_FILES_DIR "${TEST_EXPRESSIONS_DIR}/teddy_expected_output/edge_cases")
+    endif()
 endif()
 
 set(EXPECTED_NODES_FILE "${REFERENCE_FILES_DIR}/${BASE_NAME}_bdd_nodes.txt")
@@ -153,6 +167,16 @@ elseif(DEFINED TEDDY_METHOD AND TEDDY_METHOD)
         TIMEOUT 30
     )
     message(STATUS "Running with --method=teddy option")
+elseif(DEFINED CUDD_METHOD AND CUDD_METHOD)
+    execute_process(
+        COMMAND "${EXECUTABLE}" "${TEST_EXPRESSION_FILE}" "--method=cudd"
+        WORKING_DIRECTORY "${TEST_BUILD_DIR}"
+        RESULT_VARIABLE EXEC_RESULT
+        OUTPUT_VARIABLE EXEC_OUTPUT
+        ERROR_VARIABLE EXEC_ERROR
+        TIMEOUT 30
+    )
+    message(STATUS "Running with --method=cudd option")
 else()
     execute_process(
         COMMAND "${EXECUTABLE}" "${TEST_EXPRESSION_FILE}"

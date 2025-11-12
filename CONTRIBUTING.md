@@ -130,7 +130,7 @@ When adding support for new logical operators:
 1. Update the `ExpressionNode` variant in `main.cpp`
 2. Add parsing logic in the expression parser
 3. Implement BDD conversion for the new operator
-4. Add test cases in `test_expressions/` with expected results in `test_expressions/default_ordering/`
+4. Add test cases in `test_expressions/` with expected results in `test_expressions/teddy_expected_output/`
 5. Update documentation
 
 ### Modifying Output Formats

@@ -1,3 +1,7 @@
 {
-    "vscode-nmake-tools.workspaceBuildDirectories": []
+    "vscode-nmake-tools.workspaceBuildDirectories": [],
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/compile_commands.json",
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "C_Cpp.default.intelliSenseMode": "windows-msvc-x64",
+    "cmake.buildDirectory": "${workspaceFolder}/build"
 }

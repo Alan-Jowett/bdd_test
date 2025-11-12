@@ -25,7 +25,19 @@
 #include <unordered_set>
 #include <vector>
 
+#include "graph_iterator_concepts.hpp"
+
 namespace dag_walker {
+
+/**
+ * @brief Concept defining the required interface for DAG walker iterators
+ *
+ * A DAG walker iterator extends the base graph iterator interface.
+ * It inherits all the basic requirements and may optionally provide
+ * a should_process() method to control whether the node should be processed.
+ */
+template <typename T>
+concept DagWalkerIterator = BaseGraphIterator<T>;
 
 /**
  * @brief Concept to detect if an iterator has a should_process method
@@ -41,6 +53,7 @@ concept has_should_process = requires(Iterator iter) {
 struct WalkConfig {
     bool track_unique_nodes = true;        ///< Whether to track and avoid revisiting unique nodes
     bool call_visitor_on_revisit = false;  ///< Whether to call visitor when revisiting a node
+    bool collect_all_edges = false;  ///< Whether to collect ALL edges, even to revisited nodes
 
     WalkConfig() = default;
     explicit WalkConfig(bool track_unique) : track_unique_nodes(track_unique) {}
@@ -53,7 +66,7 @@ struct WalkConfig {
  * @brief Information about the current node during traversal
  * @tparam Iterator The iterator type representing the node
  */
-template <typename Iterator>
+template <DagWalkerIterator Iterator>
 struct NodeInfo {
     const Iterator& node;      ///< The current node iterator
     size_t depth;              ///< Depth in the traversal tree
@@ -65,6 +78,15 @@ struct NodeInfo {
              const Iterator* p = nullptr)
         : node(n), depth(d), index_from_parent(idx), is_revisit(revisit), parent(p) {}
 };
+
+/**
+ * @brief Concept defining the required interface for visitor functions
+ *
+ * A visitor must be callable with a NodeInfo<Iterator> parameter.
+ * It can be a function, lambda, function object, or any callable type.
+ */
+template <typename V, typename Iterator>
+concept Visitor = requires(V visitor, const NodeInfo<Iterator>& node_info) { visitor(node_info); };
 
 /**
  * @brief Walk a DAG or tree structure in pre-order using a visitor pattern
@@ -82,13 +104,16 @@ struct NodeInfo {
  * - bool should_process() const (defaults to true if not provided)
  *
  * @tparam Iterator The iterator type that represents tree/DAG nodes
- * @tparam Visitor A callable that accepts NodeInfo<Iterator>&
+ * @tparam V A callable that accepts NodeInfo<Iterator>&
  * @param root_iterator The root iterator to start traversal from
  * @param visitor Function called for each node during traversal
  * @param config Configuration for the walking behavior
+ *
+ * @requires Iterator must satisfy DagWalkerIterator concept
+ * @requires V must satisfy Visitor<V, Iterator> concept
  */
-template <typename Iterator, typename Visitor>
-void walk_dag_preorder(const Iterator& root_iterator, Visitor&& visitor,
+template <DagWalkerIterator Iterator, Visitor<Iterator> V>
+void walk_dag_preorder(const Iterator& root_iterator, V&& visitor,
                        const WalkConfig& config = WalkConfig()) {
     std::unordered_set<const void*> visited_nodes;
 
@@ -148,12 +173,14 @@ void walk_dag_preorder(const Iterator& root_iterator, Visitor&& visitor,
 /**
  * @brief Backward compatibility alias for walk_dag_preorder
  * @deprecated Use walk_dag_preorder instead for clarity
+ *
+ * @requires Iterator must satisfy DagWalkerIterator concept
+ * @requires V must satisfy Visitor<V, Iterator> concept
  */
-template <typename Iterator, typename Visitor>
+template <DagWalkerIterator Iterator, Visitor<Iterator> V>
 [[deprecated("Use walk_dag_preorder instead for clarity")]]
-void walk_dag(const Iterator& root_iterator, Visitor&& visitor,
-              const WalkConfig& config = WalkConfig()) {
-    walk_dag_preorder(root_iterator, std::forward<Visitor>(visitor), config);
+void walk_dag(const Iterator& root_iterator, V&& visitor, const WalkConfig& config = WalkConfig()) {
+    walk_dag_preorder(root_iterator, std::forward<V>(visitor), config);
 }
 
 /**
@@ -177,13 +204,16 @@ void walk_dag(const Iterator& root_iterator, Visitor&& visitor,
  * - bool should_process() const (defaults to true if not provided)
  *
  * @tparam Iterator The iterator type that represents tree/DAG nodes
- * @tparam Visitor A callable that accepts NodeInfo<Iterator>&
+ * @tparam V A callable that accepts NodeInfo<Iterator>&
  * @param root_iterator The root iterator to start traversal from
  * @param visitor Function called for each node during traversal
  * @param config Configuration for the walking behavior
+ *
+ * @requires Iterator must satisfy DagWalkerIterator concept
+ * @requires V must satisfy Visitor<V, Iterator> concept
  */
-template <typename Iterator, typename Visitor>
-void walk_dag_topological(const Iterator& root_iterator, Visitor&& visitor,
+template <DagWalkerIterator Iterator, Visitor<Iterator> V>
+void walk_dag_topological(const Iterator& root_iterator, V&& visitor,
                           const WalkConfig& config = WalkConfig()) {
     std::unordered_set<const void*> visited_nodes;
     std::unordered_set<const void*> completed_nodes;
@@ -260,8 +290,10 @@ void walk_dag_topological(const Iterator& root_iterator, Visitor&& visitor,
  * @param root_iterator The root iterator to start traversal from
  * @param config Configuration for the walking behavior
  * @return std::vector<Iterator> Vector of all unique nodes found
+ *
+ * @requires Iterator must satisfy DagWalkerIterator concept
  */
-template <typename Iterator>
+template <DagWalkerIterator Iterator>
 std::vector<Iterator> collect_unique_nodes(const Iterator& root_iterator,
                                            const WalkConfig& config = WalkConfig()) {
     std::vector<Iterator> unique_nodes;
@@ -286,7 +318,7 @@ std::vector<Iterator> collect_unique_nodes(const Iterator& root_iterator,
  *
  * @tparam Iterator The iterator type that represents tree/DAG nodes
  */
-template <typename Iterator>
+template <DagWalkerIterator Iterator>
 struct EdgeInfo {
     Iterator parent;     ///< Parent node in the relationship
     Iterator child;      ///< Child node in the relationship
@@ -304,21 +336,61 @@ struct EdgeInfo {
  * @param root_iterator The root iterator to start traversal from
  * @param config Configuration for the walking behavior
  * @return std::vector<EdgeInfo<Iterator>> Vector of all edges found
+ *
+ * @requires Iterator must satisfy DagWalkerIterator concept
  */
-template <typename Iterator>
+template <DagWalkerIterator Iterator>
 std::vector<EdgeInfo<Iterator>> collect_edges(const Iterator& root_iterator,
                                               const WalkConfig& config = WalkConfig()) {
     std::vector<EdgeInfo<Iterator>> edges;
 
-    walk_dag_preorder(
-        root_iterator,
-        [&](const NodeInfo<Iterator>& node_info) {
-            if (node_info.parent && !node_info.is_revisit) {
-                edges.emplace_back(*node_info.parent, node_info.node, node_info.index_from_parent,
-                                   node_info.depth);
-            }
-        },
-        config);
+    if (config.collect_all_edges) {
+        // Special mode: collect ALL edges including those to revisited nodes
+        // This ensures we get the same edge set as manual BDD traversal
+        std::unordered_set<const void*> processed_nodes;
+
+        std::function<void(const Iterator&, size_t, const Iterator*)> collect_all_edges_impl =
+            [&](const Iterator& current, size_t depth, const Iterator* parent) {
+                const void* node_key = current.get_node_address();
+
+                // Add edge from parent to current (if parent exists)
+                if (parent) {
+                    // Find the index of this child in parent's children
+                    auto parent_children = parent->get_children();
+                    for (size_t i = 0; i < parent_children.size(); ++i) {
+                        if (parent_children[i].get_node_address() == node_key) {
+                            edges.emplace_back(*parent, current, i, depth);
+                            break;
+                        }
+                    }
+                }
+
+                // Stop if we've already processed this node to avoid infinite loops
+                if (processed_nodes.find(node_key) != processed_nodes.end()) {
+                    return;
+                }
+                processed_nodes.insert(node_key);
+
+                // Process all children
+                auto children = current.get_children();
+                for (const auto& child : children) {
+                    collect_all_edges_impl(child, depth + 1, &current);
+                }
+            };
+
+        collect_all_edges_impl(root_iterator, 0, nullptr);
+    } else {
+        // Original behavior: collect edges during normal traversal
+        walk_dag_preorder(
+            root_iterator,
+            [&](const NodeInfo<Iterator>& node_info) {
+                if (node_info.parent && !node_info.is_revisit) {
+                    edges.emplace_back(*node_info.parent, node_info.node,
+                                       node_info.index_from_parent, node_info.depth);
+                }
+            },
+            config);
+    }
 
     return edges;
 }
@@ -330,8 +402,10 @@ std::vector<EdgeInfo<Iterator>> collect_edges(const Iterator& root_iterator,
  * @param root_iterator The root iterator to start traversal from
  * @param count_unique_only If true, only count unique nodes (default for DAGs)
  * @return size_t Total number of nodes
+ *
+ * @requires Iterator must satisfy DagWalkerIterator concept
  */
-template <typename Iterator>
+template <DagWalkerIterator Iterator>
 size_t count_nodes(const Iterator& root_iterator, bool count_unique_only = true) {
     size_t count = 0;
     WalkConfig config;
@@ -356,8 +430,10 @@ size_t count_nodes(const Iterator& root_iterator, bool count_unique_only = true)
  * @tparam Iterator The iterator type that represents tree/DAG nodes
  * @param root_iterator The root iterator to start traversal from
  * @return size_t Maximum depth found (root is depth 0)
+ *
+ * @requires Iterator must satisfy DagWalkerIterator concept
  */
-template <typename Iterator>
+template <DagWalkerIterator Iterator>
 size_t get_max_depth(const Iterator& root_iterator) {
     size_t max_depth = 0;
 
@@ -381,8 +457,10 @@ size_t get_max_depth(const Iterator& root_iterator) {
  * @param root_iterator The root iterator to start traversal from
  * @param config Configuration for the walking behavior
  * @return std::vector<Iterator> Vector of all unique nodes in topological order
+ *
+ * @requires Iterator must satisfy DagWalkerIterator concept
  */
-template <typename Iterator>
+template <DagWalkerIterator Iterator>
 std::vector<Iterator> collect_unique_nodes_topological(const Iterator& root_iterator,
                                                        const WalkConfig& config = WalkConfig()) {
     std::vector<Iterator> unique_nodes;
@@ -411,8 +489,10 @@ std::vector<Iterator> collect_unique_nodes_topological(const Iterator& root_iter
  * @param root_iterator The root iterator to start traversal from
  * @param config Configuration for the walking behavior
  * @return std::vector<EdgeInfo<Iterator>> Vector of all edges in topological order
+ *
+ * @requires Iterator must satisfy DagWalkerIterator concept
  */
-template <typename Iterator>
+template <DagWalkerIterator Iterator>
 std::vector<EdgeInfo<Iterator>> collect_edges_topological(const Iterator& root_iterator,
                                                           const WalkConfig& config = WalkConfig()) {
     std::vector<EdgeInfo<Iterator>> edges;

@@ -36,7 +36,7 @@ foreach ($expr in $expressions) {
 
         $baseName = [System.IO.Path]::GetFileNameWithoutExtension($expr)
         $sourceFile = "test_expressions\${baseName}_analysis.md"
-        $destFile = "test_expressions\reference_outputs\${baseName}_analysis.md"
+        $destFile = "test_expressions\teddy_reference_outputs\${baseName}_analysis.md"
 
         if (Test-Path $sourceFile) {
             Copy-Item $sourceFile $destFile -Force
@@ -59,7 +59,7 @@ foreach ($expr in $edgeCaseExpressions) {
 
         $baseName = [System.IO.Path]::GetFileNameWithoutExtension($expr)
         $sourceFile = "test_expressions\${baseName}_analysis.md"
-        $destFile = "test_expressions\reference_outputs\${baseName}_analysis.md"
+        $destFile = "test_expressions\teddy_reference_outputs\${baseName}_analysis.md"
 
         if (Test-Path $sourceFile) {
             Copy-Item $sourceFile $destFile -Force

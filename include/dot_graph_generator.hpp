@@ -29,6 +29,7 @@
 #include <vector>
 
 #include "dag_walker.hpp"
+#include "graph_iterator_concepts.hpp"
 
 namespace dot_graph {
 
@@ -90,6 +91,16 @@ concept has_get_edge_fontcolor = requires(T t, T child, std::size_t index) {
 /// @}
 
 /**
+ * @brief Core concept for DOT graph iterators
+ *
+ * Defines the minimum interface required for generating DOT graphs.
+ * All DOT generation functions require iterators that satisfy this concept.
+ * This extends the base graph iterator interface.
+ */
+template <typename T>
+concept DotGraphIterator = BaseGraphIterator<T>;
+
+/**
  * @brief Configuration settings for DOT graph generation
  */
 struct DotConfig {
@@ -100,6 +111,8 @@ struct DotConfig {
     std::string default_node_style = "filled";  ///< Default style for nodes
     std::string default_edge_style = "solid";   ///< Default style for edges
     bool show_node_ids = false;                 ///< Whether to show internal node IDs
+    bool use_bdd_format = false;     ///< Whether to use BDD-specific grouped shape format
+    bool collect_all_edges = false;  ///< Whether to collect ALL edges, including to revisited nodes
 
     // C++20 spaceship operator for automatic comparison generation
     auto operator<=>(const DotConfig& other) const = default;
@@ -111,9 +124,10 @@ struct DotConfig {
  * This function generates Graphviz DOT format from tree/DAG structures by leveraging
  * the dag_walker for all traversal logic and focusing purely on DOT formatting.
  *
- * Required iterator interface:
+ * Required iterator interface (enforced by DotGraphIterator concept):
  * - std::vector<Iterator> get_children() const
  * - const void* get_node_address() const (for unique node identification)
+ * - bool operator==(const Iterator&) const / bool operator!=(const Iterator&) const
  *
  * Optional node property methods (auto-detected via C++20 concepts):
  * - std::string get_label() const
@@ -136,8 +150,10 @@ struct DotConfig {
  * @param root_iterator The root iterator to start traversal from
  * @param out Output stream for the DOT content
  * @param config Configuration for the DOT graph appearance
+ *
+ * @requires DotGraphIterator<Iterator>
  */
-template <typename Iterator>
+template <DotGraphIterator Iterator>
 void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
                         const DotConfig& config = DotConfig()) {
     // Write DOT header with configuration
@@ -258,17 +274,76 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
         return attrs;
     };
 
-    // Use dag_walker to collect all unique nodes and output them
+    // Use dag_walker to collect all unique nodes
     auto unique_nodes = dag_walker::collect_unique_nodes(root_iterator);
-    for (const auto& node : unique_nodes) {
-        std::string node_id = get_node_id(node);
-        std::string node_attrs = build_node_attributes(node, node_id);
-        out << "    " << node_id << " " << node_attrs << ";\n";
+
+    if (config.use_bdd_format) {
+        // BDD-specific grouped shape format
+
+        // First, create node ID mapping
+        for (const auto& node : unique_nodes) {
+            get_node_id(node);  // This populates the node_id_map
+        }
+
+        // Group nodes by shape for BDD-style declarations
+        std::vector<std::string> square_nodes;
+        std::vector<std::string> circle_nodes;
+
+        for (const auto& node : unique_nodes) {
+            std::string node_id = node_id_map[node.get_node_address()];
+            std::string shape = "circle";  // default
+            if constexpr (has_get_shape<Iterator>) {
+                shape = node.get_shape();
+            }
+
+            if (shape == "square") {
+                square_nodes.push_back(node_id);
+            } else {
+                circle_nodes.push_back(node_id);  // Default to circle
+            }
+        }
+
+        // Output shape declarations (BDD-specific format)
+        if (!square_nodes.empty()) {
+            out << "    node [shape = square]";
+            for (const auto& node_id : square_nodes) {
+                out << " " << node_id;
+            }
+            out << ";\n";
+            out << "    node [shape = circle];\n\n";
+        }
+
+        // Output individual node declarations (without shape attributes for BDD format)
+        for (const auto& node : unique_nodes) {
+            std::string node_id = node_id_map[node.get_node_address()];
+            out << "    " << node_id << " [label = \"";
+            if constexpr (has_get_label<Iterator>) {
+                out << node.get_label();
+            } else {
+                out << node_id;
+            }
+            out << "\"";
+            if constexpr (has_get_tooltip<Iterator>) {
+                out << ", tooltip = \"" << node.get_tooltip() << "\"";
+            }
+            out << "];\n";
+        }
+    } else {
+        // Standard format: individual node declarations with all attributes
+        for (const auto& node : unique_nodes) {
+            std::string node_id = get_node_id(node);
+            std::string node_attrs = build_node_attributes(node, node_id);
+            out << "    " << node_id << " " << node_attrs << ";\n";
+        }
     }
 
-    // Use dag_walker to collect all edges and output them
+    // Use dag_walker to collect edges with appropriate configuration
     out << "\n";
-    auto edges = dag_walker::collect_edges(root_iterator);
+    dag_walker::WalkConfig walk_config;
+    if (config.collect_all_edges) {
+        walk_config.collect_all_edges = true;
+    }
+    auto edges = dag_walker::collect_edges(root_iterator, walk_config);
     for (const auto& edge : edges) {
         std::string parent_id = get_node_id(edge.parent);
         std::string child_id = get_node_id(edge.child);
@@ -291,8 +366,10 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
  * @param root_iterator The root iterator to start traversal from
  * @param out Output stream for the DOT content
  * @param graph_name Name for the generated graph
+ *
+ * @requires DotGraphIterator<Iterator>
  */
-template <typename Iterator>
+template <DotGraphIterator Iterator>
 void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
                         const std::string& graph_name) {
     generate_dot_graph(root_iterator, out, DotConfig(graph_name));

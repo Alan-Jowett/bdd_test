@@ -42,178 +42,26 @@
 #include <variant>
 #include <vector>
 
-#include "bdd_graph.hpp"
+// CUDD headers for BDD comparison
+#include <cudd/cudd.h>
+
+#include <cudd/cuddObj.hh>
+
+#include "cudd_convert.hpp"
+#include "cudd_graph.hpp"
 #include "dag_walker.hpp"
 #include "expression_adapter.hpp"
 #include "expression_graph.hpp"
 #include "expression_parser.hpp"
+#include "node_table_generator.hpp"
+#include "teddy_convert.hpp"
+#include "teddy_graph.hpp"
 
 // ============================================================================
 // Anonymous namespace for implementation details
 // ============================================================================
 
 namespace {
-
-/**
- * @brief Core BDD node data structure for table generation
- */
-struct BddNodeInfo {
-    int index;
-    bool is_terminal;
-    std::string variable_name;
-    int false_child_index;
-    int true_child_index;
-    std::string type;
-    int terminal_value;
-};
-
-/**
- * @brief Collects BDD node information in topological order
- *
- * This function performs the common data extraction logic shared between
- * write_bdd_nodes_to_stream and write_bdd_nodes_to_markdown.
- *
- * @param diagram The BDD diagram to analyze
- * @param variable_names Ordered list of variable names for display
- * @return Vector of BddNodeInfo structures in topological order
- */
-std::vector<BddNodeInfo> collect_bdd_node_info(teddy::bdd_manager::diagram_t diagram,
-                                               const std::vector<std::string>& variable_names) {
-    using node_t = teddy::bdd_manager::diagram_t::node_t;
-
-    // Get nodes in topological order using dag_walker
-    std::vector<node_t*> nodes_in_order = collect_bdd_nodes_topological(diagram, variable_names);
-
-    // Reverse to achieve parents-before-children ordering with terminals at end
-    std::reverse(nodes_in_order.begin(), nodes_in_order.end());
-
-    // Create node-to-index mapping
-    std::unordered_map<node_t*, int> node_to_index;
-    for (int i = 0; i < nodes_in_order.size(); ++i) {
-        node_to_index[nodes_in_order[i]] = i;
-    }
-
-    // Collect node information
-    std::vector<BddNodeInfo> node_info;
-    node_info.reserve(nodes_in_order.size());
-
-    for (int i = 0; i < nodes_in_order.size(); ++i) {
-        node_t* node = nodes_in_order[i];
-        BddNodeInfo info;
-        info.index = i;
-        info.is_terminal = node->is_terminal();
-
-        if (node->is_terminal()) {
-            info.variable_name = "-";
-            info.false_child_index = -1;
-            info.true_child_index = -1;
-            info.type = "Terminal(" + std::to_string(node->get_value()) + ")";
-            info.terminal_value = node->get_value();
-        } else {
-            int var_index = node->get_index();
-            info.variable_name = (var_index < variable_names.size())
-                                     ? variable_names[var_index]
-                                     : std::format("x{}", var_index);
-
-            node_t* false_child = node->get_son(0);
-            node_t* true_child = node->get_son(1);
-            info.false_child_index = node_to_index[false_child];
-            info.true_child_index = node_to_index[true_child];
-            info.type = "Variable";
-            info.terminal_value = 0;  // Not used for variables
-        }
-
-        node_info.push_back(info);
-    }
-
-    return node_info;
-}
-
-/**
- * @brief Writes BDD node table to output stream
- *
- * This function generates a comprehensive table showing the structure of a BDD,
- * including node indices, variable assignments, and child relationships.
- * Nodes are ordered in post-order traversal and then reversed for proper display.
- *
- * @param manager Reference to the BDD manager
- * @param diagram The BDD diagram to analyze
- * @param variable_names Vector of variable names for display (indexed by variable index)
- * @param out Output stream to write the table to
- * @param include_headers Whether to include descriptive headers and footers (default: true)
- *
- * @note The function uses dag_walker's topological traversal to ensure
- *       that parent nodes have lower indices than their children
- */
-void write_bdd_nodes_to_stream(const teddy::bdd_manager& manager,
-                               teddy::bdd_manager::diagram_t diagram,
-                               const std::vector<std::string>& variable_names, std::ostream& out,
-                               bool include_headers = true) {
-    std::vector<BddNodeInfo> node_info = collect_bdd_node_info(diagram, variable_names);
-
-    // Write headers
-    if (include_headers) {
-        out << "BDD Node Table (topological ordering):\n";
-    }
-    out << "Index | Variable | False Child | True Child | Type\n";
-    out << "------|----------|-------------|------------|----------\n";
-
-    // Write table rows
-    for (const auto& info : node_info) {
-        out << std::setw(5) << info.index << " | ";
-        out << std::setw(8) << info.variable_name << " | ";
-
-        if (info.is_terminal) {
-            out << std::setw(11) << "-" << " | ";
-            out << std::setw(10) << "-" << " | ";
-        } else {
-            out << std::setw(11) << info.false_child_index << " | ";
-            out << std::setw(10) << info.true_child_index << " | ";
-        }
-        out << info.type << "\n";
-    }
-
-    if (include_headers) {
-        out << "\nTotal nodes: " << node_info.size() << "\n";
-        out << "Note: Topological order reversed for parents-first display.\n";
-    }
-}
-
-/**
- * @brief Writes BDD node table in Markdown format
- *
- * Generates a Markdown table showing BDD nodes with their relationships.
- * Uses the same data as write_bdd_nodes_to_stream but formats for Markdown.
- *
- * @param manager The BDD manager for accessing node properties
- * @param diagram The BDD diagram to analyze
- * @param variable_names Ordered list of variable names for display
- * @param out Output stream to write the Markdown table to
- */
-void write_bdd_nodes_to_markdown(const teddy::bdd_manager& manager,
-                                 teddy::bdd_manager::diagram_t diagram,
-                                 const std::vector<std::string>& variable_names,
-                                 std::ostream& out) {
-    std::vector<BddNodeInfo> node_info = collect_bdd_node_info(diagram, variable_names);
-
-    // Write Markdown table header
-    out << "| Index | Variable | False Child | True Child | Type |\n";
-    out << "|-------|----------|-------------|------------|------|\n";
-
-    // Write table rows
-    for (const auto& info : node_info) {
-        out << "| " << info.index << " | ";
-
-        if (info.is_terminal) {
-            out << "- | - | - | " << info.type << " |\n";
-        } else {
-            out << info.variable_name << " | ";
-            out << info.false_child_index << " | ";
-            out << info.true_child_index << " | ";
-            out << info.type << " |\n";
-        }
-    }
-}
 
 /**
  * @brief Constructs output file path with suffix in same directory as input file
@@ -232,128 +80,6 @@ std::filesystem::path get_output_path(const std::filesystem::path& input_filepat
     std::filesystem::path dir = input_filepath.parent_path();
     std::string base_name = input_filepath.stem().string();
     return dir / (base_name + suffix);
-}
-
-/**
- * @brief Converts an expression tree to a Binary Decision Diagram (BDD)
- *
- * Performs recursive conversion of the custom expression tree into a BDD using
- * the TeDDy library. Uses dag_walker for efficient variable collection and
- * simple recursion for BDD construction since expressions form a tree structure.
- *
- * The conversion process:
- * 1. Uses dag_walker to collect all unique variable names efficiently
- * 2. Creates a sorted variable mapping for consistent BDD ordering
- * 3. Recursively converts each expression node to BDD operations
- *
- * @param expr The root expression to convert
- * @param mgr Reference to the BDD manager for creating BDD nodes
- * @return BDD diagram representing the logical function
- *
- * @throws std::runtime_error If a variable reference is not found during conversion
- *
- * Operator mappings:
- * - AND -> BDD AND operation
- * - OR -> BDD OR operation
- * - XOR -> BDD XOR operation
- * - NOT -> XOR with constant 1
- * - Variable -> BDD variable node
- */
-teddy::bdd_manager::diagram_t convert_to_bdd(const my_expression& expr, teddy::bdd_manager& mgr) {
-    using bdd_t = teddy::bdd_manager::diagram_t;
-    using namespace teddy::ops;
-
-    // First pass: collect all unique variable names using dag_walker
-    std::unordered_set<std::string> variable_names;
-    collect_variables_with_dag_walker(expr, variable_names);
-
-    // Build variable map with sorted variable names for consistent ordering
-    std::vector<std::string> sorted_vars(variable_names.begin(), variable_names.end());
-    std::ranges::sort(sorted_vars);
-
-    std::unordered_map<std::string, int> var_map;
-    for (size_t i = 0; i < sorted_vars.size(); ++i) {
-        var_map[sorted_vars[i]] = static_cast<int>(i);
-    }
-
-    // Helper function for recursive conversion (no memoization needed for tree structure)
-    std::function<bdd_t(const my_expression&)> convert_recursive =
-        [&](const my_expression& e) -> bdd_t {
-        return std::visit(
-            [&](const auto& variant_expr) -> bdd_t {
-                using T = std::decay_t<decltype(variant_expr)>;
-
-                if constexpr (std::is_same_v<T, my_variable>) {
-                    auto it = var_map.find(variant_expr.variable_name);
-                    if (it == var_map.end()) {
-                        throw std::runtime_error("Variable not found: "
-                                                 + variant_expr.variable_name);
-                    }
-                    return mgr.variable(it->second);
-                } else if constexpr (std::is_same_v<T, my_and>) {
-                    bdd_t left_bdd = convert_recursive(*variant_expr.left);
-                    bdd_t right_bdd = convert_recursive(*variant_expr.right);
-                    return mgr.apply<AND>(left_bdd, right_bdd);
-                } else if constexpr (std::is_same_v<T, my_or>) {
-                    bdd_t left_bdd = convert_recursive(*variant_expr.left);
-                    bdd_t right_bdd = convert_recursive(*variant_expr.right);
-                    return mgr.apply<OR>(left_bdd, right_bdd);
-                } else if constexpr (std::is_same_v<T, my_not>) {
-                    bdd_t expr_bdd = convert_recursive(*variant_expr.expr);
-                    bdd_t one = mgr.constant(1);
-                    return mgr.apply<XOR>(expr_bdd, one);
-                } else if constexpr (std::is_same_v<T, my_xor>) {
-                    bdd_t left_bdd = convert_recursive(*variant_expr.left);
-                    bdd_t right_bdd = convert_recursive(*variant_expr.right);
-                    return mgr.apply<XOR>(left_bdd, right_bdd);
-                }
-            },
-            e);
-    };
-
-    return convert_recursive(expr);
-}
-
-/**
- * @brief Alternative conversion using TeDDy's built-in from_expression_tree method
- *
- * This function demonstrates using TeDDy's native from_expression_tree method
- * by wrapping our custom expression types with an adapter that conforms to
- * the expression_node concept.
- *
- * The conversion process:
- * 1. Collects all unique variable names using dag_walker
- * 2. Creates a sorted variable mapping for consistent BDD ordering
- * 3. Wraps the root expression with an adapter
- * 4. Uses TeDDy's from_expression_tree method for conversion
- *
- * @param expr The root expression to convert
- * @param mgr Reference to the BDD manager for creating BDD nodes
- * @return BDD diagram representing the logical function
- *
- * @throws std::runtime_error If a variable reference is not found during conversion
- *
- * @note This is an experimental alternative to compare performance and behavior
- *       with our custom recursive conversion approach.
- */
-teddy::bdd_manager::diagram_t convert_to_bdd_with_teddy_adapter(const my_expression& expr,
-                                                                teddy::bdd_manager& mgr) {
-    // First pass: collect all unique variable names using dag_walker
-    std::unordered_set<std::string> variable_names;
-    collect_variables_with_dag_walker(expr, variable_names);
-
-    // Build variable map with sorted variable names for consistent ordering
-    std::vector<std::string> sorted_vars(variable_names.begin(), variable_names.end());
-    std::ranges::sort(sorted_vars);
-
-    std::unordered_map<std::string, int> var_map;
-    for (size_t i = 0; i < sorted_vars.size(); ++i) {
-        var_map[sorted_vars[i]] = static_cast<int>(i);
-    }
-
-    // Create adapter and use TeDDy's from_expression_tree
-    expression_adapter adapter(expr, var_map);
-    return mgr.from_expression_tree(adapter);
 }
 
 }  // end anonymous namespace
@@ -410,7 +136,11 @@ int main(int argc, const char* argv[]) {
     std::filesystem::path input_file = "";
     bool enable_auto_reordering = false;
     bool force_reorder_after_build = false;
-    enum class ConversionMethod { Custom, TeDDy } conversion_method = ConversionMethod::Custom;
+    enum class ConversionMethod {
+        Custom,
+        TeDDy,
+        CUDD
+    } conversion_method = ConversionMethod::Custom;
     bool quiet_mode = true;
     bool show_help = false;
     bool help_due_to_error = false;
@@ -430,6 +160,8 @@ int main(int argc, const char* argv[]) {
             conversion_method = ConversionMethod::Custom;
         } else if (arg == "--method=teddy") {
             conversion_method = ConversionMethod::TeDDy;
+        } else if (arg == "--method=cudd") {
+            conversion_method = ConversionMethod::CUDD;
         } else if (arg == "--quiet" || arg == "-q") {
             quiet_mode = true;
         } else if (arg == "--verbose" || arg == "-v") {
@@ -469,6 +201,7 @@ int main(int argc, const char* argv[]) {
                      "construction\n";
         std::cout << "  --method=custom       Use custom recursive conversion method (default)\n";
         std::cout << "  --method=teddy        Use TeDDy's from_expression_tree method\n";
+        std::cout << "  --method=cudd         Use CUDD library for BDD conversion\n";
         std::cout << "  --quiet, -q           Suppress console output of BDD structure and DOT "
                      "graph (default)\n";
         std::cout << "  --verbose, -v         Show detailed console output of BDD structure and "
@@ -558,6 +291,10 @@ int main(int argc, const char* argv[]) {
 
     // Convert the expression tree to BDD using selected method
     bdd_t f;
+    std::unique_ptr<Cudd> cudd_mgr_ptr;
+    BDD cudd_bdd;
+    bool using_cudd = false;
+
     switch (conversion_method) {
         case ConversionMethod::Custom:
             std::cout << "Converting expression to BDD using custom recursive method...\n";
@@ -568,10 +305,18 @@ int main(int argc, const char* argv[]) {
                 << "Converting expression to BDD using TeDDy's from_expression_tree method...\n";
             f = convert_to_bdd_with_teddy_adapter(*expr, manager);
             break;
+        case ConversionMethod::CUDD:
+            std::cout << "Converting expression to BDD using CUDD library...\n";
+            std::tie(cudd_mgr_ptr, cudd_bdd) = convert_to_cudd_bdd(*expr, variable_names);
+            using_cudd = true;
+            std::cout << "CUDD BDD conversion completed successfully\n";
+            std::cout << "CUDD BDD node count: " << cudd_bdd.nodeCount() << "\n";
+            std::cout << "Note: CUDD BDDs are handled separately from TeDDy BDDs\n";
+            break;
     }
 
-    // Force variable reordering if requested
-    if (force_reorder_after_build) {
+    // Force variable reordering if requested (only for TeDDy)
+    if (force_reorder_after_build && !using_cudd) {
         std::cout << "Forcing variable reordering after BDD construction...\n";
         manager.force_reorder();
         std::cout << "Variable reordering completed\n";
@@ -580,10 +325,28 @@ int main(int argc, const char* argv[]) {
         std::cout << "Applying reduce() method after reordering...\n";
         f = manager.reduce(f);  // Call reduce() with the diagram
         std::cout << "Reduce method completed successfully\n";
+    } else if (force_reorder_after_build && using_cudd) {
+        std::cout << "Variable reordering is not supported for CUDD in this implementation\n";
     }
 
     std::cout << "Function created successfully!\n";
     std::cout << "Using " << variable_names.size() << " variables\n\n";
+
+    // Handle CUDD-specific output
+    if (using_cudd) {
+        std::cout << "\n=== CUDD BDD Analysis ===\n";
+        std::cout << "CUDD BDD Statistics:\n";
+        std::cout << "- Node count: " << cudd_bdd.nodeCount() << "\n";
+        std::cout << "- Support size: " << cudd_bdd.SupportSize() << "\n";
+        std::cout << "- Is constant: " << (cudd_bdd.IsZero() || cudd_bdd.IsOne() ? "Yes" : "No")
+                  << "\n";
+
+        if (cudd_bdd.IsZero() || cudd_bdd.IsOne()) {
+            std::cout << "- Constant value: " << (cudd_bdd.IsOne() ? "True" : "False") << "\n";
+        }
+
+        std::cout << "\nCUDD conversion completed successfully.\n";
+    }
 
     // Generate output filenames in the same directory as the input file
     std::filesystem::path expr_dot_filename = get_output_path(input_file, "_expression_tree.dot");
@@ -625,22 +388,39 @@ int main(int argc, const char* argv[]) {
             combined_file << "## Binary Decision Diagram (BDD)\n\n";
             combined_file << "The following diagram shows the optimized BDD representation:\n\n";
             combined_file << "```mermaid\n";
-            write_bdd_to_mermaid(manager, f, sorted_variable_names, combined_file);  // No title
+            if (using_cudd) {
+                write_cudd_to_mermaid(*cudd_mgr_ptr, cudd_bdd, sorted_variable_names,
+                                      combined_file);  // No title
+            } else {
+                write_teddy_to_mermaid(manager, f, sorted_variable_names,
+                                       combined_file);  // No title
+            }
             combined_file << "```\n\n";
 
             combined_file << "## Analysis Summary\n\n";
             combined_file << "- **Variables**: " << sorted_variable_names.size() << "\n";
 
             // Calculate BDD node count
-            auto nodes_in_order = collect_bdd_nodes_topological(f, sorted_variable_names);
-            combined_file << "- **BDD Nodes**: " << nodes_in_order.size() << "\n";
+            size_t node_count;
+            if (using_cudd) {
+                node_count = cudd_bdd.nodeCount();
+            } else {
+                auto nodes_in_order = collect_teddy_nodes_topological(f, sorted_variable_names);
+                node_count = nodes_in_order.size();
+            }
+            combined_file << "- **BDD Nodes**: " << node_count << "\n";
             combined_file << "- **Expression**: " << original_expression << "\n\n";
 
             // Add BDD Node Table
             combined_file << "## BDD Node Table\n\n";
             combined_file << "The following table shows the internal structure of the BDD with "
                              "node relationships:\n\n";
-            write_bdd_nodes_to_markdown(manager, f, sorted_variable_names, combined_file);
+            if (using_cudd) {
+                write_cudd_nodes_to_markdown(*cudd_mgr_ptr, cudd_bdd, sorted_variable_names,
+                                             combined_file);
+            } else {
+                write_teddy_nodes_to_markdown(manager, f, sorted_variable_names, combined_file);
+            }
             combined_file << "\n";
             combined_file << "**Note**: Nodes are ordered topologically (parents before children) "
                              "with terminal nodes at the end.\n";
@@ -659,20 +439,33 @@ int main(int argc, const char* argv[]) {
         // Print BDD node structure
         std::cout << "BDD Node Structure:\n";
         std::cout << "==================\n";
-        write_bdd_nodes_to_stream(manager, f, sorted_variable_names, std::cout, true);
+        if (using_cudd) {
+            write_cudd_nodes_to_stream(*cudd_mgr_ptr, cudd_bdd, sorted_variable_names, std::cout,
+                                       true);
+        } else {
+            write_teddy_nodes_to_stream(manager, f, sorted_variable_names, std::cout, true);
+        }
         std::cout << "\n";
 
         // Output DOT representation to console
         std::cout << "DOT representation of the BDD:\n";
         std::cout << "==============================\n";
-        write_bdd_to_dot(manager, f, sorted_variable_names, std::cout);
+        if (using_cudd) {
+            write_cudd_to_dot(*cudd_mgr_ptr, cudd_bdd, sorted_variable_names, std::cout, "DD");
+        } else {
+            write_teddy_to_dot(manager, f, sorted_variable_names, std::cout);
+        }
         std::cout << "\n\n";
     }
 
     // Output DOT representation to file
     std::ofstream dot_file(bdd_dot_filename);
     if (dot_file.is_open()) {
-        write_bdd_to_dot(manager, f, sorted_variable_names, dot_file);
+        if (using_cudd) {
+            write_cudd_to_dot(*cudd_mgr_ptr, cudd_bdd, sorted_variable_names, dot_file, "DD");
+        } else {
+            write_teddy_to_dot(manager, f, sorted_variable_names, dot_file);
+        }
         dot_file.close();
         std::cout << "BDD DOT representation saved to '" << bdd_dot_filename << "'\n";
         std::cout << "You can visualize it using Graphviz with: dot -Tpng " << bdd_dot_filename
@@ -685,7 +478,12 @@ int main(int argc, const char* argv[]) {
     // Output BDD node table to file
     std::ofstream nodes_file(bdd_nodes_filename);
     if (nodes_file.is_open()) {
-        write_bdd_nodes_to_stream(manager, f, sorted_variable_names, nodes_file, false);
+        if (using_cudd) {
+            write_cudd_nodes_to_stream(*cudd_mgr_ptr, cudd_bdd, sorted_variable_names, nodes_file,
+                                       false);
+        } else {
+            write_teddy_nodes_to_stream(manager, f, sorted_variable_names, nodes_file, false);
+        }
         nodes_file.close();
         std::cout << "BDD node table saved to '" << bdd_nodes_filename << "'\n";
     } else {

@@ -5,10 +5,10 @@ The BDD Expression Converter generates both expression tree and BDD visualizatio
 ## Simple Expression: `(a AND b) OR (c AND d)`
 
 **Expression Tree:**
-![Simple Expression Tree](../test_expressions/default_ordering/simple_expression_expression_tree.png)
+![Simple Expression Tree](../test_expressions/teddy_expected_output/simple_expression_expression_tree.png)
 
 **Resulting BDD:**
-![Simple Expression BDD](../test_expressions/default_ordering/simple_expression_bdd.png)
+![Simple Expression BDD](../test_expressions/teddy_expected_output/simple_expression_bdd.png)
 
 This basic expression shows how AND/OR operations are structured in the BDD with 4 variables (a, b, c, d) displayed with their actual names.
 
@@ -17,10 +17,10 @@ This basic expression shows how AND/OR operations are structured in the BDD with
 ## Complex Expression: `((x0 AND x1) OR (NOT x2)) XOR ((x3 AND (NOT x4)) OR (x5 XOR x6))`
 
 **Expression Tree:**
-![Complex Expression Tree](../test_expressions/default_ordering/filter_expression_expression_tree.png)
+![Complex Expression Tree](../test_expressions/teddy_expected_output/filter_expression_expression_tree.png)
 
 **Resulting BDD:**
-![Complex Expression BDD](../test_expressions/default_ordering/filter_expression_bdd.png)
+![Complex Expression BDD](../test_expressions/teddy_expected_output/filter_expression_bdd.png)
 
 This complex expression demonstrates all supported operators (AND, OR, NOT, XOR) with 7 variables (x0 through x6), showing how the BDD optimization reduces the structure while preserving logical equivalence.
 
@@ -61,10 +61,10 @@ The 8-queens problem generates a 71,166-node BDD that, while computationally tra
 ## Negated Expression: `NOT (a OR b) AND c`
 
 **Expression Tree:**
-![Negated Expression Tree](../test_expressions/default_ordering/my_test_expression_expression_tree.png)
+![Negated Expression Tree](../test_expressions/teddy_expected_output/my_test_expression_expression_tree.png)
 
 **Resulting BDD:**
-![Negated Expression BDD](../test_expressions/default_ordering/my_test_expression_bdd.png)
+![Negated Expression BDD](../test_expressions/teddy_expected_output/my_test_expression_bdd.png)
 
 This example shows how NOT operations and De Morgan's laws are handled in the BDD representation with 3 variables (a, b, c) displayed with their actual names.
 
