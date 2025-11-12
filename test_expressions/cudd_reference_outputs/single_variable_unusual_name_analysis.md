@@ -32,19 +32,22 @@ The following diagram shows the optimized BDD representation:
 
 ```mermaid
 ---
-title: CUDD BDD
+title: BDD
 ---
 flowchart TD
-    N0(("variable_with_unusual$characters@123"))
-    N1["0"]
-    N2["1"]
+    N0["0"]
+    N1["1"]
+    N2(("variable_with_unusual$characters@123"))
 
-    N0 -.-> N1
-    N0 --> N2
+    N2 -.-> N0
+    N2 --> N1
 
-    class N0 default
-    class N1 default
-    class N2 default
+    class N0 terminal
+    class N1 terminal
+    class N2 bddVariable
+
+    classDef bddVariable fill:lightblue,stroke:#333,stroke-width:2px,color:#000
+    classDef terminal fill:lightgray,stroke:#333,stroke-width:2px,color:#000
 ```
 
 ## Analysis Summary

@@ -42,19 +42,22 @@ The following diagram shows the optimized BDD representation:
 
 ```mermaid
 ---
-title: CUDD BDD
+title: BDD
 ---
 flowchart TD
-    N0(("x"))
+    N0["1"]
     N1["0"]
-    N2["1"]
+    N2(("x"))
 
-    N0 -.-> N1
-    N0 --> N2
+    N2 -.-> N1
+    N2 --> N0
 
-    class N0 default
-    class N1 default
-    class N2 default
+    class N0 terminal
+    class N1 terminal
+    class N2 bddVariable
+
+    classDef bddVariable fill:lightblue,stroke:#333,stroke-width:2px,color:#000
+    classDef terminal fill:lightgray,stroke:#333,stroke-width:2px,color:#000
 ```
 
 ## Analysis Summary
@@ -70,7 +73,7 @@ The following table shows the internal structure of the BDD with node relationsh
 | Index | Variable | False Child | True Child | Type |
 |-------|----------|-------------|------------|------|
 | 0 | x | 2 | 1 | Variable |
-| 1 | - | - | - | Terminal(1) |
-| 2 | - | - | - | Terminal(0) |
+| 1 | - | - | - | Terminal(0) |
+| 2 | - | - | - | Terminal(1) |
 
 **Note**: Nodes are ordered topologically (parents before children) with terminal nodes at the end.

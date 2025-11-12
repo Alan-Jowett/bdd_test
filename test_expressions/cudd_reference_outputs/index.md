@@ -17,6 +17,7 @@ These files enable comparison between CUDD and TeDDy BDD implementations:
 - **Variable Ordering**: CUDD may use different variable ordering strategies
 - **Node Optimization**: Different optimization techniques may result in varying node counts
 - **Representation**: Both libraries should produce logically equivalent BDDs for the same expression
+- **Visual Format**: Now uses identical Mermaid styling and CSS classes as TeDDy
 
 ## 📁 Available Reference Files
 
@@ -35,18 +36,28 @@ These files enable comparison between CUDD and TeDDy BDD implementations:
 
 ### Special Cases and Edge Cases
 - **[multiple_not_analysis.md](multiple_not_analysis.md)** - Multiple NOT operations
-- **[same_variable_analysis.md](same_variable_analysis.md)** - Expression with repeated variables
-- **[test_subdir_expression_analysis.md](test_subdir_expression_analysis.md)** - Test subdirectory expression
-- **[underscore_vars_analysis.md](underscore_vars_analysis.md)** - Variables with underscores
+- **[same_variable_analysis.md](same_variable_analysis.md)** - Expressions with repeated variable usage
+- **[underscore_vars_analysis.md](underscore_vars_analysis.md)** - Variables with underscore naming
 
-## 📖 Usage
+### Advanced Structures
+- **[test_subdir_expression_analysis.md](test_subdir_expression_analysis.md)** - Subdirectory test expressions
 
-These reference files are used by:
-1. **Mermaid Tests**: Regression testing for markdown generation with CUDD library
-2. **Comparison Analysis**: Validating that CUDD and TeDDy produce equivalent results
-3. **Documentation**: Examples of CUDD BDD analysis output format
-4. **Debugging**: Reference for expected CUDD output when troubleshooting issues
+## 🎯 Format Compatibility
 
-## ⚠️ Note
+As of the latest update, CUDD reference outputs now use the same visual format as TeDDy:
+- ✅ Identical Mermaid diagram styling with proper CSS classes
+- ✅ Consistent color schemes for BDD nodes and terminals
+- ✅ Same graph title format ("BDD" instead of "CUDD BDD")
+- ✅ Compatible node representation and edge styling
 
-Some edge cases that work with TeDDy's lenient parser may not have CUDD equivalents due to CUDD's stricter expression parsing requirements.
+This ensures consistent documentation and testing across both BDD implementations while maintaining the mathematical correctness of each library's approach.
+
+## 📋 Usage for Testing
+
+These reference files serve multiple purposes:
+- **Regression Testing**: Verify that CUDD output format remains consistent
+- **Visual Comparison**: Compare BDD structures between CUDD and TeDDy
+- **Documentation**: Provide examples of CUDD BDD analysis output
+- **Format Validation**: Ensure Mermaid diagrams render correctly
+
+Each file represents the canonical CUDD analysis output for its respective logical expression.

@@ -75,43 +75,62 @@ The following diagram shows the optimized BDD representation:
 
 ```mermaid
 ---
-title: CUDD BDD
+title: BDD
 ---
 flowchart TD
-    N0(("x0"))
-    N1(("x2"))
-    N2(("x3"))
-    N3(("x5"))
-    N4(("x6"))
-    N5["0"]
-    N6["1"]
-    N7(("x6"))
+    N0["1"]
+    N1["0"]
+    N2(("x6"))
+    N3(("x6"))
+    N4(("x5"))
+    N5(("x4"))
+    N6(("x3"))
+    N7(("x5"))
     N8(("x4"))
     N9(("x3"))
-    N10(("x1"))
+    N10(("x2"))
+    N11(("x1"))
+    N12(("x0"))
 
-    N0 -.-> N1
-    N1 -.-> N2
-    N2 -.-> N3
-    N3 -.-> N4
-    N4 -.-> N5
-    N4 --> N6
-    N3 --> N7
-    N2 --> N8
-    N1 --> N9
-    N0 --> N10
+    N2 -.-> N1
+    N2 --> N0
+    N3 -.-> N1
+    N3 --> N0
+    N4 -.-> N2
+    N4 --> N3
+    N5 -.-> N1
+    N5 --> N4
+    N6 -.-> N4
+    N6 --> N5
+    N7 -.-> N2
+    N7 --> N3
+    N8 -.-> N1
+    N8 --> N4
+    N9 -.-> N4
+    N9 --> N5
+    N10 -.-> N9
+    N10 --> N6
+    N11 -.-> N10
+    N11 --> N6
+    N12 -.-> N10
+    N12 --> N11
 
-    class N0 default
-    class N1 default
-    class N2 default
-    class N3 default
-    class N4 default
-    class N5 default
-    class N6 default
-    class N7 default
-    class N8 default
-    class N9 default
-    class N10 default
+    class N0 terminal
+    class N1 terminal
+    class N2 bddVariable
+    class N3 bddVariable
+    class N4 bddVariable
+    class N5 bddVariable
+    class N6 bddVariable
+    class N7 bddVariable
+    class N8 bddVariable
+    class N9 bddVariable
+    class N10 bddVariable
+    class N11 bddVariable
+    class N12 bddVariable
+
+    classDef bddVariable fill:lightblue,stroke:#333,stroke-width:2px,color:#000
+    classDef terminal fill:lightgray,stroke:#333,stroke-width:2px,color:#000
 ```
 
 ## Analysis Summary
@@ -127,15 +146,17 @@ The following table shows the internal structure of the BDD with node relationsh
 | Index | Variable | False Child | True Child | Type |
 |-------|----------|-------------|------------|------|
 | 0 | x0 | 2 | 1 | Variable |
-| 1 | x1 | 2 | 3 | Variable |
-| 2 | x2 | 4 | 3 | Variable |
-| 3 | x3 | 6 | 5 | Variable |
-| 4 | x3 | 6 | 5 | Variable |
-| 5 | x4 | 10 | 6 | Variable |
-| 6 | x5 | 8 | 7 | Variable |
-| 7 | x6 | 10 | 9 | Variable |
-| 8 | x6 | 10 | 9 | Variable |
-| 9 | - | - | - | Terminal(1) |
-| 10 | - | - | - | Terminal(0) |
+| 1 | x1 | 2 | 6 | Variable |
+| 2 | x2 | 6 | 3 | Variable |
+| 3 | x3 | 5 | 4 | Variable |
+| 4 | x4 | 12 | 5 | Variable |
+| 5 | x5 | 9 | 10 | Variable |
+| 6 | x3 | 8 | 7 | Variable |
+| 7 | x4 | 11 | 8 | Variable |
+| 8 | x5 | 10 | 9 | Variable |
+| 9 | x6 | 11 | 12 | Variable |
+| 10 | x6 | 12 | 11 | Variable |
+| 11 | - | - | - | Terminal(0) |
+| 12 | - | - | - | Terminal(1) |
 
 **Note**: Nodes are ordered topologically (parents before children) with terminal nodes at the end.

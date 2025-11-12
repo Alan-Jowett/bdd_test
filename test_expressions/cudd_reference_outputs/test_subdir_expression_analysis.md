@@ -45,25 +45,30 @@ The following diagram shows the optimized BDD representation:
 
 ```mermaid
 ---
-title: CUDD BDD
+title: BDD
 ---
 flowchart TD
-    N0(("x"))
-    N1(("z"))
-    N2["0"]
-    N3["1"]
-    N4(("y"))
+    N0["0"]
+    N1["1"]
+    N2(("z"))
+    N3(("y"))
+    N4(("x"))
 
-    N0 -.-> N1
-    N1 -.-> N2
-    N1 --> N3
-    N0 --> N4
+    N2 -.-> N0
+    N2 --> N1
+    N3 -.-> N2
+    N3 --> N1
+    N4 -.-> N2
+    N4 --> N3
 
-    class N0 default
-    class N1 default
-    class N2 default
-    class N3 default
-    class N4 default
+    class N0 terminal
+    class N1 terminal
+    class N2 bddVariable
+    class N3 bddVariable
+    class N4 bddVariable
+
+    classDef bddVariable fill:lightblue,stroke:#333,stroke-width:2px,color:#000
+    classDef terminal fill:lightgray,stroke:#333,stroke-width:2px,color:#000
 ```
 
 ## Analysis Summary

@@ -87,46 +87,58 @@ The following diagram shows the optimized BDD representation:
 
 ```mermaid
 ---
-title: CUDD BDD
+title: BDD
 ---
 flowchart TD
-    N0(("x1"))
-    N1(("x10"))
-    N2(("x2"))
-    N3(("x3"))
-    N4(("x4"))
-    N5(("x5"))
-    N6(("x6"))
-    N7(("x7"))
-    N8(("x8"))
-    N9(("x9"))
-    N10["0"]
-    N11["1"]
+    N0["0"]
+    N1["1"]
+    N2(("x9"))
+    N3(("x8"))
+    N4(("x7"))
+    N5(("x6"))
+    N6(("x5"))
+    N7(("x4"))
+    N8(("x3"))
+    N9(("x2"))
+    N10(("x10"))
+    N11(("x1"))
 
-    N0 -.-> N1
-    N1 -.-> N2
-    N2 -.-> N3
-    N3 -.-> N4
-    N4 -.-> N5
-    N5 -.-> N6
-    N6 -.-> N7
-    N7 -.-> N8
-    N8 -.-> N9
-    N9 -.-> N10
-    N9 --> N11
+    N2 -.-> N0
+    N2 --> N1
+    N3 -.-> N2
+    N3 --> N1
+    N4 -.-> N3
+    N4 --> N1
+    N5 -.-> N4
+    N5 --> N1
+    N6 -.-> N5
+    N6 --> N1
+    N7 -.-> N6
+    N7 --> N1
+    N8 -.-> N7
+    N8 --> N1
+    N9 -.-> N8
+    N9 --> N1
+    N10 -.-> N9
+    N10 --> N1
+    N11 -.-> N10
+    N11 --> N1
 
-    class N0 default
-    class N1 default
-    class N2 default
-    class N3 default
-    class N4 default
-    class N5 default
-    class N6 default
-    class N7 default
-    class N8 default
-    class N9 default
-    class N10 default
-    class N11 default
+    class N0 terminal
+    class N1 terminal
+    class N2 bddVariable
+    class N3 bddVariable
+    class N4 bddVariable
+    class N5 bddVariable
+    class N6 bddVariable
+    class N7 bddVariable
+    class N8 bddVariable
+    class N9 bddVariable
+    class N10 bddVariable
+    class N11 bddVariable
+
+    classDef bddVariable fill:lightblue,stroke:#333,stroke-width:2px,color:#000
+    classDef terminal fill:lightgray,stroke:#333,stroke-width:2px,color:#000
 ```
 
 ## Analysis Summary

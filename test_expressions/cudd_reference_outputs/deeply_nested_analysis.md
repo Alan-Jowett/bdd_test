@@ -111,70 +111,76 @@ The following diagram shows the optimized BDD representation:
 
 ```mermaid
 ---
-title: CUDD BDD
+title: BDD
 ---
 flowchart TD
-    N0(("a"))
-    N1(("c"))
-    N2(("e"))
-    N3(("f"))
-    N4["1"]
-    N5(("g"))
-    N6(("h"))
-    N7(("i"))
-    N8(("k"))
-    N9(("m"))
-    N10["0"]
-    N11(("l"))
-    N12(("j"))
-    N13(("k"))
-    N14(("h"))
-    N15(("d"))
-    N16(("e"))
-    N17(("f"))
-    N18(("g"))
-    N19(("b"))
+    N0["0"]
+    N1["1"]
+    N2(("m"))
+    N3(("l"))
+    N4(("k"))
+    N5(("m"))
+    N6(("l"))
+    N7(("k"))
+    N8(("j"))
+    N9(("i"))
+    N10(("h"))
+    N11(("h"))
+    N12(("g"))
+    N13(("f"))
+    N14(("e"))
+    N15(("g"))
+    N16(("f"))
+    N17(("e"))
+    N18(("d"))
+    N19(("c"))
+    N20(("b"))
+    N21(("a"))
 
-    N0 -.-> N1
-    N1 -.-> N2
-    N2 -.-> N3
-    N3 -.-> N4
-    N3 --> N5
-    N5 -.-> N6
-    N6 --> N7
-    N7 -.-> N8
-    N8 -.-> N9
-    N9 -.-> N10
-    N8 --> N11
-    N7 --> N12
-    N12 -.-> N13
-    N5 --> N14
-    N1 --> N15
-    N15 --> N16
-    N16 -.-> N17
-    N17 --> N18
-    N0 --> N19
+    N2 -.-> N0
+    N2 --> N1
+    N3 -.-> N5
+    N3 --> N1
+    N4 -.-> N5
+    N4 --> N6
+    N5 -.-> N0
+    N5 --> N1
+    N6 -.-> N5
+    N6 --> N1
+    N7 -.-> N5
+    N7 --> N6
+    N8 -.-> N4
+    N8 --> N7
+    N9 -.-> N7
+    N10 -.-> N1
+    N11 --> N1
+    N13 -.-> N1
 
-    class N0 default
-    class N1 default
-    class N2 default
-    class N3 default
-    class N4 default
-    class N5 default
-    class N6 default
-    class N7 default
-    class N8 default
-    class N9 default
-    class N10 default
-    class N11 default
-    class N12 default
-    class N13 default
-    class N14 default
-    class N15 default
-    class N16 default
-    class N17 default
-    class N18 default
-    class N19 default
+    class N0 terminal
+    class N1 terminal
+    class N2 bddVariable
+    class N3 bddVariable
+    class N4 bddVariable
+    class N5 bddVariable
+    class N6 bddVariable
+    class N7 bddVariable
+    class N8 bddVariable
+    class N9 bddVariable
+    class N10 bddVariable
+    class N11 bddVariable
+    class N12 bddVariable
+    class N13 bddVariable
+    class N14 bddVariable
+    class N15 bddVariable
+    class N16 bddVariable
+    class N17 bddVariable
+    class N18 bddVariable
+    class N19 bddVariable
+    class N20 bddVariable
+    class N21 bddVariable
+
+    classDef bddVariable fill:lightblue,stroke:#333,stroke-width:2px,color:#000
+    classDef terminal fill:lightgray,stroke:#333,stroke-width:2px,color:#000
 ```
 
 ## Analysis Summary
@@ -197,17 +203,19 @@ The following table shows the internal structure of the BDD with node relationsh
 | 5 | f | 12 | 6 | Variable |
 | 6 | g | 10 | 11 | Variable |
 | 7 | e | 8 | 9 | Variable |
-| 8 | f | 19 | 9 | Variable |
+| 8 | f | 21 | 9 | Variable |
 | 9 | g | 11 | 10 | Variable |
-| 10 | h | 12 | 19 | Variable |
-| 11 | h | 19 | 12 | Variable |
-| 12 | i | 15 | 13 | Variable |
-| 13 | j | 14 | 15 | Variable |
-| 14 | k | 17 | 16 | Variable |
-| 15 | k | 17 | 16 | Variable |
-| 16 | l | 17 | 19 | Variable |
-| 17 | m | 18 | 19 | Variable |
-| 18 | - | - | - | Terminal(0) |
-| 19 | - | - | - | Terminal(1) |
+| 10 | h | 12 | 21 | Variable |
+| 11 | h | 21 | 12 | Variable |
+| 12 | i | 17 | 13 | Variable |
+| 13 | j | 14 | 17 | Variable |
+| 14 | k | 16 | 15 | Variable |
+| 15 | l | 16 | 20 | Variable |
+| 16 | m | 20 | 21 | Variable |
+| 17 | k | 19 | 18 | Variable |
+| 18 | l | 19 | 21 | Variable |
+| 19 | m | 21 | 20 | Variable |
+| 20 | - | - | - | Terminal(1) |
+| 21 | - | - | - | Terminal(0) |
 
 **Note**: Nodes are ordered topologically (parents before children) with terminal nodes at the end.

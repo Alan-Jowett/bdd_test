@@ -57,43 +57,54 @@ The following diagram shows the optimized BDD representation:
 
 ```mermaid
 ---
-title: CUDD BDD
+title: BDD
 ---
 flowchart TD
-    N0(("a"))
-    N1(("b"))
-    N2(("c"))
-    N3(("d"))
-    N4(("e"))
-    N5["0"]
-    N6["1"]
-    N7(("e"))
-    N8(("d"))
-    N9(("c"))
-    N10(("b"))
+    N0["0"]
+    N1["1"]
+    N2(("e"))
+    N3(("e"))
+    N4(("d"))
+    N5(("d"))
+    N6(("c"))
+    N7(("c"))
+    N8(("b"))
+    N9(("b"))
+    N10(("a"))
 
-    N0 -.-> N1
-    N1 -.-> N2
-    N2 -.-> N3
-    N3 -.-> N4
-    N4 -.-> N5
-    N4 --> N6
-    N3 --> N7
-    N2 --> N8
-    N1 --> N9
-    N0 --> N10
+    N2 -.-> N0
+    N2 --> N1
+    N3 -.-> N0
+    N3 --> N1
+    N4 -.-> N3
+    N4 --> N2
+    N5 -.-> N3
+    N5 --> N2
+    N6 -.-> N4
+    N6 --> N5
+    N7 -.-> N4
+    N7 --> N5
+    N8 -.-> N7
+    N8 --> N6
+    N9 -.-> N7
+    N9 --> N6
+    N10 -.-> N8
+    N10 --> N9
 
-    class N0 default
-    class N1 default
-    class N2 default
-    class N3 default
-    class N4 default
-    class N5 default
-    class N6 default
-    class N7 default
-    class N8 default
-    class N9 default
-    class N10 default
+    class N0 terminal
+    class N1 terminal
+    class N2 bddVariable
+    class N3 bddVariable
+    class N4 bddVariable
+    class N5 bddVariable
+    class N6 bddVariable
+    class N7 bddVariable
+    class N8 bddVariable
+    class N9 bddVariable
+    class N10 bddVariable
+
+    classDef bddVariable fill:lightblue,stroke:#333,stroke-width:2px,color:#000
+    classDef terminal fill:lightgray,stroke:#333,stroke-width:2px,color:#000
 ```
 
 ## Analysis Summary
@@ -109,13 +120,13 @@ The following table shows the internal structure of the BDD with node relationsh
 | Index | Variable | False Child | True Child | Type |
 |-------|----------|-------------|------------|------|
 | 0 | a | 2 | 1 | Variable |
-| 1 | b | 4 | 3 | Variable |
+| 1 | b | 3 | 4 | Variable |
 | 2 | b | 4 | 3 | Variable |
-| 3 | c | 6 | 5 | Variable |
+| 3 | c | 5 | 6 | Variable |
 | 4 | c | 6 | 5 | Variable |
-| 5 | d | 8 | 7 | Variable |
+| 5 | d | 7 | 8 | Variable |
 | 6 | d | 8 | 7 | Variable |
-| 7 | e | 10 | 9 | Variable |
+| 7 | e | 9 | 10 | Variable |
 | 8 | e | 10 | 9 | Variable |
 | 9 | - | - | - | Terminal(1) |
 | 10 | - | - | - | Terminal(0) |
