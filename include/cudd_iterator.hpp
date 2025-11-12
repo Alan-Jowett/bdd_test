@@ -96,13 +96,6 @@ class cudd_iterator {
     // ========================================================================
 
     /**
-     * @brief Get DOT node identifier
-     */
-    std::string get_dot_node_id() const {
-        return std::format("node_{:x}", reinterpret_cast<uintptr_t>(node_));
-    }
-
-    /**
      * @brief Get DOT node label
      */
     std::string get_label() const {
@@ -176,43 +169,6 @@ class cudd_iterator {
     }
 
     // ========================================================================
-    // Mermaid Graph Generator Interface
-    // ========================================================================
-
-    /**
-     * @brief Get Mermaid node identifier
-     */
-    std::string get_mermaid_node_id() const {
-        return std::format("N{:x}", reinterpret_cast<uintptr_t>(node_));
-    }
-
-    /**
-     * @brief Get Mermaid node declaration
-     */
-    std::string get_mermaid_node_declaration() const {
-        std::string node_id = get_mermaid_node_id();
-        std::string label = get_label();  // Reuse DOT label
-
-        DdNode* regular_node = node_;
-        if (Cudd_IsConstant(regular_node)) {
-            // Terminal nodes as rectangles
-            return std::format("{}[{}]", node_id, label);
-        } else {
-            // Internal nodes as circles
-            return std::format("{}({})", node_id, label);
-        }
-    }
-
-    /**
-     * @brief Get Mermaid edge declaration to a child
-     */
-    std::string get_mermaid_edge_declaration(const cudd_iterator& child, size_t child_index) const {
-        std::string edge_label = (child_index == 0) ? "0" : "1";
-        return std::format("{} -->|{}| {}", get_mermaid_node_id(), edge_label,
-                           child.get_mermaid_node_id());
-    }
-
-    // ========================================================================
     // Node Table Generator Interface
     // ========================================================================
 
@@ -232,30 +188,6 @@ class cudd_iterator {
                 return std::format("x{}", var_index);
             }
         }
-    }
-
-    /**
-     * @brief Get low child identifier for node table
-     */
-    std::string get_low_child_id() const {
-        if (Cudd_IsConstant(node_)) {
-            return "-";
-        }
-
-        auto children = get_children();
-        return children.size() > 1 ? children[1].get_dot_node_id() : "-";
-    }
-
-    /**
-     * @brief Get high child identifier for node table
-     */
-    std::string get_high_child_id() const {
-        if (Cudd_IsConstant(node_)) {
-            return "-";
-        }
-
-        auto children = get_children();
-        return children.size() > 0 ? children[0].get_dot_node_id() : "-";
     }
 
     /**
