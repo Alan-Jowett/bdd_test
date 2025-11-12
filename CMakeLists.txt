@@ -278,3 +278,8 @@ add_cmdline_test(test_error_message_regression
 
 # Mermaid analysis file generation regression tests
 register_mermaid_tests()
+
+# Python BDD Integration
+# ======================
+# Include Python BDD support from separate CMake file
+include(cmake/python_bdd_integration.cmake)
