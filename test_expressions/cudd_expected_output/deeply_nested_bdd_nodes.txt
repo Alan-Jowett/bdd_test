@@ -8,15 +8,17 @@ Index | Variable | False Child | True Child | Type
     5 |        f |          12 |          6 | Variable
     6 |        g |          10 |         11 | Variable
     7 |        e |           8 |          9 | Variable
-    8 |        f |          19 |          9 | Variable
+    8 |        f |          21 |          9 | Variable
     9 |        g |          11 |         10 | Variable
-   10 |        h |          12 |         19 | Variable
-   11 |        h |          19 |         12 | Variable
-   12 |        i |          15 |         13 | Variable
-   13 |        j |          14 |         15 | Variable
-   14 |        k |          17 |         16 | Variable
-   15 |        k |          17 |         16 | Variable
-   16 |        l |          17 |         19 | Variable
-   17 |        m |          18 |         19 | Variable
-   18 |        - |           - |          - | Terminal(0)
-   19 |        - |           - |          - | Terminal(1)
+   10 |        h |          12 |         21 | Variable
+   11 |        h |          21 |         12 | Variable
+   12 |        i |          17 |         13 | Variable
+   13 |        j |          14 |         17 | Variable
+   14 |        k |          16 |         15 | Variable
+   15 |        l |          16 |         20 | Variable
+   16 |        m |          20 |         21 | Variable
+   17 |        k |          19 |         18 | Variable
+   18 |        l |          19 |         21 | Variable
+   19 |        m |          21 |         20 | Variable
+   20 |        - |           - |          - | Terminal(1)
+   21 |        - |           - |          - | Terminal(0)

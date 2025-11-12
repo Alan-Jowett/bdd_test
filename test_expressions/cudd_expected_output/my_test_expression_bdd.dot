@@ -13,6 +13,6 @@ digraph DD {
     node1 -> node2 [style = dashed];
     node2 -> node3 [style = dashed];
     node2 -> node4 [style = solid];
-    node1 -> node4 [style = solid];
-    node0 -> node4 [style = solid];
+    node1 -> node3 [style = solid];
+    node0 -> node3 [style = solid];
 }

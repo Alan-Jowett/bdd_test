@@ -47,23 +47,32 @@ class cudd_iterator {
     /**
      * @brief Get child iterators for this node
      * @return Vector of child iterators (THEN, ELSE for BDD nodes)
+     *
+     * Properly expands CUDD's complement edges to match TeDDy's explicit node structure.
+     * When accessing a complemented node, the children are complemented to implement NOT semantics.
      */
     std::vector<cudd_iterator> get_children() const {
         std::vector<cudd_iterator> children;
 
+        // Get the regular (non-complemented) physical node
+        DdNode* regular_node = Cudd_Regular(node_);
+
         // Only non-constant nodes have children
-        if (!Cudd_IsConstant(node_)) {
-            // Get ELSE child (low edge) - FALSE child (first, to match TeDDy convention)
-            DdNode* else_node = Cudd_E(node_);
-            children.emplace_back(*cudd_manager_, else_node, variable_names_);
+        if (!Cudd_IsConstant(regular_node)) {
+            // Get children from the regular node
+            DdNode* else_child = Cudd_E(regular_node);
+            DdNode* then_child = Cudd_T(regular_node);
 
-            // Get THEN child (high edge) - TRUE child (second, to match TeDDy convention)
-            DdNode* then_node = Cudd_T(node_);
-            children.emplace_back(*cudd_manager_, then_node, variable_names_);
+            // If this node is accessed through a complement edge, negate the children
+            // This implements NOT(f) = f with negated children, expanding complement edges
+            if (Cudd_IsComplement(node_)) {
+                else_child = Cudd_Not(else_child);
+                then_child = Cudd_Not(then_child);
+            }
 
-            // Note: Do NOT swap children for complemented nodes - this breaks the BDD structure
-            // The complement bit is already handled properly in get_terminal_value() and
-            // get_node_address()
+            // Return children in TeDDy convention order: FALSE (else) first, TRUE (then) second
+            children.emplace_back(*cudd_manager_, else_child, variable_names_);
+            children.emplace_back(*cudd_manager_, then_child, variable_names_);
         }
 
         return children;
@@ -72,8 +81,16 @@ class cudd_iterator {
     /**
      * @brief Get unique address for this node (for equality comparisons)
      * @return Pointer value as const void* (with complement bit preserved)
+     *
+     * Preserves the complement bit for all nodes (both terminals and non-terminals).
+     * This expands CUDD's complement-edge representation into explicit nodes,
+     * matching TeDDy's structure where each logical node access is a separate node.
+     * A node accessed through a complement edge is treated as a distinct node
+     * from the same node accessed directly.
      */
     const void* get_node_address() const {
+        // Preserve the complement bit so that node and ~node are treated as distinct nodes
+        // This matches TeDDy's representation where negation creates explicit nodes
         return reinterpret_cast<const void*>(node_);
     }
 
@@ -94,13 +111,6 @@ class cudd_iterator {
     // ========================================================================
     // DOT Graph Generator Interface
     // ========================================================================
-
-    /**
-     * @brief Get DOT node identifier
-     */
-    std::string get_dot_node_id() const {
-        return std::format("node_{:x}", reinterpret_cast<uintptr_t>(node_));
-    }
 
     /**
      * @brief Get DOT node label
@@ -176,43 +186,6 @@ class cudd_iterator {
     }
 
     // ========================================================================
-    // Mermaid Graph Generator Interface
-    // ========================================================================
-
-    /**
-     * @brief Get Mermaid node identifier
-     */
-    std::string get_mermaid_node_id() const {
-        return std::format("N{:x}", reinterpret_cast<uintptr_t>(node_));
-    }
-
-    /**
-     * @brief Get Mermaid node declaration
-     */
-    std::string get_mermaid_node_declaration() const {
-        std::string node_id = get_mermaid_node_id();
-        std::string label = get_label();  // Reuse DOT label
-
-        DdNode* regular_node = node_;
-        if (Cudd_IsConstant(regular_node)) {
-            // Terminal nodes as rectangles
-            return std::format("{}[{}]", node_id, label);
-        } else {
-            // Internal nodes as circles
-            return std::format("{}({})", node_id, label);
-        }
-    }
-
-    /**
-     * @brief Get Mermaid edge declaration to a child
-     */
-    std::string get_mermaid_edge_declaration(const cudd_iterator& child, size_t child_index) const {
-        std::string edge_label = (child_index == 0) ? "0" : "1";
-        return std::format("{} -->|{}| {}", get_mermaid_node_id(), edge_label,
-                           child.get_mermaid_node_id());
-    }
-
-    // ========================================================================
     // Node Table Generator Interface
     // ========================================================================
 
@@ -232,30 +205,6 @@ class cudd_iterator {
                 return std::format("x{}", var_index);
             }
         }
-    }
-
-    /**
-     * @brief Get low child identifier for node table
-     */
-    std::string get_low_child_id() const {
-        if (Cudd_IsConstant(node_)) {
-            return "-";
-        }
-
-        auto children = get_children();
-        return children.size() > 1 ? children[1].get_dot_node_id() : "-";
-    }
-
-    /**
-     * @brief Get high child identifier for node table
-     */
-    std::string get_high_child_id() const {
-        if (Cudd_IsConstant(node_)) {
-            return "-";
-        }
-
-        auto children = get_children();
-        return children.size() > 0 ? children[0].get_dot_node_id() : "-";
     }
 
     /**

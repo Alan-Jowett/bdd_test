@@ -34,3 +34,7 @@ test_expressions/*_bdd_nodes.txt
 # OS files
 .DS_Store
 Thumbs.db
+
+# CodeQL build artifacts
+_codeql_build_dir/
+_codeql_detected_source_root
