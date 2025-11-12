@@ -320,6 +320,7 @@ jobs:
 
   python-bdd-comparison:
     name: Python BDD Comparison Tests
+    needs: build-and-test
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     strategy:
@@ -354,128 +355,20 @@ jobs:
       if: runner.os == 'Windows'
       uses: microsoft/setup-msbuild@v2
 
-    - name: Build TeDDy BDD Demo
+    - name: Configure CMake with Python BDD enabled
       run: |
-        cmake -B build -S .
+        cmake -B build -S . -DENABLE_PYTHON_BDD=ON -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build with Python BDD support
+      run: |
         cmake --build build --config Release --parallel
 
-    - name: Test Python BDD Implementation
+    - name: Run Python BDD Comparison Tests
+      working-directory: build
       run: |
-        echo "Testing Python BDD implementation..."
-
-        # Test simple expression
-        python python_bdd/bdd_demo_python.py test_expressions/simple_expression.txt --verbose
-
-        # Test complex expression
-        python python_bdd/bdd_demo_python.py test_expressions/all_operators.txt --verbose
-
-    - name: Compare TeDDy vs Python BDD Results
-      shell: bash
-      run: |
-        echo "Comparing TeDDy vs Python BDD results..."
-
-        # Test expressions to compare
-        expressions=(
-          "simple_expression"
-          "all_operators"
-          "my_test_expression"
-          "filter_expression"
-          "single_variable"
-        )
-
-        # Determine executable path based on OS
-        if [ "${{ runner.os }}" = "Windows" ]; then
-          TEDDY_EXEC="build/bin/Release/bdd_demo.exe"
-        else
-          TEDDY_EXEC="build/bin/bdd_demo"
-        fi
-
-        # Make sure the executable exists and is executable
-        if [ ! -f "$TEDDY_EXEC" ]; then
-          echo "❌ TeDDy executable not found at: $TEDDY_EXEC"
-          echo "Available files in build:"
-          find build -name "*bdd_demo*" -type f 2>/dev/null || echo "No bdd_demo files found"
-          exit 1
-        fi
-
-        chmod +x "$TEDDY_EXEC" 2>/dev/null || true
-
-        comparison_failed=false
-
-        for expr in "${expressions[@]}"; do
-          if [ ! -f "test_expressions/${expr}.txt" ]; then
-            echo "⏭️  Skipping $expr - file not found"
-            continue
-          fi
-
-          echo "🔍 Comparing results for: $expr"
-
-          # Generate TeDDy output
-          "$TEDDY_EXEC" "test_expressions/${expr}.txt" --method=teddy > teddy_output.txt 2>&1 || {
-            echo "❌ Failed to generate TeDDy output for $expr"
-            cat teddy_output.txt
-            comparison_failed=true
-            continue
-          }
-
-          # Generate Python output
-          python python_bdd/bdd_demo_python.py "test_expressions/${expr}.txt" > python_output.txt 2>&1 || {
-            echo "❌ Failed to generate Python output for $expr"
-            cat python_output.txt
-            comparison_failed=true
-            continue
-          }
-
-          # Compare node tables if they exist
-          teddy_nodes="${expr}_bdd_nodes.txt"
-          python_nodes="test_expressions/${expr}_bdd_nodes.txt"
-
-          if [ -f "$teddy_nodes" ] && [ -f "$python_nodes" ]; then
-            echo "📊 Comparing node tables for $expr..."
-
-            # Extract just the data rows (skip headers) and compare structure
-            teddy_structure=$(tail -n +3 "$teddy_nodes" | wc -l)
-            python_structure=$(tail -n +3 "$python_nodes" | wc -l)
-
-            if [ "$teddy_structure" -eq "$python_structure" ]; then
-              echo "✅ Node count matches: $teddy_structure nodes"
-
-              # Compare terminal nodes (last two lines should be Terminal(0) and Terminal(1))
-              teddy_terminals=$(tail -n 2 "$teddy_nodes" | grep "Terminal" | wc -l)
-              python_terminals=$(tail -n 2 "$python_nodes" | grep "Terminal" | wc -l)
-
-              if [ "$teddy_terminals" -eq 2 ] && [ "$python_terminals" -eq 2 ]; then
-                echo "✅ Both have proper Terminal(0) and Terminal(1) nodes"
-              else
-                echo "❌ Terminal node mismatch - TeDDy: $teddy_terminals, Python: $python_terminals"
-                echo "TeDDy terminals:"
-                tail -n 2 "$teddy_nodes" | grep "Terminal" || echo "None found"
-                echo "Python terminals:"
-                tail -n 2 "$python_nodes" | grep "Terminal" || echo "None found"
-                comparison_failed=true
-              fi
-            else
-              echo "❌ Node count mismatch - TeDDy: $teddy_structure, Python: $python_structure"
-              echo "This indicates different BDD structures, which should not happen for canonical ROBDDs"
-              comparison_failed=true
-            fi
-          else
-            echo "⚠️  Node table comparison skipped - files missing"
-          fi
-
-          # Clean up temporary files
-          rm -f teddy_output.txt python_output.txt
-
-          echo ""
-        done
-
-        if [ "$comparison_failed" = true ]; then
-          echo "❌ One or more BDD comparisons failed"
-          echo "This indicates the Python and TeDDy implementations are producing different results"
-          exit 1
-        else
-          echo "✅ All BDD comparisons passed - Python and TeDDy produce equivalent results"
-        fi
+        # Run all Python BDD comparison tests (automatically discovers all expressions except problematic ones)
+        echo "Running comprehensive Python vs TeDDy BDD comparison tests..."
+        ctest -C Release --output-on-failure --verbose -L "python.*comparison"
 
   documentation:
     name: Documentation Check
@@ -633,7 +526,7 @@ jobs:
   release:
     name: Create Release
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [build-and-test, code-quality, documentation]
+    needs: [build-and-test, code-quality, documentation, python-bdd-comparison]
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
