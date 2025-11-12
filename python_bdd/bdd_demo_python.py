@@ -111,24 +111,18 @@ class ExpressionParser:
         return expr
 
     def parse_or_expression(self) -> str:
-        """Parse OR expressions (lowest precedence)"""
-        left = self.parse_xor_expression()
-
-        while self.current_token().type == 'operator' and self.current_token().value == 'OR':
-            self.consume_token()
-            right = self.parse_xor_expression()
-            left = f"({left} | {right})"
-
-        return left
-
-    def parse_xor_expression(self) -> str:
-        """Parse XOR expressions"""
+        """Parse OR and XOR expressions (same precedence, left-associative)"""
         left = self.parse_and_expression()
 
-        while self.current_token().type == 'operator' and self.current_token().value == 'XOR':
+        while (self.current_token().type == 'operator' and
+               self.current_token().value in ['OR', 'XOR']):
+            op = self.current_token().value
             self.consume_token()
             right = self.parse_and_expression()
-            left = f"({left} ^ {right})"
+            if op == 'OR':
+                left = f"({left} | {right})"
+            else:  # XOR
+                left = f"({left} ^ {right})"
 
         return left
 
@@ -323,9 +317,22 @@ class PythonBDDDemo:
                 # Start processing from root
                 process_function(bdd_func)
 
-                # Convert to list and sort by ID
+                # Convert to list and reverse sort by ID to match TeDDy ordering
                 nodes = list(visited_functions.values())
-                nodes.sort(key=lambda x: x['id'])
+                nodes.sort(key=lambda x: x['id'], reverse=True)
+
+                # Create mapping from old IDs to new IDs
+                id_mapping = {}
+                for i, node in enumerate(nodes):
+                    id_mapping[node['id']] = i
+
+                # Update all nodes with new IDs and correct child references
+                for i, node in enumerate(nodes):
+                    node['id'] = i
+                    if isinstance(node['false_child'], int):
+                        node['false_child'] = id_mapping[node['false_child']]
+                    if isinstance(node['true_child'], int):
+                        node['true_child'] = id_mapping[node['true_child']]
 
         except Exception as e:
             print(f"Error generating node table: {e}")
