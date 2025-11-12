@@ -225,7 +225,11 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
     }
 
     // Use dag_walker to collect all edges and output them
-    auto edges = dag_walker::collect_edges(root_iterator);
+    // For BDD visualization, we need ALL edges including those to revisited nodes
+    // (e.g., multiple nodes pointing to the same terminal node)
+    dag_walker::WalkConfig edge_config;
+    edge_config.collect_all_edges = true;
+    auto edges = dag_walker::collect_edges(root_iterator, edge_config);
     if (!edges.empty() && !unique_nodes.empty()) {
         out << "\n";
     }
