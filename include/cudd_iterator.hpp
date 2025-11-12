@@ -254,4 +254,18 @@ class cudd_iterator {
             return "Variable";
         }
     }
+
+    /**
+     * @brief Get CSS class for Mermaid styling
+     * @return "terminal" for terminal nodes, "bddVariable" for variable nodes
+     *
+     * This method provides CSS class names for proper Mermaid diagram styling,
+     * matching TeDDy's output format for compatibility.
+     */
+    std::string get_css_class() const {
+        if (!node_) {
+            return "default";
+        }
+        return is_terminal() ? "terminal" : "bddVariable";
+    }
 };
