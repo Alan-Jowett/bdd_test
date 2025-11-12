@@ -47,34 +47,23 @@ class cudd_iterator {
     /**
      * @brief Get child iterators for this node
      * @return Vector of child iterators (THEN, ELSE for BDD nodes)
-     * 
-     * Properly handles CUDD's complement edges following the standard CUDD pattern:
-     * - Get children from the regular (non-complemented) node
-     * - If this node is accessed through a complement edge, negate the children
      */
     std::vector<cudd_iterator> get_children() const {
         std::vector<cudd_iterator> children;
 
-        // Get the regular (physical) node
-        DdNode* regular_node = Cudd_Regular(node_);
-
         // Only non-constant nodes have children
-        if (!Cudd_IsConstant(regular_node)) {
-            // Get children from the regular node
-            // Cudd_E and Cudd_T return the actual child pointers, which may themselves be complemented
-            DdNode* else_child = Cudd_E(regular_node);
-            DdNode* then_child = Cudd_T(regular_node);
+        if (!Cudd_IsConstant(node_)) {
+            // Get ELSE child (low edge) - FALSE child (first, to match TeDDy convention)
+            DdNode* else_node = Cudd_E(node_);
+            children.emplace_back(*cudd_manager_, else_node, variable_names_);
 
-            // If we're accessing this node through a complement edge, negate the children
-            // This implements the semantics: NOT(node) = node with negated children
-            if (Cudd_IsComplement(node_)) {
-                else_child = Cudd_Not(else_child);
-                then_child = Cudd_Not(then_child);
-            }
+            // Get THEN child (high edge) - TRUE child (second, to match TeDDy convention)
+            DdNode* then_node = Cudd_T(node_);
+            children.emplace_back(*cudd_manager_, then_node, variable_names_);
 
-            // Return children in TeDDy convention order: FALSE (else) first, TRUE (then) second
-            children.emplace_back(*cudd_manager_, else_child, variable_names_);
-            children.emplace_back(*cudd_manager_, then_child, variable_names_);
+            // Note: Do NOT swap children for complemented nodes - this breaks the BDD structure
+            // The complement bit is already handled properly in get_terminal_value() and
+            // get_node_address()
         }
 
         return children;
@@ -82,14 +71,23 @@ class cudd_iterator {
 
     /**
      * @brief Get unique address for this node (for equality comparisons)
-     * @return Pointer value as const void* (complement bit removed for physical node uniqueness)
-     * 
-     * Returns the regular (non-complemented) node pointer to ensure that a node accessed through
-     * a complement edge is recognized as the same physical node. This is necessary for proper
-     * ROBDD comparison with TeDDy, which doesn't use complement edges.
+     * @return Pointer value as const void*
+     *
+     * For terminals, preserves complement bit to distinguish terminal 0 from terminal 1.
+     * For non-terminals, removes complement bit to count each physical node once.
+     * This ensures CUDD's complement-edge representation produces the same node count
+     * as TeDDy's explicit-node representation.
      */
     const void* get_node_address() const {
-        return reinterpret_cast<const void*>(Cudd_Regular(node_));
+        if (Cudd_IsConstant(Cudd_Regular(node_))) {
+            // For terminals, preserve the complement bit so terminal 0 and terminal 1
+            // are counted as separate nodes (matching TeDDy's representation)
+            return reinterpret_cast<const void*>(node_);
+        } else {
+            // For non-terminals, use the regular node so that regular and complemented
+            // accesses to the same variable node are counted as one node
+            return reinterpret_cast<const void*>(Cudd_Regular(node_));
+        }
     }
 
     /**
@@ -114,14 +112,11 @@ class cudd_iterator {
      * @brief Get DOT node label
      */
     std::string get_label() const {
-        DdNode* regular_node = Cudd_Regular(node_);
-        
-        if (Cudd_IsConstant(regular_node)) {
-            // Terminal node - return the logical value (accounting for complement edge)
+        if (Cudd_IsConstant(node_)) {
             return get_terminal_value() ? "1" : "0";
         } else {
-            // Internal node - show variable name (based on physical node, not complement)
-            unsigned int var_index = Cudd_NodeReadIndex(regular_node);
+            // Internal node - show variable name
+            unsigned int var_index = Cudd_NodeReadIndex(node_);
             if (variable_names_ && var_index < variable_names_->size()) {
                 return (*variable_names_)[var_index];
             } else {
@@ -212,20 +207,18 @@ class cudd_iterator {
      * @brief Check if this is a terminal node
      */
     bool is_terminal() const {
-        return Cudd_IsConstant(Cudd_Regular(node_));
+        return Cudd_IsConstant(node_);
     }
 
     /**
      * @brief Get terminal value (only valid for terminal nodes)
-     * 
-     * Returns the logical terminal value, accounting for complement edges.
      */
     int get_terminal_value() const {
         if (!is_terminal()) {
             throw std::runtime_error("get_terminal_value called on non-terminal node");
         }
 
-        DdNode* regular_node = Cudd_Regular(node_);
+        DdNode* regular_node = node_;
         int value = Cudd_V(regular_node);
         if (Cudd_IsComplement(node_)) {
             value = !value;
