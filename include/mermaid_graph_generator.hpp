@@ -21,9 +21,11 @@
 
 #pragma once
 
+#include <algorithm>
 #include <concepts>
 #include <format>
 #include <iostream>
+#include <ranges>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
@@ -216,8 +218,9 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
         }
     };
 
-    // Use dag_walker to collect all unique nodes and output them
-    auto unique_nodes = dag_walker::collect_unique_nodes(root_iterator);
+    // Use dag_walker to collect all unique nodes in topological order
+    // This ensures node IDs match the node table indices for consistency
+    auto unique_nodes = dag_walker::collect_unique_nodes_topological(root_iterator);
     for (const auto& node : unique_nodes) {
         std::string node_id = get_node_id(node);
         std::string node_def = build_node_definition(node, node_id);
@@ -230,6 +233,24 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
     dag_walker::WalkConfig edge_config;
     edge_config.collect_all_edges = true;
     auto edges = dag_walker::collect_edges(root_iterator, edge_config);
+    
+    // Sort edges to match reference output format:
+    // 1. By parent node (in topological order, which is the order nodes appear in unique_nodes)
+    // 2. For same parent, false edge (child_index=0) before true edge (child_index=1)
+    std::unordered_map<const void*, size_t> node_order;
+    for (size_t i = 0; i < unique_nodes.size(); ++i) {
+        node_order[unique_nodes[i].get_node_address()] = i;
+    }
+    std::ranges::sort(edges, [&](const auto& e1, const auto& e2) {
+        size_t order1 = node_order[e1.parent.get_node_address()];
+        size_t order2 = node_order[e2.parent.get_node_address()];
+        if (order1 != order2) {
+            return order1 < order2;
+        }
+        // Same parent: false edge (index 0) before true edge (index 1)
+        return e1.child_index < e2.child_index;
+    });
+    
     if (!edges.empty() && !unique_nodes.empty()) {
         out << "\n";
     }
@@ -259,11 +280,24 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
 
         if (!class_to_nodes.empty()) {
             out << "\n";
-            for (const auto& [class_name, node_ids] : class_to_nodes) {
-                for (const auto& node_id : node_ids) {
+            // Output CSS class assignments sorted by class name to match reference format
+            // (terminal before bddVariable alphabetically)
+            std::vector<std::string> class_names;
+            for (const auto& [class_name, _] : class_to_nodes) {
+                class_names.push_back(class_name);
+            }
+            std::ranges::sort(class_names);
+            
+            for (const auto& class_name : class_names) {
+                for (const auto& node_id : class_to_nodes[class_name]) {
                     out << "    class " << node_id << " " << class_name << "\n";
                 }
             }
+
+            // Add CSS class definitions for BDD node styling
+            out << "\n";
+            out << "    classDef bddVariable fill:lightblue,stroke:#333,stroke-width:2px,color:#000\n";
+            out << "    classDef terminal fill:lightgray,stroke:#333,stroke-width:2px,color:#000\n";
         }
     }
 }
