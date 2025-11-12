@@ -107,13 +107,16 @@ include(CTest)
 include(Catch)
 
 # Discover and register Catch2 tests
-catch_discover_tests(unit_tests)
+# Set working directory to project root so test expressions can be found
+catch_discover_tests(unit_tests
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
 
 # Create a custom target to run only unit tests
 add_custom_target(run_unit_tests
     COMMAND $<TARGET_FILE:unit_tests>
     DEPENDS unit_tests
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Running unit tests with Catch2"
 )
 
@@ -121,6 +124,6 @@ add_custom_target(run_unit_tests
 add_custom_target(run_unit_tests_verbose
     COMMAND $<TARGET_FILE:unit_tests> -s
     DEPENDS unit_tests
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Running unit tests with Catch2 (verbose)"
 )
