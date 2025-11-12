@@ -145,6 +145,45 @@ Demo completed successfully!
 
 For more visualization examples, see [docs/VISUALIZATIONS.md](docs/VISUALIZATIONS.md).
 
+## Python BDD Comparison Tool
+
+This project includes a **Python-based equivalent of bdd_demo.exe** for cross-validation and CUDD canonicality issue detection. The Python implementation uses the trusted `dd` (Decision Diagrams) library to produce canonical ROBDDs for comparison.
+
+### Quick Start
+```bash
+# Setup Python BDD tools
+cd python_bdd
+python setup_python_bdd.py
+
+# Compare implementations
+python bdd_demo_python.py ../test_expressions/simple_expression.txt --verbose
+./build/bin/Release/bdd_demo.exe test_expressions/simple_expression.txt --method=teddy --verbose
+./build/bin/Release/bdd_demo.exe test_expressions/simple_expression.txt --method=cudd --verbose
+```
+
+### CMake Integration
+```bash
+# Enable Python BDD testing
+cmake -DENABLE_PYTHON_BDD=ON -B build -S .
+ctest -C Release -L python
+```
+
+### Key Features
+- **✅ Identical Output Formats** - Node tables and DOT graphs match C++ exactly
+- **✅ Canonical Reference** - Uses academically trusted `dd` library
+- **✅ CUDD Issue Detection** - Reveals non-canonical BDD problems
+- **✅ Cross-Platform** - Pure Python implementation
+
+**Example Canonicality Issue Detection:**
+```
+Expression: (a AND b) OR (c AND d)
+TeDDy:   6 nodes (canonical) ✅
+CUDD:    5 nodes (non-canonical) ❌
+Python:  6 nodes (canonical reference) ✅
+```
+
+For complete documentation, see **[python_bdd/README.md](python_bdd/README.md)**.
+
 ## Project Structure
 
 ```
@@ -158,6 +197,11 @@ bdd_test/
 │   ├── ADVANCED.md                    # Advanced features
 │   ├── TROUBLESHOOTING.md             # Common issues and solutions
 │   └── CONTRIBUTING.md                # Development guidelines
+├── python_bdd/                       # Python BDD comparison tools
+│   ├── README.md                      # Python BDD overview
+│   ├── bdd_demo_python.py            # Python BDD demo script
+│   ├── requirements.txt              # Python dependencies
+│   └── setup_python_bdd.py          # Setup and verification
 ├── test_expressions/                  # Test expression files and outputs
 │   └── teddy_reference_outputs/       # BDD analysis examples (see index.md)
 └── build/                             # Build artifacts and executables

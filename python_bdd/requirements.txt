@@ -1,0 +1,9 @@
+# Python BDD Demo Dependencies
+# Install with: pip install -r requirements.txt
+
+# Primary BDD library - well-maintained, pure Python implementation
+# Supports ROBDDs with canonical forms
+dd>=0.5.7
+
+# Optional: Enhanced visualization support
+# graphviz>=0.20  # Uncomment if you want Python DOT rendering
