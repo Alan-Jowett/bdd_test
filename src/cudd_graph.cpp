@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include <ranges>
+#include <unordered_map>
 
 #include "cudd_iterator.hpp"
 #include "dag_walker.hpp"
@@ -53,11 +54,88 @@ void write_cudd_to_dot(const Cudd& cudd_manager, const BDD& bdd,
 void write_cudd_to_mermaid(const Cudd& cudd_manager, const BDD& bdd,
                            const std::vector<std::string>& variable_names, std::ostream& out,
                            const std::string& graph_title) {
-    // Create iterator for the root node
-    cudd_iterator root_iter(cudd_manager, bdd.getNode(), &variable_names);
+    out << "---\n";
+    out << "title: " << graph_title << "\n";
+    out << "---\n";
+    out << "flowchart TD\n";
 
-    // Use the generic Mermaid generator
-    mermaid_graph::generate_mermaid_graph(root_iter, out, graph_title);
+    // Get all nodes using the same topological collection as TeDDy
+    std::vector<DdNode*> nodes = collect_cudd_nodes_topological(cudd_manager, bdd, variable_names);
+
+    // Create node ID mapping and class assignments
+    std::unordered_map<DdNode*, std::string> node_to_id;
+    std::vector<std::string> class_assignments;
+
+    for (size_t i = 0; i < nodes.size(); ++i) {
+        node_to_id[nodes[i]] = "N" + std::to_string(i);
+    }
+
+    // Generate node definitions
+    for (DdNode* node : nodes) {
+        std::string node_id = node_to_id[node];
+
+        if (Cudd_IsConstant(node)) {
+            // Terminals as squares: N1["0"] or N1["1"]
+            // Handle complement bit correctly like cudd_iterator does
+            int value = Cudd_V(node);
+            if (Cudd_IsComplement(node)) {
+                value = !value;
+            }
+            out << "    " << node_id << "[\"" << value << "\"]\n";
+            // Add CSS class for terminals
+            class_assignments.push_back("    class " + node_id + " terminal");
+        } else {
+            // Variables as circles: N1(("var_name"))
+            int var_index = Cudd_NodeReadIndex(node);
+            std::string var_name = (var_index < variable_names.size())
+                                       ? variable_names[var_index]
+                                       : "x" + std::to_string(var_index);
+            out << "    " << node_id << "((\"" << var_name << "\"))\n";
+            // Add CSS class for variables
+            class_assignments.push_back("    class " + node_id + " bddVariable");
+        }
+    }
+
+    // Add separator between nodes and edges if we have both
+    bool has_edges = std::any_of(nodes.begin(), nodes.end(),
+                                 [](DdNode* node) { return !Cudd_IsConstant(node); });
+
+    if (!nodes.empty() && has_edges) {
+        out << "\n";
+    }
+
+    // Generate edges
+    for (DdNode* node : nodes) {
+        if (!Cudd_IsConstant(node)) {
+            std::string node_id = node_to_id[node];
+
+            DdNode* false_child = Cudd_E(node);
+            DdNode* true_child = Cudd_T(node);
+
+            // False edge (dashed): N1 -.-> N2
+            if (false_child && node_to_id.find(false_child) != node_to_id.end()) {
+                out << "    " << node_id << " -.-> " << node_to_id[false_child] << "\n";
+            }
+
+            // True edge (solid): N1 --> N2
+            if (true_child && node_to_id.find(true_child) != node_to_id.end()) {
+                out << "    " << node_id << " --> " << node_to_id[true_child] << "\n";
+            }
+        }
+    }
+
+    // Add CSS class assignments
+    if (!class_assignments.empty()) {
+        out << "\n";
+        for (const auto& class_assign : class_assignments) {
+            out << class_assign << "\n";
+        }
+    }
+
+    // Add CSS class definitions for BDD node colors
+    out << "\n";
+    out << "    classDef bddVariable fill:lightblue,stroke:#333,stroke-width:2px,color:#000\n";
+    out << "    classDef terminal fill:lightgray,stroke:#333,stroke-width:2px,color:#000\n";
 }
 
 std::vector<DdNode*> collect_cudd_nodes_topological(
