@@ -1,22 +1,23 @@
-# CUDD Reference Analysis Files
+# BDD Reference Analysis Files
 
-This directory contains reference analysis files generated using the CUDD BDD library, used for Mermaid regression testing and comparison with TeDDy outputs. Each file includes comprehensive BDD analysis with visual diagrams and structured data tables.
+This directory contains reference analysis files generated for BDD analysis, used for regression testing and documentation. Each file includes comprehensive BDD analysis with visual diagrams and structured data tables.
 
 ## 📊 Analysis File Structure
 
 Each analysis file contains:
 - **Original Expression**: The logical expression being analyzed
 - **Expression Tree**: Mermaid flowchart showing the parse tree structure
-- **Binary Decision Diagram (BDD)**: Optimized BDD representation with colored nodes (CUDD-generated)
-- **BDD Summary**: Statistics about the CUDD-generated BDD
-- **BDD Node Table**: Detailed node structure with CUDD variable mappings
+- **Binary Decision Diagram (BDD)**: Optimized BDD representation with colored nodes
+- **BDD Summary**: Statistics about the generated BDD
+- **BDD Node Table**: Detailed node structure with variable mappings
 
-## 🔄 CUDD vs TeDDy Comparison
+## 🔄 Cross-Library Validation
 
-These files enable comparison between CUDD and TeDDy BDD implementations:
-- **Variable Ordering**: CUDD may use different variable ordering strategies
-- **Node Optimization**: Different optimization techniques may result in varying node counts
-- **Representation**: Both libraries should produce logically equivalent BDDs for the same expression
+These files enable validation across different BDD implementations:
+- **Variable Ordering**: Different libraries may use different variable ordering strategies
+- **Node Optimization**: Various optimization techniques may result in different node counts
+- **Representation**: All libraries should produce logically equivalent BDDs for the same expression
+- **Python Integration**: Cross-validation with Python's `dd` library for canonical BDD comparison
 
 ## 📁 Available Reference Files
 
@@ -39,14 +40,21 @@ These files enable comparison between CUDD and TeDDy BDD implementations:
 - **[test_subdir_expression_analysis.md](test_subdir_expression_analysis.md)** - Test subdirectory expression
 - **[underscore_vars_analysis.md](underscore_vars_analysis.md)** - Variables with underscores
 
+### Edge Case Regressions
+- **[boundary_detection_regression_analysis.md](boundary_detection_regression_analysis.md)** - Boundary detection edge cases
+- **[complex_boundary_regression_analysis.md](complex_boundary_regression_analysis.md)** - Complex boundary conditions
+- **[operator_keywords_in_vars_analysis.md](operator_keywords_in_vars_analysis.md)** - Variables containing operator keywords
+- **[unicode_chars_regression_analysis.md](unicode_chars_regression_analysis.md)** - Unicode character handling
+
 ## 📖 Usage
 
 These reference files are used by:
-1. **Mermaid Tests**: Regression testing for markdown generation with CUDD library
-2. **Comparison Analysis**: Validating that CUDD and TeDDy produce equivalent results
-3. **Documentation**: Examples of CUDD BDD analysis output format
-4. **Debugging**: Reference for expected CUDD output when troubleshooting issues
+1. **Regression Testing**: Ensuring consistent BDD output format across builds
+2. **Documentation**: Examples of BDD analysis output format and structure
+3. **Cross-Library Validation**: Comparing outputs between different BDD implementations (TeDDy, Python's dd library)
+4. **Debugging**: Reference for expected output when troubleshooting issues
+5. **Mermaid Visualization**: Templates for generating consistent diagram formats
 
 ## ⚠️ Note
 
-Some edge cases that work with TeDDy's lenient parser may not have CUDD equivalents due to CUDD's stricter expression parsing requirements.
+Edge case files may have different behavior across BDD libraries due to varying parser strictness and optimization strategies. The unified reference structure helps track these differences systematically.
