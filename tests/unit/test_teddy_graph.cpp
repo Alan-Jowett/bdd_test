@@ -13,10 +13,36 @@
 #include <catch2/matchers/catch_matchers_string.hpp>
 #include <libteddy/core.hpp>
 #include <sstream>
+#include <vector>
 
 #include "teddy_graph.hpp"
 
 using Catch::Matchers::ContainsSubstring;
+
+// Helper function to evaluate a TeDDy BDD with specific variable assignments
+// Returns true if the BDD evaluates to 1 for the given assignment
+bool evaluate_teddy_bdd(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t bdd,
+                        const std::vector<bool>& assignment) {
+    using namespace teddy::ops;
+
+    // Create a "cube" representing the complete assignment
+    teddy::bdd_manager::diagram_t cube = manager.constant(1);
+    for (size_t i = 0; i < assignment.size(); i++) {
+        teddy::bdd_manager::diagram_t var = manager.variable(i);
+        if (!assignment[i]) {
+            // If variable should be false, use NOT variable
+            teddy::bdd_manager::diagram_t one = manager.constant(1);
+            var = manager.apply<XOR>(var, one);
+        }
+        cube = manager.apply<AND>(cube, var);
+    }
+
+    // Check if BDD AND cube equals cube (meaning BDD is 1 for this assignment)
+    teddy::bdd_manager::diagram_t result = manager.apply<AND>(bdd, cube);
+
+    // If result equals cube, then BDD evaluates to 1 for this assignment
+    return result.unsafe_get_root() == cube.unsafe_get_root();
+}
 
 TEST_CASE("TeddyGraph - Basic BDD manager creation", "[teddy_graph][basic]") {
     teddy::bdd_manager manager(2, 1000);
@@ -43,7 +69,12 @@ TEST_CASE("TeddyGraph - AND operation", "[teddy_graph][operations]") {
     auto result = manager.apply<AND>(var0, var1);
 
     REQUIRE(result.unsafe_get_root() != nullptr);
-    // AND of two variables should create additional nodes beyond terminals
+
+    // Validate AND truth table: result should be 1 only when both inputs are 1
+    REQUIRE(evaluate_teddy_bdd(manager, result, {false, false}) == false);  // 0 AND 0 = 0
+    REQUIRE(evaluate_teddy_bdd(manager, result, {false, true}) == false);   // 0 AND 1 = 0
+    REQUIRE(evaluate_teddy_bdd(manager, result, {true, false}) == false);   // 1 AND 0 = 0
+    REQUIRE(evaluate_teddy_bdd(manager, result, {true, true}) == true);     // 1 AND 1 = 1
 }
 
 TEST_CASE("TeddyGraph - OR operation", "[teddy_graph][operations]") {
@@ -55,6 +86,12 @@ TEST_CASE("TeddyGraph - OR operation", "[teddy_graph][operations]") {
     auto result = manager.apply<OR>(var0, var1);
 
     REQUIRE(result.unsafe_get_root() != nullptr);
+
+    // Validate OR truth table: result should be 1 when at least one input is 1
+    REQUIRE(evaluate_teddy_bdd(manager, result, {false, false}) == false);  // 0 OR 0 = 0
+    REQUIRE(evaluate_teddy_bdd(manager, result, {false, true}) == true);    // 0 OR 1 = 1
+    REQUIRE(evaluate_teddy_bdd(manager, result, {true, false}) == true);    // 1 OR 0 = 1
+    REQUIRE(evaluate_teddy_bdd(manager, result, {true, true}) == true);     // 1 OR 1 = 1
 }
 
 TEST_CASE("TeddyGraph - XOR operation", "[teddy_graph][operations]") {
@@ -66,6 +103,12 @@ TEST_CASE("TeddyGraph - XOR operation", "[teddy_graph][operations]") {
     auto result = manager.apply<XOR>(var0, var1);
 
     REQUIRE(result.unsafe_get_root() != nullptr);
+
+    // Validate XOR truth table: result should be 1 when inputs differ
+    REQUIRE(evaluate_teddy_bdd(manager, result, {false, false}) == false);  // 0 XOR 0 = 0
+    REQUIRE(evaluate_teddy_bdd(manager, result, {false, true}) == true);    // 0 XOR 1 = 1
+    REQUIRE(evaluate_teddy_bdd(manager, result, {true, false}) == true);    // 1 XOR 0 = 1
+    REQUIRE(evaluate_teddy_bdd(manager, result, {true, true}) == false);    // 1 XOR 1 = 0
 }
 
 TEST_CASE("TeddyGraph - NOT operation", "[teddy_graph][operations]") {
@@ -77,6 +120,10 @@ TEST_CASE("TeddyGraph - NOT operation", "[teddy_graph][operations]") {
     auto result = manager.apply<XOR>(var0, one);  // NOT is XOR with 1
 
     REQUIRE(result.unsafe_get_root() != nullptr);
+
+    // Validate NOT truth table: result should be opposite of input
+    REQUIRE(evaluate_teddy_bdd(manager, result, {false}) == true);  // NOT 0 = 1
+    REQUIRE(evaluate_teddy_bdd(manager, result, {true}) == false);  // NOT 1 = 0
 }
 
 TEST_CASE("TeddyGraph - Complex nested operations", "[teddy_graph][operations]") {
@@ -91,6 +138,24 @@ TEST_CASE("TeddyGraph - Complex nested operations", "[teddy_graph][operations]")
     auto final_result = manager.apply<OR>(and_result, var2);
 
     REQUIRE(final_result.unsafe_get_root() != nullptr);
+
+    // Validate truth table for (A AND B) OR C
+    REQUIRE(evaluate_teddy_bdd(manager, final_result, {false, false, false})
+            == false);  // (0 AND 0) OR 0 = 0
+    REQUIRE(evaluate_teddy_bdd(manager, final_result, {false, false, true})
+            == true);  // (0 AND 0) OR 1 = 1
+    REQUIRE(evaluate_teddy_bdd(manager, final_result, {false, true, false})
+            == false);  // (0 AND 1) OR 0 = 0
+    REQUIRE(evaluate_teddy_bdd(manager, final_result, {false, true, true})
+            == true);  // (0 AND 1) OR 1 = 1
+    REQUIRE(evaluate_teddy_bdd(manager, final_result, {true, false, false})
+            == false);  // (1 AND 0) OR 0 = 0
+    REQUIRE(evaluate_teddy_bdd(manager, final_result, {true, false, true})
+            == true);  // (1 AND 0) OR 1 = 1
+    REQUIRE(evaluate_teddy_bdd(manager, final_result, {true, true, false})
+            == true);  // (1 AND 1) OR 0 = 1
+    REQUIRE(evaluate_teddy_bdd(manager, final_result, {true, true, true})
+            == true);  // (1 AND 1) OR 1 = 1
 }
 
 TEST_CASE("TeddyGraph - DOT generation for single variable", "[teddy_graph][dot]") {

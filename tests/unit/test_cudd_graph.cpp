@@ -13,10 +13,29 @@
 #include <catch2/matchers/catch_matchers_string.hpp>
 #include <cudd/cuddObj.hh>
 #include <sstream>
+#include <vector>
 
 #include "cudd_graph.hpp"
 
 using Catch::Matchers::ContainsSubstring;
+
+// Helper function to evaluate a BDD with specific variable assignments
+// Returns true if the BDD evaluates to 1 for the given assignment
+bool evaluate_cudd_bdd(Cudd& manager, const BDD& bdd, const std::vector<bool>& assignment) {
+    BDD temp = bdd;
+    for (size_t i = 0; i < assignment.size(); i++) {
+        // Get the BDD variable
+        BDD var = manager.bddVar(i);
+        if (assignment[i]) {
+            // If variable is true, restrict to the positive cofactor
+            temp = temp.Restrict(var);
+        } else {
+            // If variable is false, restrict to the negative cofactor
+            temp = temp.Restrict(!var);
+        }
+    }
+    return temp.IsOne();
+}
 
 TEST_CASE("CuddGraph - Basic CUDD manager creation", "[cudd_graph][basic]") {
     Cudd manager(2);  // 2 variables
@@ -39,6 +58,12 @@ TEST_CASE("CuddGraph - AND operation", "[cudd_graph][operations]") {
     BDD result = var0 * var1;  // AND operation
 
     REQUIRE(!result.IsZero());
+
+    // Validate AND truth table: result should be 1 only when both inputs are 1
+    REQUIRE(evaluate_cudd_bdd(manager, result, {false, false}) == false);  // 0 AND 0 = 0
+    REQUIRE(evaluate_cudd_bdd(manager, result, {false, true}) == false);   // 0 AND 1 = 0
+    REQUIRE(evaluate_cudd_bdd(manager, result, {true, false}) == false);   // 1 AND 0 = 0
+    REQUIRE(evaluate_cudd_bdd(manager, result, {true, true}) == true);     // 1 AND 1 = 1
 }
 
 TEST_CASE("CuddGraph - OR operation", "[cudd_graph][operations]") {
@@ -49,6 +74,12 @@ TEST_CASE("CuddGraph - OR operation", "[cudd_graph][operations]") {
     BDD result = var0 + var1;  // OR operation
 
     REQUIRE(!result.IsZero());
+
+    // Validate OR truth table: result should be 1 when at least one input is 1
+    REQUIRE(evaluate_cudd_bdd(manager, result, {false, false}) == false);  // 0 OR 0 = 0
+    REQUIRE(evaluate_cudd_bdd(manager, result, {false, true}) == true);    // 0 OR 1 = 1
+    REQUIRE(evaluate_cudd_bdd(manager, result, {true, false}) == true);    // 1 OR 0 = 1
+    REQUIRE(evaluate_cudd_bdd(manager, result, {true, true}) == true);     // 1 OR 1 = 1
 }
 
 TEST_CASE("CuddGraph - XOR operation", "[cudd_graph][operations]") {
@@ -59,6 +90,12 @@ TEST_CASE("CuddGraph - XOR operation", "[cudd_graph][operations]") {
     BDD result = var0.Xor(var1);  // XOR operation
 
     REQUIRE(!result.IsZero());
+
+    // Validate XOR truth table: result should be 1 when inputs differ
+    REQUIRE(evaluate_cudd_bdd(manager, result, {false, false}) == false);  // 0 XOR 0 = 0
+    REQUIRE(evaluate_cudd_bdd(manager, result, {false, true}) == true);    // 0 XOR 1 = 1
+    REQUIRE(evaluate_cudd_bdd(manager, result, {true, false}) == true);    // 1 XOR 0 = 1
+    REQUIRE(evaluate_cudd_bdd(manager, result, {true, true}) == false);    // 1 XOR 1 = 0
 }
 
 TEST_CASE("CuddGraph - NOT operation", "[cudd_graph][operations]") {
@@ -68,6 +105,10 @@ TEST_CASE("CuddGraph - NOT operation", "[cudd_graph][operations]") {
     BDD result = ~var0;  // NOT operation
 
     REQUIRE(!result.IsZero());
+
+    // Validate NOT truth table: result should be opposite of input
+    REQUIRE(evaluate_cudd_bdd(manager, result, {false}) == true);  // NOT 0 = 1
+    REQUIRE(evaluate_cudd_bdd(manager, result, {true}) == false);  // NOT 1 = 0
 }
 
 TEST_CASE("CuddGraph - Complex nested operations", "[cudd_graph][operations]") {
@@ -81,6 +122,24 @@ TEST_CASE("CuddGraph - Complex nested operations", "[cudd_graph][operations]") {
     BDD final_result = and_result + var2;
 
     REQUIRE(!final_result.IsZero());
+
+    // Validate truth table for (A AND B) OR C
+    REQUIRE(evaluate_cudd_bdd(manager, final_result, {false, false, false})
+            == false);  // (0 AND 0) OR 0 = 0
+    REQUIRE(evaluate_cudd_bdd(manager, final_result, {false, false, true})
+            == true);  // (0 AND 0) OR 1 = 1
+    REQUIRE(evaluate_cudd_bdd(manager, final_result, {false, true, false})
+            == false);  // (0 AND 1) OR 0 = 0
+    REQUIRE(evaluate_cudd_bdd(manager, final_result, {false, true, true})
+            == true);  // (0 AND 1) OR 1 = 1
+    REQUIRE(evaluate_cudd_bdd(manager, final_result, {true, false, false})
+            == false);  // (1 AND 0) OR 0 = 0
+    REQUIRE(evaluate_cudd_bdd(manager, final_result, {true, false, true})
+            == true);  // (1 AND 0) OR 1 = 1
+    REQUIRE(evaluate_cudd_bdd(manager, final_result, {true, true, false})
+            == true);  // (1 AND 1) OR 0 = 1
+    REQUIRE(evaluate_cudd_bdd(manager, final_result, {true, true, true})
+            == true);  // (1 AND 1) OR 1 = 1
 }
 
 TEST_CASE("CuddGraph - BDD constants", "[cudd_graph][constants]") {
