@@ -246,12 +246,12 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
     // Collect parent node IDs to sort them
     for (const auto& [parent_key, _] : edges_by_parent) {
         // Find the parent iterator to get its ID
-        for (const auto& node : unique_nodes) {
-            if (node.get_node_address() == parent_key) {
-                std::string parent_id = get_node_id(node);
-                parent_ids_and_keys.push_back({parent_id, parent_key});
-                break;
-            }
+        auto it = std::find_if(
+            unique_nodes.begin(), unique_nodes.end(),
+            [parent_key](const auto& node) { return node.get_node_address() == parent_key; });
+        if (it != unique_nodes.end()) {
+            std::string parent_id = get_node_id(*it);
+            parent_ids_and_keys.push_back({parent_id, parent_key});
         }
     }
 
@@ -301,9 +301,11 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
             // Sort CSS class assignments by node ID for consistent output
             std::vector<std::pair<std::string, std::string>> sorted_class_assignments;
             for (const auto& [class_name, node_ids] : class_to_nodes) {
-                for (const auto& node_id : node_ids) {
-                    sorted_class_assignments.emplace_back(node_id, class_name);
-                }
+                std::transform(node_ids.begin(), node_ids.end(),
+                               std::back_inserter(sorted_class_assignments),
+                               [&class_name](const std::string& node_id) {
+                                   return std::make_pair(node_id, class_name);
+                               });
             }
             std::sort(sorted_class_assignments.begin(), sorted_class_assignments.end(),
                       [](const auto& a, const auto& b) {
