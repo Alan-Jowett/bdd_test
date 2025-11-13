@@ -1,3 +1,19 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
+
+/**
+ * @file cudd_iterator.hpp
+ * @brief CUDD BDD iterator interface for graph traversal
+ *
+ * This file provides iterator classes for traversing CUDD Binary Decision Diagrams.
+ * The iterators support various traversal patterns and are compatible with the
+ * generic graph generation templates.
+ *
+ * @author Alan Jowett
+ * @date 2025
+ * @copyright Copyright (c) 2025 Alan Jowett. Licensed under the MIT License
+ */
+
 #pragma once
 
 #include <cudd/cudd.h>

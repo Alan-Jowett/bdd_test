@@ -1,3 +1,19 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
+
+/**
+ * @file graph_iterator_concepts.hpp
+ * @brief C++20 concepts for graph iterator interfaces
+ *
+ * This file defines C++20 concepts that specify the requirements for graph iterators
+ * used in BDD traversal and visualization. These concepts ensure type safety and
+ * provide clear interfaces for template-based graph generation.
+ *
+ * @author Alan Jowett
+ * @date 2025
+ * @copyright Copyright (c) 2025 Alan Jowett. Licensed under the MIT License
+ */
+
 #ifndef GRAPH_ITERATOR_CONCEPTS_HPP
 #define GRAPH_ITERATOR_CONCEPTS_HPP
 

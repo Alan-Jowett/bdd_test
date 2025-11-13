@@ -1,4 +1,7 @@
 #!/bin/bash
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
+
 # Verification script for CUDD canonical BDD output
 # This script verifies that CUDD produces deterministic, canonical output
 

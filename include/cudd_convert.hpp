@@ -1,3 +1,19 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
+
+/**
+ * @file cudd_convert.hpp
+ * @brief CUDD BDD library integration and conversion utilities
+ *
+ * This file provides conversion functions and utilities for working with the CUDD
+ * Binary Decision Diagram library. It includes functions for converting between
+ * different BDD representations and managing CUDD-specific data structures.
+ *
+ * @author Alan Jowett
+ * @date 2025
+ * @copyright Copyright (c) 2025 Alan Jowett. Licensed under the MIT License
+ */
+
 #pragma once
 
 #include <algorithm>

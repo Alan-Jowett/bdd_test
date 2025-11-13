@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
+
 # Example of using fetch_and_patch with multiple projects
 
 # Include the FetchAndPatch module
