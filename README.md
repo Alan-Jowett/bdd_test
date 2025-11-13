@@ -139,7 +139,7 @@ Index | Variable | False Child | True Child | Type
     5 |        - |           - |          - | Terminal(0)
 
 Total nodes: 6
-BDD node table saved to "test_expressions\teddy_expected_output\simple_expression_bdd_nodes.txt"
+BDD node table saved to "test_expressions\expected_output\simple_expression_bdd_nodes.txt"
 Demo completed successfully!
 ```
 

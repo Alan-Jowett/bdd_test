@@ -1,8 +1,0 @@
-Index | Variable | False Child | True Child | Type
-------|----------|-------------|------------|----------
-    0 | AND_at_start |           5 |          1 | Variable
-    1 | NOT_multiple_AND_keywords |           5 |          2 | Variable
-    2 | OR_in_middle |           5 |          3 | Variable
-    3 | at_end_NOT |           5 |          4 | Variable
-    4 |        - |           - |          - | Terminal(1)
-    5 |        - |           - |          - | Terminal(0)

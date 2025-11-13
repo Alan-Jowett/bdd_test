@@ -75,11 +75,11 @@ void write_cudd_to_dot(const Cudd& cudd_manager, const BDD& bdd,
  * @param bdd CUDD BDD to process
  * @param variable_names Vector of variable names for labeling
  * @param out Output stream for Mermaid content
- * @param graph_title Title for the generated Mermaid graph (default: "CUDD BDD")
+ * @param graph_title Title for the generated Mermaid graph (default: "BDD")
  */
 void write_cudd_to_mermaid(const Cudd& cudd_manager, const BDD& bdd,
                            const std::vector<std::string>& variable_names, std::ostream& out,
-                           const std::string& graph_title = "CUDD BDD");
+                           const std::string& graph_title = "BDD");
 
 /**
  * @brief Collect CUDD BDD nodes in topological order using dag_walker

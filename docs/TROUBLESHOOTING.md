@@ -21,7 +21,7 @@
 
 **Test Failure**: `Generated BDD nodes file differs from expected`
 - **Problem**: Generated output doesn't match expected test files
-- **Solution**: Regenerate expected output files by running the tool and copying the generated `*_bdd_nodes.txt` files to `test_expressions/teddy_expected_output/`
+- **Solution**: Regenerate expected output files by running the tool and copying the generated `*_bdd_nodes.txt` files to `test_expressions/expected_output/`
 - **Note**: Ensure expected files use real variable names, not x0, x1, x2
 
 **CTest not finding tests**
@@ -134,7 +134,7 @@ cd build
 ctest --verbose
 
 # Check generated files
-ls test_expressions/teddy_expected_output/
+ls test_expressions/expected_output/
 ```
 
 ## Known Limitations

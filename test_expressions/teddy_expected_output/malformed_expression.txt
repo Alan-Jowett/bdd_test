@@ -1,3 +1,0 @@
-# Test for complex variable name with special characters
-# The parser is lenient and treats unrecognized patterns as variable names
-unusual_var_name_with_parens

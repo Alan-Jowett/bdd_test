@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <concepts>
 #include <format>
 #include <iostream>
@@ -216,26 +217,67 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
         }
     };
 
-    // Use dag_walker to collect all unique nodes and output them
-    auto unique_nodes = dag_walker::collect_unique_nodes(root_iterator);
+    // Use dag_walker to collect all unique nodes in topological order and output them
+    auto unique_nodes = dag_walker::collect_unique_nodes_topological(root_iterator);
     for (const auto& node : unique_nodes) {
         std::string node_id = get_node_id(node);
         std::string node_def = build_node_definition(node, node_id);
         out << node_def;
     }
 
-    // Use dag_walker to collect all edges and output them
-    auto edges = dag_walker::collect_edges(root_iterator);
+    // Collect and output edges to match original TeDDy ordering
+    // TeDDy outputs edges grouped by parent, in ascending node ID order (not topological)
+    dag_walker::WalkConfig edge_config;
+    edge_config.collect_all_edges = true;
+    auto edges = dag_walker::collect_edges(root_iterator, edge_config);
     if (!edges.empty() && !unique_nodes.empty()) {
         out << "\n";
     }
 
+    // Group edges by their parent node and collect parent info
+    std::unordered_map<const void*, std::vector<dag_walker::EdgeInfo<Iterator>>> edges_by_parent;
+    std::vector<std::pair<std::string, const void*>> parent_ids_and_keys;
+
     for (const auto& edge : edges) {
-        std::string parent_id = get_node_id(edge.parent);
-        std::string child_id = get_node_id(edge.child);
-        std::string edge_def =
-            build_edge_definition(edge.parent, edge.child, edge.child_index, parent_id, child_id);
-        out << edge_def;
+        const void* parent_key = edge.parent.get_node_address();
+        edges_by_parent[parent_key].push_back(edge);
+    }
+
+    // Collect parent node IDs to sort them
+    for (const auto& [parent_key, _] : edges_by_parent) {
+        // Find the parent iterator to get its ID
+        auto it = std::find_if(
+            unique_nodes.begin(), unique_nodes.end(),
+            [parent_key](const auto& node) { return node.get_node_address() == parent_key; });
+        if (it != unique_nodes.end()) {
+            std::string parent_id = get_node_id(*it);
+            parent_ids_and_keys.push_back({parent_id, parent_key});
+        }
+    }
+
+    // Sort by node ID numerically to get consistent TeDDy ordering
+    std::sort(parent_ids_and_keys.begin(), parent_ids_and_keys.end(),
+              [](const auto& a, const auto& b) {
+                  // Extract numeric part from node ID (e.g., "N2" -> 2)
+                  int num_a = std::stoi(a.first.substr(1));
+                  int num_b = std::stoi(b.first.substr(1));
+                  return num_a < num_b;
+              });
+
+    // Output edges in sorted parent ID order
+    for (const auto& [parent_id, parent_key] : parent_ids_and_keys) {
+        auto& parent_edges = edges_by_parent[parent_key];
+        // Sort edges within each parent: false edge first, then true edge
+        std::sort(parent_edges.begin(), parent_edges.end(),
+                  [](const auto& a, const auto& b) { return a.child_index < b.child_index; });
+
+        for (const auto& edge : parent_edges) {
+            std::string parent_id_str = get_node_id(edge.parent);
+            std::string child_id = get_node_id(edge.child);
+            std::string edge_def = build_edge_definition(edge.parent, edge.child, edge.child_index,
+                                                         parent_id_str, child_id);
+            out << edge_def;
+        }
     }
 
     // Collect CSS classes and output them if enabled
@@ -255,10 +297,42 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
 
         if (!class_to_nodes.empty()) {
             out << "\n";
+
+            // Sort CSS class assignments by node ID for consistent output
+            std::vector<std::pair<std::string, std::string>> sorted_class_assignments;
             for (const auto& [class_name, node_ids] : class_to_nodes) {
-                for (const auto& node_id : node_ids) {
-                    out << "    class " << node_id << " " << class_name << "\n";
-                }
+                std::transform(node_ids.begin(), node_ids.end(),
+                               std::back_inserter(sorted_class_assignments),
+                               [&class_name](const std::string& node_id) {
+                                   return std::make_pair(node_id, class_name);
+                               });
+            }
+            std::sort(sorted_class_assignments.begin(), sorted_class_assignments.end(),
+                      [](const auto& a, const auto& b) {
+                          // Sort by node ID numerically (e.g., N1, N2, N3...)
+                          int num_a = std::stoi(a.first.substr(1));
+                          int num_b = std::stoi(b.first.substr(1));
+                          return num_a < num_b;
+                      });
+
+            for (const auto& [node_id, class_name] : sorted_class_assignments) {
+                out << "    class " << node_id << " " << class_name << "\n";
+            }
+        }
+
+        // Add CSS class definitions for BDD-specific styling (matching TeDDy format)
+        bool has_bdd_variable = class_to_nodes.find("bddVariable") != class_to_nodes.end();
+        bool has_terminal = class_to_nodes.find("terminal") != class_to_nodes.end();
+
+        if (has_bdd_variable || has_terminal) {
+            out << "\n";
+            if (has_bdd_variable) {
+                out << "    classDef bddVariable "
+                       "fill:lightblue,stroke:#333,stroke-width:2px,color:#000\n";
+            }
+            if (has_terminal) {
+                out << "    classDef terminal "
+                       "fill:lightgray,stroke:#333,stroke-width:2px,color:#000\n";
             }
         }
     }

@@ -1,0 +1,3 @@
+# Test for variable with unusual characters in name
+# Parser is lenient and allows complex variable names
+variable_with_unusual$characters@123

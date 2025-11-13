@@ -10,7 +10,7 @@ To add new test expressions:
 
 1. **Create Expression File**: Create a new `.txt` file in `test_expressions/` folder with meaningful variable names
 2. **Generate Expected Output**: Run the tool to generate the BDD node file
-3. **Save Expected Output**: Copy the generated `*_bdd_nodes.txt` file to `test_expressions/teddy_expected_output/` with **real variable names** (not x0, x1, x2)
+3. **Save Expected Output**: Copy the generated `*_bdd_nodes.txt` file to `test_expressions/expected_output/` with **real variable names** (not x0, x1, x2)
 4. **Update Build Configuration**: Add the new test to `CMakeLists.txt` using the `add_bdd_test()` function
 5. **Verify**: Run `ctest` to ensure the new test passes
 
@@ -30,7 +30,7 @@ To add new test expressions:
 
 3. Copy the generated node file:
    ```powershell
-   cp test_expressions\network_filter_bdd_nodes.txt test_expressions\teddy_expected_output\
+   cp test_expressions\network_filter_bdd_nodes.txt test_expressions\expected_output\
    ```
 
 4. Add test to `CMakeLists.txt`:

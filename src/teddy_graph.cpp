@@ -56,85 +56,11 @@ void write_teddy_to_mermaid(const teddy::bdd_manager& manager,
                             teddy::bdd_manager::diagram_t diagram,
                             const std::vector<std::string>& variable_names, std::ostream& out,
                             const std::string& graph_title) {
-    using node_t = teddy::bdd_manager::diagram_t::node_t;
+    // Create iterator for the root node
+    teddy_iterator root_iter(diagram.unsafe_get_root(), &variable_names);
 
-    out << "---\n";
-    out << "title: " << graph_title << "\n";
-    out << "---\n";
-    out << "flowchart TD\n";
-
-    // Get all nodes using the same topological collection as the original
-    std::vector<node_t*> nodes = collect_teddy_nodes_topological(diagram, variable_names);
-
-    // Create node ID mapping and class assignments
-    std::unordered_map<node_t*, std::string> node_to_id;
-    std::vector<std::string> class_assignments;
-
-    for (size_t i = 0; i < nodes.size(); ++i) {
-        node_to_id[nodes[i]] = "N" + std::to_string(i);
-    }
-
-    // Generate node definitions
-    for (node_t* node : nodes) {
-        std::string node_id = node_to_id[node];
-
-        if (node->is_terminal()) {
-            // Terminals as squares: N1["0"] or N1["1"]
-            out << "    " << node_id << "[\"" << node->get_value() << "\"]\n";
-            // Add CSS class for terminals
-            class_assignments.push_back("    class " + node_id + " terminal");
-        } else {
-            // Variables as circles: N1(("var_name"))
-            int var_index = node->get_index();
-            std::string var_name = (var_index < variable_names.size())
-                                       ? variable_names[var_index]
-                                       : "x" + std::to_string(var_index);
-            out << "    " << node_id << "((\"" << var_name << "\"))\n";
-            // Add CSS class for variables
-            class_assignments.push_back("    class " + node_id + " bddVariable");
-        }
-    }
-
-    // Add separator between nodes and edges if we have both
-    bool has_edges = std::any_of(nodes.begin(), nodes.end(),
-                                 [](const node_t* node) { return !node->is_terminal(); });
-
-    if (!nodes.empty() && has_edges) {
-        out << "\n";
-    }
-
-    // Generate edges
-    for (node_t* node : nodes) {
-        if (!node->is_terminal()) {
-            std::string node_id = node_to_id[node];
-
-            node_t* false_child = node->get_son(0);
-            node_t* true_child = node->get_son(1);
-
-            // False edge (dashed): N1 -.-> N2
-            if (false_child && node_to_id.find(false_child) != node_to_id.end()) {
-                out << "    " << node_id << " -.-> " << node_to_id[false_child] << "\n";
-            }
-
-            // True edge (solid): N1 --> N2
-            if (true_child && node_to_id.find(true_child) != node_to_id.end()) {
-                out << "    " << node_id << " --> " << node_to_id[true_child] << "\n";
-            }
-        }
-    }
-
-    // Add CSS class assignments
-    if (!class_assignments.empty()) {
-        out << "\n";
-        for (const auto& class_assign : class_assignments) {
-            out << class_assign << "\n";
-        }
-    }
-
-    // Add CSS class definitions for BDD node colors
-    out << "\n";
-    out << "    classDef bddVariable fill:lightblue,stroke:#333,stroke-width:2px,color:#000\n";
-    out << "    classDef terminal fill:lightgray,stroke:#333,stroke-width:2px,color:#000\n";
+    // Use the generic Mermaid generator
+    mermaid_graph::generate_mermaid_graph(root_iter, out, graph_title);
 }
 
 std::vector<teddy::bdd_manager::diagram_t::node_t*> collect_teddy_nodes_topological(

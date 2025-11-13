@@ -1,0 +1,16 @@
+digraph ExpressionTree {
+    rankdir=TB;
+    node [fontname="Arial"];
+    edge [fontname="Arial"];
+
+    node0 [label = "OR", shape=box, style = filled, fillcolor = lightcoral];
+    node1 [label = "AND", shape=box, style = filled, fillcolor = lightgreen];
+    node2 [label = "var_1", shape=ellipse, style = filled, fillcolor = lightblue];
+    node3 [label = "var_2", shape=ellipse, style = filled, fillcolor = lightblue];
+    node4 [label = "var_3", shape=ellipse, style = filled, fillcolor = lightblue];
+
+    node0 -> node1 [label = "L"];
+    node1 -> node2 [label = "L"];
+    node1 -> node3 [label = "R"];
+    node0 -> node4 [label = "R"];
+}
