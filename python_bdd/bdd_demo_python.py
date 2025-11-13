@@ -149,11 +149,27 @@ class ExpressionParser:
         self.variables: Set[str] = set()
 
     def current_token(self) -> ExpressionToken:
-        """Get current token"""
+        """Get the current token without advancing the position.
+
+        Returns:
+            ExpressionToken: The current token, or EOF token if at end of input.
+                Returns the last token (EOF) if position exceeds token count.
+        """
         return self.tokens[self.pos] if self.pos < len(self.tokens) else self.tokens[-1]
 
     def consume_token(self, expected_type: Optional[str] = None) -> ExpressionToken:
-        """Consume and return current token"""
+        """Consume and return the current token, optionally validating its type.
+
+        Args:
+            expected_type (Optional[str]): Expected token type to validate against.
+                If provided and doesn't match current token type, raises ValueError.
+
+        Returns:
+            ExpressionToken: The consumed token before advancing position.
+
+        Raises:
+            ValueError: If expected_type is specified and doesn't match current token type.
+        """
         token = self.current_token()
         if expected_type and token.type != expected_type:
             raise ValueError(f"Expected {expected_type} but got {token.type}")
@@ -161,14 +177,32 @@ class ExpressionParser:
         return token
 
     def parse_expression(self) -> str:
-        """Parse the full expression"""
+        """Parse the complete boolean expression from tokens.
+
+        Parses the entire expression and validates that all tokens are consumed,
+        ensuring no unexpected tokens remain after parsing completes.
+
+        Returns:
+            str: The parsed expression string in prefix notation suitable for BDD construction.
+
+        Raises:
+            ValueError: If unexpected tokens remain after parsing the complete expression.
+        """
         expr = self.parse_or_expression()
         if self.current_token().type != 'eof':
             raise ValueError(f"Unexpected token {self.current_token().value}")
         return expr
 
     def parse_or_expression(self) -> str:
-        """Parse OR and XOR expressions (same precedence, left-associative)"""
+        """Parse OR and XOR expressions with same precedence and left-associative behavior.
+
+        Handles binary OR ('|', '||', 'OR', 'or') and XOR ('^', 'XOR', 'xor') operators
+        which have the same precedence level and are left-associative.
+        These are the lowest precedence operators in boolean expressions.
+
+        Returns:
+            str: The parsed OR/XOR expression in parenthesized format for BDD construction.
+        """
         left = self.parse_and_expression()
 
         while (self.current_token().type == 'operator' and
@@ -184,7 +218,15 @@ class ExpressionParser:
         return left
 
     def parse_and_expression(self) -> str:
-        """Parse AND expressions (higher precedence)"""
+        """Parse AND expressions with left-associative behavior.
+
+        Handles binary AND operators ('&', '&&', 'AND', 'and') which have
+        higher precedence than OR/XOR but lower than NOT operators.
+        AND operations are left-associative.
+
+        Returns:
+            str: The parsed AND expression in parenthesized format for BDD construction.
+        """
         left = self.parse_not_expression()
 
         while self.current_token().type == 'operator' and self.current_token().value == 'AND':
@@ -195,7 +237,15 @@ class ExpressionParser:
         return left
 
     def parse_not_expression(self) -> str:
-        """Parse NOT expressions (highest precedence)"""
+        """Parse NOT expressions which have the highest operator precedence.
+
+        Handles unary NOT operators ('!', '~', 'NOT', 'not') which bind
+        most tightly and are right-associative (can be chained).
+        Multiple NOT operators can be applied consecutively.
+
+        Returns:
+            str: The parsed NOT expression with proper negation operators for BDD construction.
+        """
         if self.current_token().type == 'operator' and self.current_token().value == 'NOT':
             self.consume_token()
             expr = self.parse_not_expression()
@@ -204,7 +254,18 @@ class ExpressionParser:
             return self.parse_primary_expression()
 
     def parse_primary_expression(self) -> str:
-        """Parse primary expressions (variables and parenthesized expressions)"""
+        """Parse primary expressions: variables and parenthesized sub-expressions.
+
+        Handles the most basic expression elements:
+        - Variable names: Added to the variables set for tracking
+        - Parenthesized expressions: Recursively parsed with proper grouping
+
+        Returns:
+            str: The variable name or the result of parsing the parenthesized expression.
+
+        Raises:
+            ValueError: If the current token is not a variable or opening parenthesis.
+        """
         token = self.current_token()
 
         if token.type == 'variable':
@@ -302,7 +363,25 @@ class PythonBDDDemo:
         return ordering
 
     def build_bdd_from_expression(self, expression_text: str) -> any:
-        """Build BDD from parsed expression"""
+        """Build a Binary Decision Diagram from a boolean expression string.
+
+        Parses the expression text, extracts variables, creates consistent variable
+        ordering, and constructs the BDD using the 'dd' library. This method
+        coordinates the entire process from text parsing to BDD construction.
+
+        Args:
+            expression_text (str): Boolean expression in standard infix notation
+                with support for AND, OR, NOT, XOR operators and parentheses.
+
+        Returns:
+            Any: The constructed BDD object from the 'dd' library representing
+                the boolean function defined by the expression.
+
+        Side Effects:
+            - Updates self.variable_order with the variable mapping used
+            - Declares all found variables in the internal BDD manager
+            - May raise parsing errors if expression syntax is invalid
+        """
         # Tokenize and parse
         lexer = ExpressionLexer(expression_text)
         parser = ExpressionParser(lexer.tokens)

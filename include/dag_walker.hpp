@@ -115,6 +115,9 @@ concept Visitor = requires(V visitor, const NodeInfo<Iterator>& node_info) { vis
 template <DagWalkerIterator Iterator, Visitor<Iterator> V>
 void walk_dag_preorder(const Iterator& root_iterator, V&& visitor,
                        const WalkConfig& config = WalkConfig()) {
+    static_assert(DagWalkerIterator<Iterator>,
+                  "Iterator must satisfy DagWalkerIterator concept for DAG traversal");
+
     std::unordered_set<const void*> visited_nodes;
 
     // Helper to check if iterator has should_process method
@@ -215,6 +218,9 @@ void walk_dag(const Iterator& root_iterator, V&& visitor, const WalkConfig& conf
 template <DagWalkerIterator Iterator, Visitor<Iterator> V>
 void walk_dag_topological(const Iterator& root_iterator, V&& visitor,
                           const WalkConfig& config = WalkConfig()) {
+    static_assert(DagWalkerIterator<Iterator>,
+                  "Iterator must satisfy DagWalkerIterator concept for topological traversal");
+
     std::unordered_set<const void*> visited_nodes;
     std::unordered_set<const void*> completed_nodes;
 
@@ -296,6 +302,9 @@ void walk_dag_topological(const Iterator& root_iterator, V&& visitor,
 template <DagWalkerIterator Iterator>
 std::vector<Iterator> collect_unique_nodes(const Iterator& root_iterator,
                                            const WalkConfig& config = WalkConfig()) {
+    static_assert(DagWalkerIterator<Iterator>,
+                  "Iterator must satisfy DagWalkerIterator concept for node collection");
+
     std::vector<Iterator> unique_nodes;
 
     walk_dag_preorder(
@@ -342,6 +351,9 @@ struct EdgeInfo {
 template <DagWalkerIterator Iterator>
 std::vector<EdgeInfo<Iterator>> collect_edges(const Iterator& root_iterator,
                                               const WalkConfig& config = WalkConfig()) {
+    static_assert(DagWalkerIterator<Iterator>,
+                  "Iterator must satisfy DagWalkerIterator concept for edge collection");
+
     std::vector<EdgeInfo<Iterator>> edges;
 
     if (config.collect_all_edges) {
@@ -463,6 +475,10 @@ size_t get_max_depth(const Iterator& root_iterator) {
 template <DagWalkerIterator Iterator>
 std::vector<Iterator> collect_unique_nodes_topological(const Iterator& root_iterator,
                                                        const WalkConfig& config = WalkConfig()) {
+    static_assert(
+        DagWalkerIterator<Iterator>,
+        "Iterator must satisfy DagWalkerIterator concept for topological node collection");
+
     std::vector<Iterator> unique_nodes;
 
     walk_dag_topological(
@@ -495,6 +511,10 @@ std::vector<Iterator> collect_unique_nodes_topological(const Iterator& root_iter
 template <DagWalkerIterator Iterator>
 std::vector<EdgeInfo<Iterator>> collect_edges_topological(const Iterator& root_iterator,
                                                           const WalkConfig& config = WalkConfig()) {
+    static_assert(
+        DagWalkerIterator<Iterator>,
+        "Iterator must satisfy DagWalkerIterator concept for topological edge collection");
+
     std::vector<EdgeInfo<Iterator>> edges;
 
     walk_dag_topological(

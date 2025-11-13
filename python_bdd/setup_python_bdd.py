@@ -110,7 +110,21 @@ def verify_installation():
         return False
 
 def main():
-    """Main setup function"""
+    """Main setup function that orchestrates the complete Python BDD environment setup.
+
+    Coordinates the entire setup process including Python version checking,
+    dependency installation, and verification. Provides user feedback at each
+    step and returns appropriate exit codes for automation.
+
+    Returns:
+        int: Exit code (0 for success, 1 for failure) suitable for shell scripts
+            and automated build processes.
+
+    Side Effects:
+        - Prints progress messages to stdout for user feedback
+        - May install Python packages to the current environment
+        - May prompt user for confirmation depending on pip behavior
+    """
     print("Python BDD Demo Setup")
     print("===================")
     print()
