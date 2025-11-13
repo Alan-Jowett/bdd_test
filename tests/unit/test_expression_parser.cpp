@@ -11,6 +11,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
+#include <filesystem>
 #include <fstream>
 
 #include "dag_walker.hpp"
@@ -20,7 +21,12 @@ using Catch::Matchers::ContainsSubstring;
 
 // Helper function to create a temporary test file
 std::string create_temp_expression_file(const std::string& content) {
-    std::string filename = "/tmp/test_expr_" + std::to_string(std::rand()) + ".txt";
+    // Use std::filesystem to get a cross-platform temp directory
+    std::filesystem::path temp_dir = std::filesystem::temp_directory_path();
+    std::filesystem::path temp_file =
+        temp_dir / ("test_expr_" + std::to_string(std::rand()) + ".txt");
+    std::string filename = temp_file.string();
+
     std::ofstream file(filename);
     file << content;
     file.close();
@@ -295,7 +301,11 @@ TEST_CASE("ExpressionParser - Error: Only comments", "[expression_parser][error_
 }
 
 TEST_CASE("ExpressionParser - Error: Nonexistent file", "[expression_parser][error_handling]") {
-    REQUIRE_THROWS_WITH(read_expression_from_file("/tmp/nonexistent_file_12345.txt"),
+    // Use a path that doesn't exist in a cross-platform way
+    std::filesystem::path temp_dir = std::filesystem::temp_directory_path();
+    std::filesystem::path nonexistent = temp_dir / "nonexistent_file_12345.txt";
+
+    REQUIRE_THROWS_WITH(read_expression_from_file(nonexistent.string()),
                         ContainsSubstring("Could not open file"));
 }
 
