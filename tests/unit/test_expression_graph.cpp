@@ -10,57 +10,212 @@
  */
 
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
+#include <sstream>
 
 #include "expression_graph.hpp"
+#include "expression_types.hpp"
 
-// Placeholder tests - implement as you investigate the graph functionality
-TEST_CASE("ExpressionGraph basic functionality", "[expression_graph]") {
-    SECTION("Graph construction") {
-        // TODO: Add tests for ExpressionGraph construction
-        // ExpressionGraph graph;
-        // REQUIRE(graph.isValid());
-    }
+using Catch::Matchers::ContainsSubstring;
 
-    SECTION("Node creation") {
-        // TODO: Add tests for creating different types of nodes
-        // ExpressionGraph graph;
-        // auto varNode = graph.createVariableNode("A");
-        // auto andNode = graph.createOperatorNode(OperatorType::AND);
-        // REQUIRE(varNode != andNode);
-    }
+TEST_CASE("ExpressionGraph - Variable collection from simple expression",
+          "[expression_graph][variables]") {
+    my_expression expr = my_variable{"x"};
+    std::unordered_set<std::string> variables;
 
-    SECTION("Graph traversal") {
-        // TODO: Add tests for graph traversal algorithms
-        // ExpressionGraph graph;
-        // // Build some expression graph
-        // auto nodes = graph.getNodesInOrder();
-        // REQUIRE(!nodes.empty());
-    }
+    collect_variables_with_dag_walker(expr, variables);
 
-    SECTION("DOT graph generation") {
-        // TODO: Add tests for DOT format output
-        // ExpressionGraph graph;
-        // // Build some expression graph
-        // auto dotOutput = graph.generateDotGraph();
-        // REQUIRE(!dotOutput.empty());
-        // REQUIRE(dotOutput.find("digraph") != std::string::npos);
-    }
+    REQUIRE(variables.size() == 1);
+    REQUIRE(variables.count("x") == 1);
+}
 
-    SECTION("Mermaid graph generation") {
-        // TODO: Add tests for Mermaid format output
-        // ExpressionGraph graph;
-        // // Build some expression graph
-        // auto mermaidOutput = graph.generateMermaidGraph();
-        // REQUIRE(!mermaidOutput.empty());
-        // REQUIRE(mermaidOutput.find("graph") != std::string::npos);
-    }
+TEST_CASE("ExpressionGraph - Variable collection from AND expression",
+          "[expression_graph][variables]") {
+    my_expression expr = my_and{std::make_unique<my_expression>(my_variable{"a"}),
+                                std::make_unique<my_expression>(my_variable{"b"})};
+    std::unordered_set<std::string> variables;
 
-    SECTION("Expression evaluation") {
-        // TODO: Add tests for expression evaluation with different variable assignments
-        // ExpressionGraph graph;
-        // // Build expression: A & B
-        // std::map<std::string, bool> assignment = {{"A", true}, {"B", false}};
-        // auto result = graph.evaluate(assignment);
-        // REQUIRE(!result); // A & B with A=true, B=false should be false
-    }
+    collect_variables_with_dag_walker(expr, variables);
+
+    REQUIRE(variables.size() == 2);
+    REQUIRE(variables.count("a") == 1);
+    REQUIRE(variables.count("b") == 1);
+}
+
+TEST_CASE("ExpressionGraph - Variable collection from OR expression",
+          "[expression_graph][variables]") {
+    my_expression expr = my_or{std::make_unique<my_expression>(my_variable{"x"}),
+                               std::make_unique<my_expression>(my_variable{"y"})};
+    std::unordered_set<std::string> variables;
+
+    collect_variables_with_dag_walker(expr, variables);
+
+    REQUIRE(variables.size() == 2);
+    REQUIRE(variables.count("x") == 1);
+    REQUIRE(variables.count("y") == 1);
+}
+
+TEST_CASE("ExpressionGraph - Variable collection from NOT expression",
+          "[expression_graph][variables]") {
+    my_expression expr = my_not{std::make_unique<my_expression>(my_variable{"z"})};
+    std::unordered_set<std::string> variables;
+
+    collect_variables_with_dag_walker(expr, variables);
+
+    REQUIRE(variables.size() == 1);
+    REQUIRE(variables.count("z") == 1);
+}
+
+TEST_CASE("ExpressionGraph - Variable collection from XOR expression",
+          "[expression_graph][variables]") {
+    my_expression expr = my_xor{std::make_unique<my_expression>(my_variable{"p"}),
+                                std::make_unique<my_expression>(my_variable{"q"})};
+    std::unordered_set<std::string> variables;
+
+    collect_variables_with_dag_walker(expr, variables);
+
+    REQUIRE(variables.size() == 2);
+    REQUIRE(variables.count("p") == 1);
+    REQUIRE(variables.count("q") == 1);
+}
+
+TEST_CASE("ExpressionGraph - Variable collection from nested expression",
+          "[expression_graph][variables]") {
+    // (a AND b) OR (c AND d)
+    my_expression expr = my_or{
+        std::make_unique<my_expression>(my_and{std::make_unique<my_expression>(my_variable{"a"}),
+                                               std::make_unique<my_expression>(my_variable{"b"})}),
+        std::make_unique<my_expression>(my_and{std::make_unique<my_expression>(my_variable{"c"}),
+                                               std::make_unique<my_expression>(my_variable{"d"})})};
+
+    std::unordered_set<std::string> variables;
+    collect_variables_with_dag_walker(expr, variables);
+
+    REQUIRE(variables.size() == 4);
+    REQUIRE(variables.count("a") == 1);
+    REQUIRE(variables.count("b") == 1);
+    REQUIRE(variables.count("c") == 1);
+    REQUIRE(variables.count("d") == 1);
+}
+
+TEST_CASE("ExpressionGraph - Variable collection with duplicates",
+          "[expression_graph][variables]") {
+    // (a AND b) OR a  - 'a' appears twice but should be collected once
+    my_expression expr = my_or{
+        std::make_unique<my_expression>(my_and{std::make_unique<my_expression>(my_variable{"a"}),
+                                               std::make_unique<my_expression>(my_variable{"b"})}),
+        std::make_unique<my_expression>(my_variable{"a"})};
+
+    std::unordered_set<std::string> variables;
+    collect_variables_with_dag_walker(expr, variables);
+
+    REQUIRE(variables.size() == 2);
+    REQUIRE(variables.count("a") == 1);
+    REQUIRE(variables.count("b") == 1);
+}
+
+TEST_CASE("ExpressionGraph - DOT generation for single variable", "[expression_graph][dot]") {
+    my_expression expr = my_variable{"x"};
+    std::ostringstream out;
+
+    write_expression_to_dot(expr, out, "TestGraph");
+
+    std::string result = out.str();
+    REQUIRE_THAT(result, ContainsSubstring("digraph TestGraph"));
+    REQUIRE_THAT(result, ContainsSubstring("x"));
+}
+
+TEST_CASE("ExpressionGraph - DOT generation for AND expression", "[expression_graph][dot]") {
+    my_expression expr = my_and{std::make_unique<my_expression>(my_variable{"a"}),
+                                std::make_unique<my_expression>(my_variable{"b"})};
+    std::ostringstream out;
+
+    write_expression_to_dot(expr, out, "ANDGraph");
+
+    std::string result = out.str();
+    REQUIRE_THAT(result, ContainsSubstring("digraph ANDGraph"));
+    REQUIRE_THAT(result, ContainsSubstring("AND"));
+    REQUIRE_THAT(result, ContainsSubstring("a"));
+    REQUIRE_THAT(result, ContainsSubstring("b"));
+    REQUIRE_THAT(result, ContainsSubstring("->"));  // Should have edges
+}
+
+TEST_CASE("ExpressionGraph - DOT generation for OR expression", "[expression_graph][dot]") {
+    my_expression expr = my_or{std::make_unique<my_expression>(my_variable{"x"}),
+                               std::make_unique<my_expression>(my_variable{"y"})};
+    std::ostringstream out;
+
+    write_expression_to_dot(expr, out, "ORGraph");
+
+    std::string result = out.str();
+    REQUIRE_THAT(result, ContainsSubstring("digraph ORGraph"));
+    REQUIRE_THAT(result, ContainsSubstring("OR"));
+}
+
+TEST_CASE("ExpressionGraph - DOT generation for NOT expression", "[expression_graph][dot]") {
+    my_expression expr = my_not{std::make_unique<my_expression>(my_variable{"z"})};
+    std::ostringstream out;
+
+    write_expression_to_dot(expr, out, "NOTGraph");
+
+    std::string result = out.str();
+    REQUIRE_THAT(result, ContainsSubstring("digraph NOTGraph"));
+    REQUIRE_THAT(result, ContainsSubstring("NOT"));
+}
+
+TEST_CASE("ExpressionGraph - DOT generation for XOR expression", "[expression_graph][dot]") {
+    my_expression expr = my_xor{std::make_unique<my_expression>(my_variable{"p"}),
+                                std::make_unique<my_expression>(my_variable{"q"})};
+    std::ostringstream out;
+
+    write_expression_to_dot(expr, out, "XORGraph");
+
+    std::string result = out.str();
+    REQUIRE_THAT(result, ContainsSubstring("digraph XORGraph"));
+    REQUIRE_THAT(result, ContainsSubstring("XOR"));
+}
+
+TEST_CASE("ExpressionGraph - Mermaid generation for single variable",
+          "[expression_graph][mermaid]") {
+    my_expression expr = my_variable{"x"};
+    std::ostringstream out;
+
+    write_expression_to_mermaid(expr, out, "TestGraph");
+
+    std::string result = out.str();
+    REQUIRE_THAT(result, ContainsSubstring("flowchart TD"));
+    REQUIRE_THAT(result, ContainsSubstring("x"));
+}
+
+TEST_CASE("ExpressionGraph - Mermaid generation for AND expression",
+          "[expression_graph][mermaid]") {
+    my_expression expr = my_and{std::make_unique<my_expression>(my_variable{"a"}),
+                                std::make_unique<my_expression>(my_variable{"b"})};
+    std::ostringstream out;
+
+    write_expression_to_mermaid(expr, out, "ANDGraph");
+
+    std::string result = out.str();
+    REQUIRE_THAT(result, ContainsSubstring("flowchart TD"));
+    REQUIRE_THAT(result, ContainsSubstring("AND"));
+    REQUIRE_THAT(result, ContainsSubstring("a"));
+    REQUIRE_THAT(result, ContainsSubstring("b"));
+    REQUIRE_THAT(result, ContainsSubstring("-->"));  // Should have edges
+}
+
+TEST_CASE("ExpressionGraph - Mermaid generation for complex expression",
+          "[expression_graph][mermaid]") {
+    // (a AND b) OR c
+    my_expression expr = my_or{
+        std::make_unique<my_expression>(my_and{std::make_unique<my_expression>(my_variable{"a"}),
+                                               std::make_unique<my_expression>(my_variable{"b"})}),
+        std::make_unique<my_expression>(my_variable{"c"})};
+    std::ostringstream out;
+
+    write_expression_to_mermaid(expr, out, "ComplexGraph");
+
+    std::string result = out.str();
+    REQUIRE_THAT(result, ContainsSubstring("flowchart TD"));
+    REQUIRE_THAT(result, ContainsSubstring("OR"));
+    REQUIRE_THAT(result, ContainsSubstring("AND"));
 }

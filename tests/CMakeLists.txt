@@ -80,6 +80,7 @@ endif()
 add_executable(unit_tests
     unit/test_main.cpp
     unit/test_expression_parser.cpp
+    unit/test_expression_adapter.cpp
     unit/test_teddy_graph.cpp
     unit/test_cudd_graph.cpp
     unit/test_expression_graph.cpp
