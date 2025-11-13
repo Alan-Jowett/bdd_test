@@ -1,5 +1,11 @@
-# PowerShell script to regenerate all reference analysis files with updated styling
-# This ensures all reference files have the dark-mode friendly text colors
+# PowerShell script to regenerate all reference analysis files for TeDDy and CUDD methods
+# This ensures all reference files have the unified Mermaid format
+
+param(
+    [Parameter(Position=0)]
+    [ValidateSet("teddy", "cudd", "both")]
+    [string]$Method = "both"
+)
 
 $expressions = @(
     "all_operators.txt",
@@ -24,53 +30,73 @@ $edgeCaseExpressions = @(
     "edge_cases\unicode_chars_regression.txt"
 )
 
-Write-Host "Regenerating reference analysis files with updated dark-mode styling..." -ForegroundColor Green
+Write-Host "Regenerating reference analysis files for method: $Method" -ForegroundColor Green
 
-# Main expressions
-foreach ($expr in $expressions) {
-    Write-Host "Processing: $expr" -ForegroundColor Yellow
-    $exprPath = "test_expressions\$expr"
+function Update-ReferenceFiles {
+    param(
+        [string]$MethodName,
+        [string]$MethodFlag,
+        [string]$OutputDir
+    )
 
-    if (Test-Path $exprPath) {
-        & ".\build\bin\Release\bdd_demo.exe" --mermaid $exprPath
+    Write-Host "`n--- Processing $MethodName method ---" -ForegroundColor Cyan
 
-        $baseName = [System.IO.Path]::GetFileNameWithoutExtension($expr)
-        $sourceFile = "test_expressions\${baseName}_analysis.md"
-        $destFile = "test_expressions\teddy_reference_outputs\${baseName}_analysis.md"
+    # Main expressions
+    foreach ($expr in $expressions) {
+        Write-Host "Processing: $expr" -ForegroundColor Yellow
+        $exprPath = "test_expressions\$expr"
 
-        if (Test-Path $sourceFile) {
-            Copy-Item $sourceFile $destFile -Force
-            Write-Host "  ✓ Updated: $destFile" -ForegroundColor Green
+        if (Test-Path $exprPath) {
+            & ".\build\bin\Release\bdd_demo.exe" --mermaid $MethodFlag $exprPath
+
+            $baseName = [System.IO.Path]::GetFileNameWithoutExtension($expr)
+            $sourceFile = "test_expressions\${baseName}_analysis.md"
+            $destFile = "$OutputDir\${baseName}_analysis.md"
+
+            if (Test-Path $sourceFile) {
+                Copy-Item $sourceFile $destFile -Force
+                Write-Host "  ✓ Updated: $destFile" -ForegroundColor Green
+            } else {
+                Write-Host "  ✗ Source file not found: $sourceFile" -ForegroundColor Red
+            }
         } else {
-            Write-Host "  ✗ Source file not found: $sourceFile" -ForegroundColor Red
+            Write-Host "  ✗ Expression file not found: $exprPath" -ForegroundColor Red
         }
-    } else {
-        Write-Host "  ✗ Expression file not found: $exprPath" -ForegroundColor Red
+    }
+
+    # Edge case expressions
+    foreach ($expr in $edgeCaseExpressions) {
+        Write-Host "Processing edge case: $expr" -ForegroundColor Yellow
+        $exprPath = "test_expressions\$expr"
+
+        if (Test-Path $exprPath) {
+            & ".\build\bin\Release\bdd_demo.exe" --mermaid $MethodFlag $exprPath
+
+            $baseName = [System.IO.Path]::GetFileNameWithoutExtension($expr)
+            # Edge case files are generated in the edge_cases subdirectory
+            $sourceFile = "test_expressions\edge_cases\${baseName}_analysis.md"
+            $destFile = "$OutputDir\${baseName}_analysis.md"
+
+            if (Test-Path $sourceFile) {
+                Copy-Item $sourceFile $destFile -Force
+                Write-Host "  ✓ Updated: $destFile" -ForegroundColor Green
+            } else {
+                Write-Host "  ✗ Source file not found: $sourceFile" -ForegroundColor Red
+            }
+        } else {
+            Write-Host "  ✗ Expression file not found: $exprPath" -ForegroundColor Red
+        }
     }
 }
 
-# Edge case expressions
-foreach ($expr in $edgeCaseExpressions) {
-    Write-Host "Processing edge case: $expr" -ForegroundColor Yellow
-    $exprPath = "test_expressions\$expr"
-
-    if (Test-Path $exprPath) {
-        & ".\build\bin\Release\bdd_demo.exe" --mermaid $exprPath
-
-        $baseName = [System.IO.Path]::GetFileNameWithoutExtension($expr)
-        $sourceFile = "test_expressions\${baseName}_analysis.md"
-        $destFile = "test_expressions\teddy_reference_outputs\${baseName}_analysis.md"
-
-        if (Test-Path $sourceFile) {
-            Copy-Item $sourceFile $destFile -Force
-            Write-Host "  ✓ Updated: $destFile" -ForegroundColor Green
-        } else {
-            Write-Host "  ✗ Source file not found: $sourceFile" -ForegroundColor Red
-        }
-    } else {
-        Write-Host "  ✗ Expression file not found: $exprPath" -ForegroundColor Red
-    }
+# Process based on selected method - now using unified reference output directory
+if ($Method -eq "teddy" -or $Method -eq "both") {
+    Update-ReferenceFiles -MethodName "TeDDy" -MethodFlag "--method=teddy" -OutputDir "test_expressions\reference_output"
 }
 
-Write-Host "✅ Reference file regeneration complete!" -ForegroundColor Green
-Write-Host "All Mermaid diagrams now include dark-mode friendly text colors (color:#000)" -ForegroundColor Cyan
+if ($Method -eq "cudd" -or $Method -eq "both") {
+    Update-ReferenceFiles -MethodName "CUDD" -MethodFlag "--method=cudd" -OutputDir "test_expressions\reference_output"
+}
+
+Write-Host "`n✅ Reference file regeneration complete for method: $Method!" -ForegroundColor Green
+Write-Host "All Mermaid diagrams now include unified format with CSS definitions" -ForegroundColor Cyan

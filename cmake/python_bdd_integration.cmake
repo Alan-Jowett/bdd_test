@@ -101,7 +101,7 @@ get_filename_component(BASE_NAME \"\${EXPRESSION_FILE}\" NAME_WE)
 
 # Compare node table files (Python output vs TeDDy expected output)
 set(PYTHON_NODES_FILE \"${CMAKE_SOURCE_DIR}/test_expressions/\${BASE_NAME}_bdd_nodes.txt\")
-set(TEDDY_NODES_FILE \"${CMAKE_SOURCE_DIR}/test_expressions/teddy_expected_output/\${BASE_NAME}_bdd_nodes.txt\")
+set(TEDDY_NODES_FILE "${CMAKE_SOURCE_DIR}/test_expressions/expected_output/\${BASE_NAME}_bdd_nodes.txt")
 
 # Check if both files exist
 if(NOT EXISTS \"\${PYTHON_NODES_FILE}\")
@@ -179,7 +179,7 @@ message(\"✓ Python vs TeDDy comparison test passed for \${TEST_NAME}\")
             # Filter out files that don't have TeDDy reference outputs
             foreach(EXPR_FILE ${EXPRESSION_FILES})
                 get_filename_component(BASE_NAME "${EXPR_FILE}" NAME_WE)
-                set(TEDDY_REF_FILE "${CMAKE_SOURCE_DIR}/test_expressions/teddy_expected_output/${BASE_NAME}_bdd_nodes.txt")
+                set(TEDDY_REF_FILE "${CMAKE_SOURCE_DIR}/test_expressions/expected_output/${BASE_NAME}_bdd_nodes.txt")
 
                 # Skip eight_queens test due to timeout issues
                 if(BASE_NAME STREQUAL "eight_queens")

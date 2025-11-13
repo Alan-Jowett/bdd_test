@@ -128,7 +128,7 @@ endfunction()
 
 # Define test helper function for Mermaid generation tests
 function(add_mermaid_test TEST_NAME EXPRESSION_FILE)
-    # Create a test that uses --mermaid and verifies the analysis markdown file
+    # Create a test that uses --mermaid with --method=teddy and verifies the analysis markdown file
     add_test(
         NAME ${TEST_NAME}
         COMMAND ${CMAKE_COMMAND}
@@ -137,8 +137,27 @@ function(add_mermaid_test TEST_NAME EXPRESSION_FILE)
             -DEXECUTABLE=$<TARGET_FILE:bdd_demo>
             -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
             -DBINARY_DIR=${CMAKE_BINARY_DIR}
-            -DREFERENCE_DIR=${CMAKE_SOURCE_DIR}/test_expressions/teddy_reference_outputs
+            -DREFERENCE_DIR=${CMAKE_SOURCE_DIR}/test_expressions/reference_output
             -DMERMAID_TEST=TRUE
+            -DTEDDY_METHOD=TRUE
+            -P ${CMAKE_SOURCE_DIR}/cmake/run_bdd_test.cmake
+    )
+endfunction()
+
+# Function to add CUDD mermaid tests
+function(add_cudd_mermaid_test TEST_NAME EXPRESSION_FILE)
+    # Create a test that uses --mermaid with --method=cudd and verifies against unified reference outputs
+    add_test(
+        NAME ${TEST_NAME}
+        COMMAND ${CMAKE_COMMAND}
+            -DTEST_NAME=${TEST_NAME}
+            -DEXPRESSION_FILE=${EXPRESSION_FILE}
+            -DEXECUTABLE=$<TARGET_FILE:bdd_demo>
+            -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+            -DBINARY_DIR=${CMAKE_BINARY_DIR}
+            -DREFERENCE_DIR=${CMAKE_SOURCE_DIR}/test_expressions/reference_output
+            -DMERMAID_TEST=TRUE
+            -DCUDD_METHOD=TRUE
             -P ${CMAKE_SOURCE_DIR}/cmake/run_bdd_test.cmake
     )
 
@@ -163,8 +182,8 @@ function(register_bdd_tests)
 
         # Skip generated files (those with _bdd_nodes or _expression_tree in name)
         if(NOT "${BASE_NAME}" MATCHES ".*_(bdd_nodes|expression_tree|bdd)$")
-            # Check if reference files exist in teddy_expected_output directory
-            set(DEFAULT_NODES_FILE "${CMAKE_SOURCE_DIR}/test_expressions/teddy_expected_output/${BASE_NAME}_bdd_nodes.txt")
+            # Check if reference files exist in expected_output directory
+            set(DEFAULT_NODES_FILE "${CMAKE_SOURCE_DIR}/test_expressions/expected_output/${BASE_NAME}_bdd_nodes.txt")
             if(EXISTS "${DEFAULT_NODES_FILE}")
                 # Create test name, handling cases where BASE_NAME already starts with "test_"
                 if("${BASE_NAME}" MATCHES "^test_.*")
@@ -182,7 +201,7 @@ function(register_bdd_tests)
                 message(STATUS "Added TeDDy method test: ${TEST_NAME}_teddy")
 
                 # Check if CUDD reference files exist before adding CUDD test
-                set(CUDD_NODES_FILE "${CMAKE_SOURCE_DIR}/test_expressions/cudd_expected_output/${BASE_NAME}_bdd_nodes.txt")
+                set(CUDD_NODES_FILE "${CMAKE_SOURCE_DIR}/test_expressions/expected_output/${BASE_NAME}_bdd_nodes.txt")
                 if(EXISTS "${CUDD_NODES_FILE}")
                     # Add CUDD method test (should produce identical results)
                     add_bdd_cudd_test("${TEST_NAME}_cudd" "${REL_PATH}")
@@ -217,8 +236,8 @@ function(register_bdd_tests)
 
         # Skip generated files
         if(NOT "${BASE_NAME}" MATCHES ".*_(bdd_nodes|expression_tree|bdd)$")
-            # Check if reference files exist in teddy_expected_output directory (not in edge_cases subdirectory)
-            set(DEFAULT_NODES_FILE "${CMAKE_SOURCE_DIR}/test_expressions/teddy_expected_output/${BASE_NAME}_bdd_nodes.txt")
+            # Check if reference files exist in expected_output directory (not in edge_cases subdirectory)
+            set(DEFAULT_NODES_FILE "${CMAKE_SOURCE_DIR}/test_expressions/expected_output/${BASE_NAME}_bdd_nodes.txt")
             if(EXISTS "${DEFAULT_NODES_FILE}")
                 # Create test name, handling cases where BASE_NAME already starts with "test_"
                 if("${BASE_NAME}" MATCHES "^test_.*")
@@ -236,7 +255,7 @@ function(register_bdd_tests)
                 message(STATUS "Added TeDDy method edge case test: ${TEST_NAME}_teddy")
 
                 # Check if CUDD edge case reference files exist before adding CUDD test
-                set(CUDD_EDGE_NODES_FILE "${CMAKE_SOURCE_DIR}/test_expressions/cudd_expected_output/edge_cases/${BASE_NAME}_bdd_nodes.txt")
+                set(CUDD_EDGE_NODES_FILE "${CMAKE_SOURCE_DIR}/test_expressions/expected_output/edge_cases/${BASE_NAME}_bdd_nodes.txt")
                 if(EXISTS "${CUDD_EDGE_NODES_FILE}")
                     # Add CUDD method test for edge cases (should produce identical results)
                     add_bdd_cudd_test("${TEST_NAME}_cudd" "${REL_PATH}")
@@ -266,20 +285,36 @@ function(register_mermaid_tests)
         # Skip generated files (those with _bdd_nodes or _expression_tree in name)
         if(NOT "${BASE_NAME}" MATCHES ".*_(bdd_nodes|expression_tree|bdd)$")
             # Check if reference analysis file exists
-            set(REFERENCE_ANALYSIS_FILE "${CMAKE_SOURCE_DIR}/test_expressions/teddy_reference_outputs/${BASE_NAME}_analysis.md")
+            set(REFERENCE_ANALYSIS_FILE "${CMAKE_SOURCE_DIR}/test_expressions/reference_output/${BASE_NAME}_analysis.md")
+
             if(EXISTS "${REFERENCE_ANALYSIS_FILE}")
                 # Create test name, handling cases where BASE_NAME already starts with "test_"
                 if("${BASE_NAME}" MATCHES "^test_.*")
-                    set(TEST_NAME "test_mermaid_${BASE_NAME}")
+                    set(TEDDY_TEST_NAME "test_mermaid_${BASE_NAME}_teddy")
                     # Remove redundant "test_" prefix to avoid "test_mermaid_test_"
-                    string(REGEX REPLACE "^test_mermaid_test_" "test_mermaid_" TEST_NAME "${TEST_NAME}")
+                    string(REGEX REPLACE "^test_mermaid_test_" "test_mermaid_" TEDDY_TEST_NAME "${TEDDY_TEST_NAME}")
                 else()
-                    set(TEST_NAME "test_mermaid_${BASE_NAME}")
+                    set(TEDDY_TEST_NAME "test_mermaid_${BASE_NAME}_teddy")
                 endif()
 
-                # Add mermaid test
-                add_mermaid_test("${TEST_NAME}" "${CMAKE_SOURCE_DIR}/test_expressions/${REL_PATH}")
-                message(STATUS "Added mermaid test: ${TEST_NAME}")
+                # Add TeDDy mermaid test
+                add_mermaid_test("${TEDDY_TEST_NAME}" "${CMAKE_SOURCE_DIR}/test_expressions/${REL_PATH}")
+                message(STATUS "Added TeDDy mermaid test: ${TEDDY_TEST_NAME}")
+
+                # Also add CUDD test for the same file (since outputs are identical and in unified reference)
+                # But skip edge case files as CUDD doesn't have edge case-specific tests
+                if(NOT "${REL_PATH}" MATCHES "edge_cases/")
+                    # Create CUDD test name
+                    if("${BASE_NAME}" MATCHES "^test_.*")
+                        set(CUDD_TEST_NAME "test_mermaid_${BASE_NAME}_cudd")
+                        string(REGEX REPLACE "^test_mermaid_test_" "test_mermaid_" CUDD_TEST_NAME "${CUDD_TEST_NAME}")
+                    else()
+                        set(CUDD_TEST_NAME "test_mermaid_${BASE_NAME}_cudd")
+                    endif()
+
+                    add_cudd_mermaid_test("${CUDD_TEST_NAME}" "${CMAKE_SOURCE_DIR}/test_expressions/${REL_PATH}")
+                    message(STATUS "Added CUDD mermaid test: ${CUDD_TEST_NAME}")
+                endif()
             endif()
         endif()
     endforeach()
@@ -295,14 +330,17 @@ function(register_mermaid_tests)
         if(NOT "${BASE_NAME}" MATCHES ".*_(bdd_nodes|expression_tree|bdd)$" AND
            NOT "${BASE_NAME}" MATCHES "(^|_)(error|empty|invalid|missing|comments_only|lenient_parsing)($|_)")
             # Check if reference analysis file exists
-            set(REFERENCE_ANALYSIS_FILE "${CMAKE_SOURCE_DIR}/test_expressions/teddy_reference_outputs/${BASE_NAME}_analysis.md")
-            if(EXISTS "${REFERENCE_ANALYSIS_FILE}")
-                # Create test name
-                set(TEST_NAME "test_mermaid_${BASE_NAME}")
+            set(REFERENCE_ANALYSIS_FILE "${CMAKE_SOURCE_DIR}/test_expressions/reference_output/${BASE_NAME}_analysis.md")
 
-                # Add mermaid test with full path
-                add_mermaid_test("${TEST_NAME}" "${EXPRESSION_FILE}")
-                message(STATUS "Added edge case mermaid test: ${TEST_NAME}")
+            if(EXISTS "${REFERENCE_ANALYSIS_FILE}")
+                # Create TeDDy test name
+                set(TEDDY_TEST_NAME "test_mermaid_${BASE_NAME}_teddy")
+
+                # Add TeDDy mermaid test with full path
+                add_mermaid_test("${TEDDY_TEST_NAME}" "${EXPRESSION_FILE}")
+                message(STATUS "Added edge case TeDDy mermaid test: ${TEDDY_TEST_NAME}")
+
+                # Note: Edge cases are TeDDy-only tests, no CUDD equivalent needed
             endif()
         endif()
     endforeach()

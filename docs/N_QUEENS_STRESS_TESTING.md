@@ -58,7 +58,7 @@ The TeDDy library enables:
 
 ### Test Framework Integration
 - All three tests fully integrated into CMake/CTest framework
-- Reference files stored in `teddy_expected_output/` and `reordered/` directories
+- Reference files stored in `expected_output/` and `reordered/` directories
 - Deterministic node numbering ensures reproducible results
 - Complete test coverage from educational (4-queens) to advanced stress testing (8-queens)
 
@@ -68,7 +68,7 @@ test_expressions/
 ├── four_queens.txt          # 4×4 N-Queens constraint formula
 ├── six_queens.txt           # 6×6 N-Queens constraint formula
 ├── eight_queens.txt         # 8×8 N-Queens constraint formula
-├── teddy_expected_output/   # Reference files for TeDDy expected output
+├── expected_output/   # Reference files for expected output
 │   ├── four_queens_*.dot
 │   ├── six_queens_*.dot
 │   ├── eight_queens_*.dot

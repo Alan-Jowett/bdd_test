@@ -33,10 +33,10 @@ using my_expression = std::variant<my_and, my_or, my_not, my_xor, my_variable>;
 **Visual Example**: Here's how a simple expression `(a AND b) OR (c AND d)` is parsed and converted:
 
 **Expression Tree**:
-![Simple Expression Tree](../test_expressions/teddy_expected_output/simple_expression_expression_tree.png)
+![Simple Expression Tree](../test_expressions/expected_output/simple_expression_expression_tree.png)
 
 **Resulting BDD**:
-![Simple BDD](../test_expressions/teddy_expected_output/simple_expression_bdd.png)
+![Simple BDD](../test_expressions/expected_output/simple_expression_bdd.png)
 
 **Lessons Learned**:
 - **Variant-based AST**: std::variant provides type-safe, efficient AST nodes with C++20's pattern matching
@@ -80,7 +80,7 @@ teddy::bdd_manager::diagram_t convert_to_bdd_with_teddy_adapter(const my_express
 **Visual Demonstration**: The same 4-Queens problem with different variable ordering strategies:
 
 **Default Ordering (95 nodes)**:
-![4-Queens Default BDD](../test_expressions/teddy_expected_output/four_queens_bdd.png)
+![4-Queens Default BDD](../test_expressions/expected_output/four_queens_bdd.png)
 
 **Optimized Ordering (115 nodes)**:
 ![4-Queens Reordered BDD](../test_expressions/reordered/four_queens_bdd.png)
@@ -124,7 +124,7 @@ teddy::bdd_manager::diagram_t convert_to_bdd_with_teddy_adapter(const my_express
 **Visual Scalability Demonstration**:
 
 **4-Queens BDD (95 nodes) - Still Visually Manageable**:
-![4-Queens BDD](../test_expressions/teddy_expected_output/four_queens_bdd.png)
+![4-Queens BDD](../test_expressions/expected_output/four_queens_bdd.png)
 
 *Note: 6-Queens (3,361 nodes) and 8-Queens (71,166 nodes) BDDs are too complex for meaningful PNG visualization, demonstrating the practical visualization limits as problems scale.*
 
@@ -138,10 +138,10 @@ teddy::bdd_manager::diagram_t convert_to_bdd_with_teddy_adapter(const my_express
 **Example Pipeline Output**: For the filter expression `((x0 AND x1) OR (NOT x2)) XOR ((x3 AND (NOT x4)) OR (x5 XOR x6))`:
 
 **Expression Tree Visualization**:
-![Filter Expression Tree](../test_expressions/teddy_expected_output/filter_expression_expression_tree.png)
+![Filter Expression Tree](../test_expressions/expected_output/filter_expression_expression_tree.png)
 
 **Generated BDD Structure**:
-![Filter Expression BDD](../test_expressions/teddy_expected_output/filter_expression_bdd.png)
+![Filter Expression BDD](../test_expressions/expected_output/filter_expression_bdd.png)
 
 **Variable Name Preservation**:
 ```

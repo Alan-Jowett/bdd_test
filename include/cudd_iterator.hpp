@@ -172,6 +172,13 @@ class cudd_iterator {
         }
     }
 
+    std::string get_css_class() const {
+        if (!node_)
+            return "default";
+
+        return is_terminal() ? "terminal" : "bddVariable";
+    }
+
     /**
      * @brief Get DOT edge attributes to a child
      */
