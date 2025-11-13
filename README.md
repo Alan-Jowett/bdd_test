@@ -18,7 +18,7 @@ For detailed documentation, see the [docs/](docs/) directory:
 - **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
 - **[Contributing](docs/CONTRIBUTING.md)** - Development guidelines and code style
 - **[API Documentation](docs/DOCUMENTATION.md)** - Online docs and Doxygen setup
-- **[Reference Analysis Files](test_expressions/teddy_reference_outputs/index.md)** - BDD analysis examples with visual diagrams
+- **[Reference Analysis Files](test_expressions/reference_output/index.md)** - BDD analysis examples with visual diagrams
 - **[Complete Documentation Index](docs/README.md)** - Full documentation overview
 
 ## Features
@@ -147,7 +147,7 @@ For more visualization examples, see [docs/VISUALIZATIONS.md](docs/VISUALIZATION
 
 ## Python BDD Comparison Tool
 
-This project includes a **Python-based equivalent of bdd_demo.exe** for cross-validation and CUDD canonicality issue detection. The Python implementation uses the trusted `dd` (Decision Diagrams) library to produce canonical ROBDDs for comparison.
+This project includes a **Python-based equivalent of bdd_demo.exe** for cross-validation of BDD implementations. The Python implementation uses the trusted `dd` (Decision Diagrams) library to produce canonical ROBDDs for comparison and verification.
 
 ### Quick Start
 ```bash
@@ -203,7 +203,11 @@ bdd_test/
 │   ├── requirements.txt              # Python dependencies
 │   └── setup_python_bdd.py          # Setup and verification
 ├── test_expressions/                  # Test expression files and outputs
-│   └── teddy_reference_outputs/       # BDD analysis examples (see index.md)
+│   ├── expected_output/               # Reference output files for validation
+│   ├── edge_cases/                    # Edge case test files
+│   ├── reference_output/              # BDD analysis examples (see index.md)
+│   ├── reordered/                     # Variable reordering test results
+│   └── default_ordering/             # Default ordering test results
 └── build/                             # Build artifacts and executables
 ```
 

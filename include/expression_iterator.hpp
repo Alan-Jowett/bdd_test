@@ -1,3 +1,19 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
+
+/**
+ * @file expression_iterator.hpp
+ * @brief Iterator interface for expression tree traversal and BDD operations
+ *
+ * This file provides iterator classes and utilities for traversing expression trees
+ * and performing Binary Decision Diagram operations. It includes specialized iterators
+ * for different expression node types and supports various traversal patterns.
+ *
+ * @author Alan Jowett
+ * @date 2025
+ * @copyright Copyright (c) 2025 Alan Jowett. Licensed under the MIT License
+ */
+
 #pragma once
 
 #include <format>

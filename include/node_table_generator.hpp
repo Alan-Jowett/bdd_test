@@ -120,6 +120,9 @@ struct MarkdownTableConfig {
 template <NodeTableIterator Iterator>
 void generate_text_table(const Iterator& root_iterator, std::ostream& out,
                          const TextTableConfig& config = TextTableConfig()) {
+    static_assert(NodeTableIterator<Iterator>,
+                  "Iterator must satisfy NodeTableIterator concept for text table generation");
+
     // Collect all nodes using DAG walker
     auto nodes = dag_walker::collect_unique_nodes_topological(root_iterator);
 
@@ -201,6 +204,9 @@ void generate_text_table(const Iterator& root_iterator, std::ostream& out,
 template <NodeTableIterator Iterator>
 void generate_markdown_table(const Iterator& root_iterator, std::ostream& out,
                              const MarkdownTableConfig& config = MarkdownTableConfig()) {
+    static_assert(NodeTableIterator<Iterator>,
+                  "Iterator must satisfy NodeTableIterator concept for Markdown table generation");
+
     // Collect all nodes using DAG walker
     auto nodes = dag_walker::collect_unique_nodes_topological(root_iterator);
 
@@ -283,6 +289,9 @@ void generate_markdown_table(const Iterator& root_iterator, std::ostream& out,
 template <NodeTableIterator Iterator>
 void generate_csv_table(const Iterator& root_iterator, std::ostream& out,
                         bool include_headers = true) {
+    static_assert(NodeTableIterator<Iterator>,
+                  "Iterator must satisfy NodeTableIterator concept for CSV table generation");
+
     // Collect all nodes using DAG walker
     auto nodes = dag_walker::collect_unique_nodes_topological(root_iterator);
 
@@ -355,6 +364,9 @@ void generate_csv_table(const Iterator& root_iterator, std::ostream& out,
 template <NodeTableIterator Iterator>
 void generate_table(const Iterator& root_iterator, std::ostream& out,
                     const std::string& format = "text", bool include_headers = true) {
+    static_assert(NodeTableIterator<Iterator>,
+                  "Iterator must satisfy NodeTableIterator concept for table generation");
+
     if (format == "text") {
         generate_text_table(root_iterator, out, TextTableConfig(include_headers));
     } else if (format == "markdown") {

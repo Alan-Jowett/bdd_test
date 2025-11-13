@@ -1,3 +1,19 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
+
+/**
+ * @file teddy_iterator.hpp
+ * @brief TeDDy BDD iterator interface for graph traversal
+ *
+ * This file provides iterator classes for traversing TeDDy Binary Decision Diagrams.
+ * The iterators support various traversal patterns and are compatible with the
+ * generic graph generation templates.
+ *
+ * @author Alan Jowett
+ * @date 2025
+ * @copyright Copyright (c) 2025 Alan Jowett. Licensed under the MIT License
+ */
+
 #pragma once
 
 #include <format>
@@ -15,6 +31,13 @@
  * This iterator provides the interface needed for both DOT and Mermaid generation
  * using the generic template systems. It wraps TeDDy library BDD nodes and provides
  * all the required interface methods for both graph generators.
+ */
+/**
+ * @class teddy_iterator
+ * @brief Iterator for traversing TeDDy Binary Decision Diagrams
+ *
+ * Provides iteration capabilities for TeDDy BDD nodes, supporting various
+ * graph traversal operations. Compatible with generic graph generation templates.
  */
 class teddy_iterator {
    public:
@@ -55,11 +78,19 @@ class teddy_iterator {
         return *this;
     }
 
-    // Iterator interface
+    /**
+     * @brief Check if the iterator is pointing to a valid node
+     * @return true if the iterator is valid, false otherwise
+     */
     bool is_valid() const {
         return current_node_ != nullptr;
     }
 
+    /**
+     * @brief Compare two iterators for equality
+     * @param other The other iterator to compare with
+     * @return true if iterators point to the same node, false otherwise
+     */
     bool operator==(const teddy_iterator& other) const {
         return current_node_ == other.current_node_;
     }
@@ -78,6 +109,10 @@ class teddy_iterator {
         return current_node_;
     }
 
+    /**
+     * @brief Get the display label for this node
+     * @return String representation of the node (variable name or terminal value)
+     */
     std::string get_label() const {
         if (!current_node_)
             return "";
@@ -119,6 +154,10 @@ class teddy_iterator {
         return current_node_->is_terminal() ? "terminal" : "bddVariable";
     }
 
+    /**
+     * @brief Get child iterators for this node
+     * @return Vector of child iterators (low and high branches for variable nodes)
+     */
     std::vector<teddy_iterator> get_children() const {
         std::vector<teddy_iterator> children;
 
@@ -150,6 +189,10 @@ class teddy_iterator {
     }
 
     // NodeTableIterator concept methods
+    /**
+     * @brief Check if this node is a terminal (leaf) node
+     * @return true if this is a terminal node, false if it's a variable node
+     */
     bool is_terminal() const {
         return current_node_ && current_node_->is_terminal();
     }

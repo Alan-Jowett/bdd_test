@@ -48,20 +48,20 @@ ctest -C Release -L python
 
 ## 🎯 **Purpose**
 
-This Python implementation serves as a **canonical reference** for identifying and resolving CUDD integration issues:
+This Python implementation serves as a **canonical reference** for cross-library BDD validation:
 
 - **✅ Trusted Reference**: Uses the academically-backed `dd` library
 - **✅ Canonical ROBDDs**: Produces proper reduced, ordered BDDs
 - **✅ Identical Output**: Same formats as C++ implementation
 - **✅ Cross-Validation**: Compare TeDDy vs CUDD vs Python
 
-## 🔬 **CUDD Issue Detection**
+## 🔬 **Cross-Library Validation**
 
-The Python implementation immediately reveals canonicality problems:
+The Python implementation enables comprehensive BDD verification:
 
 **Example: `(a AND b) OR (c AND d)`**
 - **✅ TeDDy**: 6 nodes (canonical)
-- **❌ CUDD**: 5 nodes (non-canonical!)
+- **✅ CUDD**: 6 nodes (canonical)
 - **✅ Python**: 6 nodes (canonical reference)
 
 ## 📖 **Documentation**
@@ -101,7 +101,7 @@ done
 ---
 
 **Related Issues:**
-- GitHub Issue #44 - CUDD canonicality problems
+- [CUDD Canonical Output Fix](../docs/CUDD_CANONICAL_OUTPUT_FIX.md) - Documents resolution of previous canonicality issues
 - Original request for Python BDD comparison tool
 
 **Dependencies:**

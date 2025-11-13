@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
+
 # Python BDD Integration for CMake
 # This file contains all Python BDD related CMake configuration
 # to keep the main CMakeLists.txt clean and organized.

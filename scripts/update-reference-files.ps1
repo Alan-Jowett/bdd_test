@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
+
 # PowerShell script to regenerate all reference analysis files for TeDDy and CUDD methods
 # This ensures all reference files have the unified Mermaid format
 
