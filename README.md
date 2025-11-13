@@ -147,7 +147,7 @@ For more visualization examples, see [docs/VISUALIZATIONS.md](docs/VISUALIZATION
 
 ## Python BDD Comparison Tool
 
-This project includes a **Python-based equivalent of bdd_demo.exe** for cross-validation and CUDD canonicality issue detection. The Python implementation uses the trusted `dd` (Decision Diagrams) library to produce canonical ROBDDs for comparison.
+This project includes a **Python-based equivalent of bdd_demo.exe** for cross-validation of BDD implementations. The Python implementation uses the trusted `dd` (Decision Diagrams) library to produce canonical ROBDDs for comparison and verification.
 
 ### Quick Start
 ```bash

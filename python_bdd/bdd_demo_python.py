@@ -5,7 +5,7 @@ Python BDD Demo - Binary Decision Diagram Converter
 A Python implementation equivalent to bdd_demo.exe that produces identical
 output formats for comparison with TeDDy and CUDD implementations.
 
-This tool helps identify canonicality issues by providing a reference
+This tool provides cross-library BDD validation by offering a reference
 Python BDD implementation using the 'dd' library.
 
 Usage: python bdd_demo_python.py [filename] [options]
