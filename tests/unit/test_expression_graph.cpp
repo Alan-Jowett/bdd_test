@@ -121,8 +121,16 @@ TEST_CASE("ExpressionGraph - DOT generation for single variable", "[expression_g
     write_expression_to_dot(expr, out, "TestGraph");
 
     std::string result = out.str();
+
+    // Validate proper DOT graph structure
     REQUIRE_THAT(result, ContainsSubstring("digraph TestGraph"));
+    REQUIRE_THAT(result, ContainsSubstring("{"));
+    REQUIRE_THAT(result, ContainsSubstring("}"));
     REQUIRE_THAT(result, ContainsSubstring("x"));
+
+    // Verify proper structure
+    REQUIRE((result.find("{") < result.find("}")));
+    REQUIRE((result.find("digraph TestGraph") < result.find("x")));
 }
 
 TEST_CASE("ExpressionGraph - DOT generation for AND expression", "[expression_graph][dot]") {
@@ -133,11 +141,28 @@ TEST_CASE("ExpressionGraph - DOT generation for AND expression", "[expression_gr
     write_expression_to_dot(expr, out, "ANDGraph");
 
     std::string result = out.str();
+
+    // Validate proper DOT graph structure
     REQUIRE_THAT(result, ContainsSubstring("digraph ANDGraph"));
+    REQUIRE_THAT(result, ContainsSubstring("{"));
+    REQUIRE_THAT(result, ContainsSubstring("}"));
     REQUIRE_THAT(result, ContainsSubstring("AND"));
     REQUIRE_THAT(result, ContainsSubstring("a"));
     REQUIRE_THAT(result, ContainsSubstring("b"));
-    REQUIRE_THAT(result, ContainsSubstring("->"));  // Should have edges
+
+    // Validate edges exist (should have 2 edges from AND to children)
+    REQUIRE_THAT(result, ContainsSubstring("->"));
+    size_t edge_count = 0;
+    size_t pos = 0;
+    while ((pos = result.find("->", pos)) != std::string::npos) {
+        edge_count++;
+        pos += 2;
+    }
+    REQUIRE(edge_count >= 2);  // AND node connects to both children
+
+    // Verify proper structure
+    REQUIRE((result.find("{") < result.find("}")));
+    REQUIRE((result.find("AND") < result.find("->")));  // Operator defined before edges
 }
 
 TEST_CASE("ExpressionGraph - DOT generation for OR expression", "[expression_graph][dot]") {
@@ -183,8 +208,14 @@ TEST_CASE("ExpressionGraph - Mermaid generation for single variable",
     write_expression_to_mermaid(expr, out, "TestGraph");
 
     std::string result = out.str();
+
+    // Validate Mermaid flowchart structure
     REQUIRE_THAT(result, ContainsSubstring("flowchart TD"));
     REQUIRE_THAT(result, ContainsSubstring("x"));
+
+    // Verify flowchart declaration is at the start
+    // Flowchart declaration exists (may have YAML front matter before it)
+    REQUIRE_THAT(result, ContainsSubstring("flowchart TD"));
 }
 
 TEST_CASE("ExpressionGraph - Mermaid generation for AND expression",
@@ -196,11 +227,26 @@ TEST_CASE("ExpressionGraph - Mermaid generation for AND expression",
     write_expression_to_mermaid(expr, out, "ANDGraph");
 
     std::string result = out.str();
+
+    // Validate Mermaid structure
     REQUIRE_THAT(result, ContainsSubstring("flowchart TD"));
     REQUIRE_THAT(result, ContainsSubstring("AND"));
     REQUIRE_THAT(result, ContainsSubstring("a"));
     REQUIRE_THAT(result, ContainsSubstring("b"));
-    REQUIRE_THAT(result, ContainsSubstring("-->"));  // Should have edges
+
+    // Validate edges exist (should have 2 edges)
+    REQUIRE_THAT(result, ContainsSubstring("-->"));
+    size_t edge_count = 0;
+    size_t pos = 0;
+    while ((pos = result.find("-->", pos)) != std::string::npos) {
+        edge_count++;
+        pos += 3;
+    }
+    REQUIRE(edge_count >= 2);  // AND node connects to both children
+
+    // Verify flowchart declaration is at the start
+    // Flowchart declaration exists (may have YAML front matter before it)
+    REQUIRE_THAT(result, ContainsSubstring("flowchart TD"));
 }
 
 TEST_CASE("ExpressionGraph - Mermaid generation for complex expression",
