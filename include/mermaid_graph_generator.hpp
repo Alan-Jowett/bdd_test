@@ -39,32 +39,74 @@ namespace mermaid_graph {
 /// @{
 
 // Node property concepts
+/**
+ * @brief Concept for iterators that provide node labels
+ * @tparam T The iterator type to check
+ *
+ * This concept verifies that the iterator can provide string labels
+ * for nodes in the graph, essential for generating readable Mermaid diagrams.
+ */
 template <typename T>
 concept has_get_label = requires(T t) {
     { t.get_label() } -> std::convertible_to<std::string>;
 };
 
+/**
+ * @brief Concept for iterators that provide node shapes
+ * @tparam T The iterator type to check
+ *
+ * Enables custom node shapes in Mermaid diagrams (circle, rect, diamond, etc.)
+ * for visual distinction of different node types.
+ */
 template <typename T>
 concept has_get_shape = requires(T t) {
     { t.get_shape() } -> std::convertible_to<std::string>;
 };
 
+/**
+ * @brief Concept for iterators that provide CSS classes
+ * @tparam T The iterator type to check
+ *
+ * Allows custom styling through CSS classes, enabling rich visual
+ * customization in web-based Mermaid diagram renderings.
+ */
 template <typename T>
 concept has_get_css_class = requires(T t) {
     { t.get_css_class() } -> std::convertible_to<std::string>;
 };
 
+/**
+ * @brief Concept for iterators that provide tooltips
+ * @tparam T The iterator type to check
+ *
+ * Enables interactive tooltips in Mermaid diagrams, providing additional
+ * information when users hover over nodes.
+ */
 template <typename T>
 concept has_get_tooltip = requires(T t) {
     { t.get_tooltip() } -> std::convertible_to<std::string>;
 };
 
 // Edge property concepts
+/**
+ * @brief Concept for iterators that provide edge labels
+ * @tparam T The iterator type to check
+ *
+ * Enables custom labels on edges between nodes, useful for showing
+ * decision conditions or probability values in BDD structures.
+ */
 template <typename T>
 concept has_get_edge_label = requires(T t, T child, std::size_t index) {
     { t.get_edge_label(child, index) } -> std::convertible_to<std::string>;
 };
 
+/**
+ * @brief Concept for iterators that provide edge styles
+ * @tparam T The iterator type to check
+ *
+ * Allows customization of edge appearance (solid, dashed, dotted, etc.)
+ * for visual distinction of different edge types in Mermaid diagrams.
+ */
 template <typename T>
 concept has_get_edge_style = requires(T t, T child, std::size_t index) {
     { t.get_edge_style(child, index) } -> std::convertible_to<std::string>;
@@ -131,6 +173,10 @@ struct MermaidConfig {
 template <MermaidGraphIterator Iterator>
 void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
                             const MermaidConfig& config = MermaidConfig()) {
+    static_assert(
+        MermaidGraphIterator<Iterator>,
+        "Iterator must satisfy MermaidGraphIterator concept for Mermaid graph generation");
+
     // Write YAML frontmatter if enabled
     if (config.show_frontmatter) {
         out << "---\n";
@@ -351,6 +397,10 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
 template <MermaidGraphIterator Iterator>
 void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
                             const std::string& graph_title) {
+    static_assert(
+        MermaidGraphIterator<Iterator>,
+        "Iterator must satisfy MermaidGraphIterator concept for Mermaid graph generation");
+
     MermaidConfig config;
     config.graph_title = graph_title;
     generate_mermaid_graph(root_iterator, out, config);

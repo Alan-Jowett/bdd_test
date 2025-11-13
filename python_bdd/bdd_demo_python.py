@@ -28,7 +28,21 @@ except ImportError:
 
 
 class ExpressionToken:
-    """Represents a token in a boolean expression"""
+    """Represents a token in a boolean expression.
+
+    A token is the smallest unit of meaning in an expression,
+    such as variables, operators, parentheses, or the end-of-file marker.
+
+    Attributes:
+        type (str): Token type ('variable', 'operator', 'lparen', 'rparen', 'eof')
+        value (str): The actual text value of the token
+        pos (int): Position in the source text where this token was found
+
+    Args:
+        token_type (str): The type classification of this token
+        value (str): The string content of the token
+        pos (int, optional): Source position. Defaults to 0.
+    """
 
     def __init__(self, token_type: str, value: str, pos: int = 0):
         self.type = token_type  # 'variable', 'operator', 'lparen', 'rparen', 'eof'
@@ -37,7 +51,26 @@ class ExpressionToken:
 
 
 class ExpressionLexer:
-    """Tokenizes boolean expressions"""
+    """Tokenizes boolean expressions into structured tokens.
+
+    This lexer breaks down boolean expressions into individual tokens
+    that can be consumed by the parser. It handles variables, operators,
+    parentheses, and whitespace according to standard boolean expression syntax.
+
+    Supported operators:
+        - AND: '&', '&&', 'AND', 'and'
+        - OR: '|', '||', 'OR', 'or'
+        - NOT: '!', '~', 'NOT', 'not'
+        - XOR: '^', 'XOR', 'xor'
+
+    Attributes:
+        text (str): The input expression text
+        pos (int): Current position in the text
+        tokens (List[ExpressionToken]): Generated tokens
+
+    Args:
+        text (str): Boolean expression to tokenize
+    """
 
     def __init__(self, text: str):
         self.text = text
@@ -87,7 +120,28 @@ class ExpressionLexer:
 
 
 class ExpressionParser:
-    """Parses boolean expressions into BDD-compatible format"""
+    """Parses boolean expressions into BDD-compatible format.
+
+    This parser converts tokenized boolean expressions into a format
+    suitable for BDD construction. It follows standard operator precedence:
+    1. NOT (highest)
+    2. AND
+    3. OR, XOR (lowest, left-associative)
+
+    The parser validates syntax and tracks all variables used in the expression
+    for consistent variable ordering in BDD construction.
+
+    Attributes:
+        tokens (List[ExpressionToken]): Input tokens from lexer
+        pos (int): Current position in token stream
+        variables (Set[str]): Set of all variables found in expression
+
+    Args:
+        tokens (List[ExpressionToken]): Tokenized expression from ExpressionLexer
+
+    Raises:
+        ValueError: If expression has invalid syntax or unexpected tokens
+    """
 
     def __init__(self, tokens: List[ExpressionToken]):
         self.tokens = tokens
@@ -167,7 +221,23 @@ class ExpressionParser:
 
 
 class PythonBDDDemo:
-    """Python BDD Demo - produces output identical to C++ bdd_demo.exe"""
+    """Python BDD Demo - produces output identical to C++ bdd_demo.exe.
+
+    This class provides a Python implementation that generates exactly
+    the same output formats as the C++ BDD demonstration tool, enabling
+    cross-library validation between Python 'dd' library and C++ TeDDy/CUDD.
+
+    The demo supports multiple output formats:
+    - Console output with variable mappings and statistics
+    - DOT graph files for GraphViz visualization
+    - PNG image generation (when GraphViz is available)
+    - Node analysis tables in text format
+
+    Attributes:
+        bdd (BDD): Binary Decision Diagram instance from dd library
+        variable_order (Dict[str, int]): Mapping of variables to BDD indices
+        node_table (List[Dict]): Generated node analysis data
+    """
 
     def __init__(self):
         self.bdd = BDD()
@@ -175,7 +245,22 @@ class PythonBDDDemo:
         self.node_table: List[Dict] = []
 
     def read_expression_from_file(self, filename: str) -> str:
-        """Read and parse expression from file, matching C++ behavior"""
+        """Read and parse expression from file, matching C++ behavior.
+
+        Reads a boolean expression from a text file, filtering out comments
+        and empty lines. Supports multi-line expressions by joining all
+        non-comment lines.
+
+        Args:
+            filename (str): Path to file containing boolean expression
+
+        Returns:
+            str: Cleaned expression string ready for parsing
+
+        Raises:
+            FileNotFoundError: If the specified file cannot be opened
+            ValueError: If no valid expression is found in the file
+        """
         try:
             with open(filename, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
@@ -197,7 +282,18 @@ class PythonBDDDemo:
         return expression.strip()
 
     def create_variable_ordering(self, variables: Set[str]) -> Dict[str, int]:
-        """Create consistent variable ordering (sorted alphabetically)"""
+        """Create consistent variable ordering for BDD construction.
+
+        Generates a deterministic alphabetical ordering of variables
+        to ensure consistent BDD structure across multiple runs.
+        This matches the C++ implementation's variable ordering strategy.
+
+        Args:
+            variables (Set[str]): Set of variable names found in expression
+
+        Returns:
+            Dict[str, int]: Mapping from variable names to BDD indices
+        """
         sorted_vars = sorted(variables)
         ordering = {}
         for i, var in enumerate(sorted_vars):

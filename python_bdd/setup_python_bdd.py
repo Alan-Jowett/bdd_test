@@ -14,7 +14,18 @@ import sys
 from pathlib import Path
 
 def check_python_version():
-    """Check if Python version is compatible"""
+    """Check if Python version meets minimum requirements.
+
+    Verifies that the current Python installation is version 3.8 or newer,
+    which is required for the 'dd' library and modern Python features
+    used in the BDD demonstration scripts.
+
+    Returns:
+        bool: True if Python version is compatible, False otherwise
+
+    Side Effects:
+        Prints version information or error messages to stdout
+    """
     if sys.version_info < (3, 8):
         print("Error: Python 3.8 or newer is required")
         return False
@@ -22,7 +33,23 @@ def check_python_version():
     return True
 
 def install_requirements():
-    """Install requirements from requirements.txt"""
+    """Install Python dependencies from requirements.txt.
+
+    Reads the requirements.txt file in the same directory and installs
+    all specified packages using pip. This ensures the 'dd' library
+    and other dependencies are available for BDD operations.
+
+    Returns:
+        bool: True if installation succeeded, False if any errors occurred
+
+    Side Effects:
+        - Installs packages to the current Python environment
+        - Prints installation progress and results to stdout
+        - May modify the Python package environment
+
+    Raises:
+        subprocess.CalledProcessError: If pip installation fails
+    """
     requirements_file = Path(__file__).parent / "requirements.txt"
 
     if not requirements_file.exists():
@@ -45,7 +72,22 @@ def install_requirements():
         return False
 
 def verify_installation():
-    """Verify that the dd library is properly installed"""
+    """Verify that the 'dd' library is properly installed and functional.
+
+    Attempts to import the 'dd' library and create a basic BDD instance
+    to ensure the installation is working correctly. This validation
+    catches common installation issues before running BDD demonstrations.
+
+    Returns:
+        bool: True if 'dd' library is working correctly, False otherwise
+
+    Side Effects:
+        Prints verification status and version information to stdout
+
+    Note:
+        This function performs a minimal functionality test by creating
+        a simple BDD to verify the library is fully operational.
+    """
     try:
         import dd
         print(f"✓ 'dd' library version {dd.__version__} installed and working")

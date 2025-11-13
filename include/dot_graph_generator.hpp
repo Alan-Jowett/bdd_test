@@ -37,52 +37,122 @@ namespace dot_graph {
 /// @{
 
 // Node property concepts
+/**
+ * @brief Concept for iterators that provide node labels
+ * @tparam T The iterator type to check
+ *
+ * This concept verifies that the iterator can provide string labels
+ * for nodes in DOT graphs, essential for generating readable GraphViz output.
+ */
 template <typename T>
 concept has_get_label = requires(T t) {
     { t.get_label() } -> std::convertible_to<std::string>;
 };
 
+/**
+ * @brief Concept for iterators that provide node shapes
+ * @tparam T The iterator type to check
+ *
+ * Enables custom node shapes in DOT graphs (box, ellipse, diamond, etc.)
+ * for visual distinction of different node types in GraphViz output.
+ */
 template <typename T>
 concept has_get_shape = requires(T t) {
     { t.get_shape() } -> std::convertible_to<std::string>;
 };
 
+/**
+ * @brief Concept for iterators that provide node styles
+ * @tparam T The iterator type to check
+ *
+ * Allows specification of node appearance attributes like filled,
+ * bold, dashed, etc. for GraphViz rendering customization.
+ */
 template <typename T>
 concept has_get_style = requires(T t) {
     { t.get_style() } -> std::convertible_to<std::string>;
 };
 
+/**
+ * @brief Concept for iterators that provide node fill colors
+ * @tparam T The iterator type to check
+ *
+ * Enables custom fill colors for nodes, supporting both named colors
+ * and hex color codes for GraphViz diagram customization.
+ */
 template <typename T>
 concept has_get_fillcolor = requires(T t) {
     { t.get_fillcolor() } -> std::convertible_to<std::string>;
 };
 
+/**
+ * @brief Concept for iterators that provide font colors
+ * @tparam T The iterator type to check
+ *
+ * Allows customization of text color within nodes, supporting
+ * both named colors and hex codes for optimal readability.
+ */
 template <typename T>
 concept has_get_fontcolor = requires(T t) {
     { t.get_fontcolor() } -> std::convertible_to<std::string>;
 };
 
+/**
+ * @brief Concept for iterators that provide tooltips
+ * @tparam T The iterator type to check
+ *
+ * Enables interactive tooltips in SVG output from GraphViz,
+ * providing additional information for interactive viewing.
+ */
 template <typename T>
 concept has_get_tooltip = requires(T t) {
     { t.get_tooltip() } -> std::convertible_to<std::string>;
 };
 
 // Edge property concepts
+/**
+ * @brief Concept for iterators that provide edge labels
+ * @tparam T The iterator type to check
+ *
+ * Enables custom labels on edges, useful for showing decision
+ * paths, weights, or conditions in GraphViz BDD visualizations.
+ */
 template <typename T>
 concept has_get_edge_label = requires(T t, T child, std::size_t index) {
     { t.get_edge_label(child, index) } -> std::convertible_to<std::string>;
 };
 
+/**
+ * @brief Concept for iterators that provide edge styles
+ * @tparam T The iterator type to check
+ *
+ * Allows customization of edge appearance (solid, dashed, dotted, bold)
+ * for visual distinction in GraphViz output.
+ */
 template <typename T>
 concept has_get_edge_style = requires(T t, T child, std::size_t index) {
     { t.get_edge_style(child, index) } -> std::convertible_to<std::string>;
 };
 
+/**
+ * @brief Concept for iterators that provide edge colors
+ * @tparam T The iterator type to check
+ *
+ * Enables custom colors for edges in GraphViz diagrams,
+ * supporting both named colors and hex color codes.
+ */
 template <typename T>
 concept has_get_edge_color = requires(T t, T child, std::size_t index) {
     { t.get_edge_color(child, index) } -> std::convertible_to<std::string>;
 };
 
+/**
+ * @brief Concept for iterators that provide edge font colors
+ * @tparam T The iterator type to check
+ *
+ * Allows customization of text color for edge labels in GraphViz,
+ * enhancing readability of edge annotations.
+ */
 template <typename T>
 concept has_get_edge_fontcolor = requires(T t, T child, std::size_t index) {
     { t.get_edge_fontcolor(child, index) } -> std::convertible_to<std::string>;
@@ -156,6 +226,9 @@ struct DotConfig {
 template <DotGraphIterator Iterator>
 void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
                         const DotConfig& config = DotConfig()) {
+    static_assert(DotGraphIterator<Iterator>,
+                  "Iterator must satisfy DotGraphIterator concept for DOT graph generation");
+
     // Write DOT header with configuration
     out << "digraph " << config.graph_name << " {\n";
 
@@ -372,6 +445,9 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
 template <DotGraphIterator Iterator>
 void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
                         const std::string& graph_name) {
+    static_assert(DotGraphIterator<Iterator>,
+                  "Iterator must satisfy DotGraphIterator concept for DOT graph generation");
+
     generate_dot_graph(root_iterator, out, DotConfig(graph_name));
 }
 
