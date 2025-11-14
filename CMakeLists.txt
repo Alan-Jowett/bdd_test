@@ -124,14 +124,14 @@ include(cmake/FetchAndPatch.cmake)
 # Fetch and patch TeDDy library from GitHub
 fetch_and_patch(DecisionDiagrams
     GIT_REPOSITORY https://github.com/MichalMrena/DecisionDiagrams.git
-    GIT_TAG v4.1.0
+    GIT_TAG a5b73864106d98ae407095033e75b0bc29fc22af
     PATCHES_DIR ${CMAKE_SOURCE_DIR}/patches/teddy
 )
 
 # Fetch and patch CUDD library from GitHub
 fetch_and_patch(CUDD
     GIT_REPOSITORY https://github.com/cuddorg/cudd.git
-    GIT_TAG 4.0.0
+    GIT_TAG b7b1ca9f35d86e2437ba35be9e5335222c524da0
     PATCHES_DIR ${CMAKE_SOURCE_DIR}/patches/cudd
 )
 
