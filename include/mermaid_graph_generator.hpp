@@ -230,8 +230,7 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
 
     out << "flowchart " << config.direction << "\n";
 
-    graph_common::node_id_allocator id_alloc(config.node_id_prefix,
-                                             static_cast<int>(config.node_id_start));
+    graph_common::node_id_allocator id_alloc(config.node_id_prefix, config.node_id_start);
     auto get_node_id = [&](const Iterator& iter) -> std::string {
         return id_alloc.get_id(iter.get_node_address());
     };
