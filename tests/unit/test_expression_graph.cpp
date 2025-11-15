@@ -265,3 +265,41 @@ TEST_CASE("ExpressionGraph - Mermaid generation for complex expression",
     REQUIRE_THAT(result, ContainsSubstring("OR"));
     REQUIRE_THAT(result, ContainsSubstring("AND"));
 }
+
+TEST_CASE("ExpressionGraph - DOT negative: empty graph name and schema checks",
+          "[expression_graph][negative]") {
+    my_expression expr = my_and{std::make_unique<my_expression>(my_variable{"a"}),
+                                std::make_unique<my_expression>(my_variable{"b"})};
+    std::ostringstream out;
+
+    // Empty graph name should be acceptable
+    write_expression_to_dot(expr, out, "");
+    std::string dot = out.str();
+    REQUIRE_THAT(dot, ContainsSubstring("digraph"));
+
+    // Basic schema checks: braces exist and are ordered
+    auto open_brace_pos = dot.find('{');
+    auto close_brace_pos = dot.rfind('}');
+    REQUIRE(open_brace_pos != std::string::npos);
+    REQUIRE(close_brace_pos != std::string::npos);
+    REQUIRE(open_brace_pos < close_brace_pos);
+}
+
+TEST_CASE("ExpressionGraph - DOT negative: label escaping", "[expression_graph][negative]") {
+    // Variable with quotes in name should not produce unbalanced quotes
+    my_expression expr = my_variable{"bad\"name"};
+    std::ostringstream out;
+
+    write_expression_to_dot(expr, out, "LabelGraph");
+    std::string dot = out.str();
+
+    // Count unescaped double-quotes (i.e., not preceded by backslash)
+    size_t unescaped_quotes = 0;
+    for (size_t i = 0; i < dot.size(); ++i) {
+        if (dot[i] == '"') {
+            if (i == 0 || dot[i - 1] != '\\')
+                ++unescaped_quotes;
+        }
+    }
+    REQUIRE(unescaped_quotes % 2 == 0);
+}

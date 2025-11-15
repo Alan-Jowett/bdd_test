@@ -128,3 +128,22 @@ TEST_CASE("CuddConvert - repeated variable usage", "[cudd_convert]") {
     REQUIRE(evaluate_cudd_bdd(mgr, b, {true, false}) == true);
     REQUIRE(evaluate_cudd_bdd(mgr, b, {true, true}) == true);
 }
+
+TEST_CASE("CuddConvert - missing variable throws", "[cudd_convert][negative]") {
+    // Expression uses variable 'c' but var_names only contains 'a' and 'b'
+    my_expression expr = my_and{std::make_unique<my_expression>(my_variable{"a"}),
+                                std::make_unique<my_expression>(my_variable{"c"})};
+
+    std::unordered_set<std::string> var_names = {"a", "b"};
+
+    REQUIRE_THROWS_AS(convert_to_cudd_bdd(expr, var_names), std::runtime_error);
+}
+
+TEST_CASE("CuddConvert - empty variable set throws on variable usage", "[cudd_convert][negative]") {
+    // Expression uses variable 'a' but var_names is empty
+    my_expression expr = my_variable{"a"};
+
+    std::unordered_set<std::string> var_names;
+
+    REQUIRE_THROWS_AS(convert_to_cudd_bdd(expr, var_names), std::runtime_error);
+}

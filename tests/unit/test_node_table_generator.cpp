@@ -101,3 +101,43 @@ TEST_CASE("node_table: text/markdown/csv generation", "[node_table]") {
         REQUIRE(s.find("leaf1") != std::string::npos);
     }
 }
+
+TEST_CASE("node_table - negative: empty node and malformed children", "[node_table][negative]") {
+    // Empty node: no variable name and no children (terminal-like)
+    FakeIterator empty_node;
+    empty_node.var = "";
+    empty_node.type = "";
+    empty_node.term_value = 0;
+
+    std::ostringstream out;
+
+    // Generators should not throw on empty or malformed input and should produce some output
+    REQUIRE_NOTHROW(node_table::generate_text_table(
+        empty_node, out, node_table::TextTableConfig(false, "EmptyTest")));
+    REQUIRE(out.str().size() > 0);
+
+    out.str("");
+    out.clear();
+    REQUIRE_NOTHROW(node_table::generate_markdown_table(empty_node, out,
+                                                        node_table::MarkdownTableConfig("left")));
+    REQUIRE(out.str().size() > 0);
+
+    out.str("");
+    out.clear();
+    REQUIRE_NOTHROW(node_table::generate_csv_table(empty_node, out, false));
+    REQUIRE(out.str().size() > 0);
+
+    // Malformed: child vector contains self-reference (duplicate address)
+    FakeIterator self_node;
+    self_node.var = "self";
+    self_node.type = "internal";
+    self_node.children = {self_node};  // note: creates a copy with same values; addresses will
+                                       // differ in this simple struct
+
+    out.str("");
+    out.clear();
+    // Ensure generation still succeeds; real cycle detection isn't part of node_table generation
+    REQUIRE_NOTHROW(node_table::generate_text_table(self_node, out,
+                                                    node_table::TextTableConfig(true, "SelfTest")));
+    REQUIRE(out.str().size() > 0);
+}

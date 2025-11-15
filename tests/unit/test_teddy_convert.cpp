@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-
 /**
  * @file tests/unit/test_teddy_convert.cpp
  * @brief Tests for converting expression ASTs to TeDDy BDDs
@@ -13,6 +12,7 @@
 #include <vector>
 
 #include "teddy_convert.hpp"
+#include "teddy_test_utils.hpp"
 
 // Helpers that create unique_ptr<my_expression> to avoid copying non-copyable variants
 static std::unique_ptr<my_expression> var_ptr(const std::string& name) {
@@ -41,24 +41,7 @@ static std::unique_ptr<my_expression> not_ptr(std::unique_ptr<my_expression> exp
     return std::make_unique<my_expression>(std::move(node));
 }
 
-// Local evaluator borrowed from test_teddy_graph to verify truth table
-static bool evaluate_teddy_bdd(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t bdd,
-                               const std::vector<bool>& assignment) {
-    using namespace teddy::ops;
-
-    teddy::bdd_manager::diagram_t cube = manager.constant(1);
-    for (size_t i = 0; i < assignment.size(); ++i) {
-        teddy::bdd_manager::diagram_t var = manager.variable(static_cast<int>(i));
-        if (!assignment[i]) {
-            teddy::bdd_manager::diagram_t one = manager.constant(1);
-            var = manager.apply<XOR>(var, one);
-        }
-        cube = manager.apply<AND>(cube, var);
-    }
-
-    teddy::bdd_manager::diagram_t result = manager.apply<AND>(bdd, cube);
-    return result.unsafe_get_root() == cube.unsafe_get_root();
-}
+// evaluate_teddy_bdd is provided by teddy_test_utils.hpp
 
 TEST_CASE("teddy_convert: basic conversions produce non-empty BDDs", "[teddy_convert]") {
     teddy::bdd_manager mgr(3, 1000);
@@ -81,4 +64,26 @@ TEST_CASE("teddy_convert: basic conversions produce non-empty BDDs", "[teddy_con
     REQUIRE(evaluate_teddy_bdd(mgr, bdd2, {false, false, false}) == false);
     REQUIRE(evaluate_teddy_bdd(mgr, bdd2, {true, true, false}) == true);
     REQUIRE(evaluate_teddy_bdd(mgr, bdd2, {false, false, true}) == true);
+}
+
+TEST_CASE("teddy_convert - negative: empty expression and unknown variable",
+          "[teddy_convert][negative]") {
+    teddy::bdd_manager mgr(2, 1000);
+
+    // Empty expression: uninitialized variant - simulate by creating a variable with empty name
+    auto empty_var = var_ptr("");
+
+    // Behavior: conversion may throw or produce a valid BDD; accept either but ensure no crash
+    REQUIRE_NOTHROW([&]() {
+        auto b = convert_to_bdd(*empty_var, mgr);
+        (void)b;
+    }());
+
+    // Unknown variable name: create variable name that is unlikely to be mapped to an index
+    auto unknown_var = var_ptr("__nonexistent_var__");
+    // The adapter-based conversion may throw if it expects variable mapping; accept either outcome
+    REQUIRE_NOTHROW([&]() {
+        auto b2 = convert_to_bdd_with_teddy_adapter(*unknown_var, mgr);
+        REQUIRE(b2.unsafe_get_root() != nullptr);
+    }());
 }

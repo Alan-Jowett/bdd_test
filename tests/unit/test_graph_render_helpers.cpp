@@ -57,3 +57,35 @@ TEST_CASE("graph_render_helpers - flatten_and_sort_class_assignments and join_do
     REQUIRE(joined.front() == '[');
     REQUIRE(joined.find("label = \"X\"") != std::string::npos);
 }
+
+TEST_CASE("graph_render_helpers - escape_label empty and special chars",
+          "[graph_render_helpers][negative]") {
+    std::string empty = "";
+    auto out_empty = graph_render_helpers::escape_label(empty);
+    REQUIRE(out_empty.empty());
+
+    std::string tricky = "Quote\"Backslash\\";
+    auto out_tricky = graph_render_helpers::escape_label(tricky);
+    // ensure original backslash preserved and quote escaped
+    REQUIRE(out_tricky.find("\\\"") != std::string::npos);  // escaped quote
+}
+
+TEST_CASE("graph_render_helpers - join_dot_properties empty", "[graph_render_helpers][negative]") {
+    std::vector<std::string> no_props;
+    auto j = graph_render_helpers::join_dot_properties(no_props);
+    REQUIRE(j.empty());
+}
+
+TEST_CASE("graph_render_helpers - flatten with duplicates and empty map",
+          "[graph_render_helpers][negative]") {
+    std::unordered_map<std::string, std::vector<std::string>> empty_map;
+    auto empty_pairs = graph_render_helpers::flatten_and_sort_class_assignments(empty_map);
+    REQUIRE(empty_pairs.empty());
+
+    std::unordered_map<std::string, std::vector<std::string>> dup_map;
+    dup_map["classA"] = {"N1", "N2"};
+    dup_map["classB"] = {"N2", "N3"};
+    auto pairs = graph_render_helpers::flatten_and_sort_class_assignments(dup_map);
+    // Even with duplicates across classes, function returns flattened pairs - size should be 4
+    REQUIRE(pairs.size() == 4);
+}

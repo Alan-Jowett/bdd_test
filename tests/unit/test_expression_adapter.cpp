@@ -199,3 +199,28 @@ TEST_CASE("ExpressionAdapter - Nested expression", "[expression_adapter][complex
     REQUIRE(right_child.is_variable());
     REQUIRE(right_child.get_index() == 2);
 }
+
+TEST_CASE("ExpressionAdapter - Error: empty variable map",
+          "[expression_adapter][error][negative]") {
+    std::unordered_map<std::string, int> var_map;  // empty
+    my_expression expr = my_variable{"x"};
+
+    // Adapter should be constructible but get_index should throw
+    expression_adapter adapter(expr, var_map);
+    REQUIRE_THROWS(adapter.get_index());
+}
+
+TEST_CASE("ExpressionAdapter - Error: evaluate called with invalid values",
+          "[expression_adapter][error][negative]") {
+    std::unordered_map<std::string, int> var_map = {{"a", 0}, {"b", 1}};
+    my_expression expr = my_and{std::make_unique<my_expression>(my_variable{"a"}),
+                                std::make_unique<my_expression>(my_variable{"b"})};
+
+    expression_adapter adapter(expr, var_map);
+
+    // Evaluate expects bits 0/1; passing other values may be undefined but
+    // should not crash. We assert it returns 0/1 and does not throw.
+    REQUIRE_NOTHROW(adapter.evaluate(2, 3));
+    int val = adapter.evaluate(2, 3);
+    REQUIRE((val == 0 || val == 1));
+}

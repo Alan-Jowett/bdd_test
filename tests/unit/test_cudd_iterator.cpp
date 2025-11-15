@@ -77,3 +77,30 @@ TEST_CASE("cudd_iterator basic operations") {
     REQUIRE(it_one.get_css_class() == "terminal");
     REQUIRE(it_var0.get_css_class() == "bddVariable");
 }
+
+TEST_CASE("cudd_iterator negative cases") {
+    Cudd cudd_mgr;
+
+    // Case: null varnames pointer for non-terminal variable
+    BDD var0 = cudd_mgr.bddVar(0);
+    DdNode* node0 = var0.getNode();
+
+    // Passing nullptr for varnames should still allow terminal checks,
+    // but get_label/get_variable_name should handle missing names.
+    cudd_iterator it_null_names(cudd_mgr, node0, nullptr);
+    REQUIRE(it_null_names.is_valid());
+    REQUIRE(!it_null_names.is_terminal());
+    // Label and variable name should not throw; they may return fallback values
+    REQUIRE_NOTHROW(it_null_names.get_label());
+    REQUIRE_NOTHROW(it_null_names.get_variable_name());
+
+    // Case: create a manager with fewer variables and use a node index that's out of range
+    Cudd small_mgr(1);  // only 1 variable available
+    BDD v0 = small_mgr.bddVar(0);
+
+    // Create a fake node pointer by using a node from a different manager
+    DdNode* foreign_node = var0.getNode();  // from cudd_mgr, not small_mgr
+
+    // Constructing an iterator with a foreign node may be invalid; ensure code doesn't crash
+    REQUIRE_NOTHROW(cudd_iterator(small_mgr, foreign_node, nullptr));
+}

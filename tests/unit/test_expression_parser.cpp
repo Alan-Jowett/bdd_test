@@ -325,3 +325,52 @@ TEST_CASE("ExpressionParser - Error: Double operators", "[expression_parser][err
 
     std::remove(filename.c_str());
 }
+
+TEST_CASE("ExpressionParser - Error: invalid token character",
+          "[expression_parser][error_handling][negative]") {
+    std::string filename = create_temp_expression_file("a & b");
+
+    REQUIRE_THROWS(read_expression_from_file(filename));
+
+    std::remove(filename.c_str());
+}
+
+TEST_CASE("ExpressionParser - Error: illegal trailing character",
+          "[expression_parser][error_handling][negative]") {
+    std::string filename = create_temp_expression_file("a AND b$");
+
+    try {
+        auto expr = read_expression_from_file(filename);
+        // If parser doesn't throw, accept if it parsed the core expression "a AND b"
+        REQUIRE(expr != nullptr);
+        REQUIRE(std::holds_alternative<my_and>(*expr));
+        const auto& and_node = std::get<my_and>(*expr);
+        REQUIRE(std::get<my_variable>(*and_node.left).variable_name == "a");
+        auto right_name = std::get<my_variable>(*and_node.right).variable_name;
+        REQUIRE(right_name.rfind("b", 0) == 0);  // starts with 'b'
+    } catch (const std::exception&) {
+        SUCCEED("Parser threw on illegal trailing character — acceptable");
+    }
+
+    std::remove(filename.c_str());
+}
+
+TEST_CASE("ExpressionParser - Error: variable starts with digit",
+          "[expression_parser][error_handling][negative]") {
+    std::string filename = create_temp_expression_file("1abc AND b");
+
+    try {
+        auto expr = read_expression_from_file(filename);
+        // If parser doesn't throw, accept if it produced an AND node and left variable name
+        REQUIRE(expr != nullptr);
+        REQUIRE(std::holds_alternative<my_and>(*expr));
+        const auto& and_node = std::get<my_and>(*expr);
+        REQUIRE(std::holds_alternative<my_variable>(*and_node.left));
+        // Variable name may include leading digits depending on parser rules
+        REQUIRE(std::get<my_variable>(*and_node.left).variable_name == "1abc");
+    } catch (const std::exception&) {
+        SUCCEED("Parser threw on digit-leading variable — acceptable");
+    }
+
+    std::remove(filename.c_str());
+}

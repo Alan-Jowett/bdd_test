@@ -425,3 +425,44 @@ TEST_CASE("CuddGraph - Node count", "[cudd_graph][analysis]") {
         REQUIRE(count >= 2);  // At least two variable nodes
     }
 }
+
+TEST_CASE("CuddGraph - DOT writer with mismatched variable names vector",
+          "[cudd_graph][negative]") {
+    Cudd manager(2);
+    BDD var0 = manager.bddVar(0);
+    BDD var1 = manager.bddVar(1);
+
+    BDD and_result = var0 * var1;
+
+    // Provide only one variable name for two vars -> mismatch
+    std::vector<std::string> var_names = {"only_one"};
+    std::ostringstream out;
+
+    // The writer should either throw or produce output without crashing.
+    // Prefer ensuring it does not crash; if behavior changes to throw, tests
+    // should be updated. We'll assert that calling the writer does not crash.
+    REQUIRE_NOTHROW(write_cudd_to_dot(manager, and_result, var_names, out, "BadGraph"));
+
+    std::string result = out.str();
+
+    // If the implementation is robust it should still include graph header
+    REQUIRE_THAT(result, ContainsSubstring("digraph BadGraph"));
+}
+
+TEST_CASE("CuddGraph - Mermaid writer with empty variable names", "[cudd_graph][negative]") {
+    Cudd manager(1);
+    BDD var0 = manager.bddVar(0);
+
+    BDD not_var = ~var0;
+
+    std::vector<std::string> var_names;  // empty
+    std::ostringstream out;
+
+    // Ensure writer handles empty names without throwing
+    REQUIRE_NOTHROW(write_cudd_to_mermaid(manager, not_var, var_names, out, "EmptyNames"));
+
+    std::string result = out.str();
+
+    // Should still produce Mermaid flowchart header
+    REQUIRE_THAT(result, ContainsSubstring("flowchart TD"));
+}
