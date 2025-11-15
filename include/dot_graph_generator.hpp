@@ -412,7 +412,7 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
 
     // Use dag_walker to collect edges with appropriate configuration
     out << "\n";
-    auto edges = dag_walker::collect_edges(root_iterator);
+    auto edges = dag_walker::collect_edges_topological(root_iterator);
     std::vector<std::string> edge_lines;
     edge_lines.reserve(edges.size());
     for (const auto& edge : edges) {

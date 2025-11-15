@@ -202,60 +202,6 @@ struct EdgeInfo {
 };
 
 /**
- * @brief Collect all edges from a DAG or tree structure
- *
- * @tparam Iterator The iterator type that represents tree/DAG nodes
- * @param root_iterator The root iterator to start traversal from
- * @return std::vector<EdgeInfo<Iterator>> Vector of all edges found
- *
- * @requires Iterator must satisfy DagWalkerIterator concept
- */
-template <DagWalkerIterator Iterator>
-std::vector<EdgeInfo<Iterator>> collect_edges(const Iterator& root_iterator) {
-    static_assert(DagWalkerIterator<Iterator>,
-                  "Iterator must satisfy DagWalkerIterator concept for edge collection");
-
-    std::vector<EdgeInfo<Iterator>> edges;
-
-    // Special mode: collect ALL edges including those to revisited nodes
-    // This ensures we get the same edge set as manual BDD traversal
-    std::unordered_set<const void*> processed_nodes;
-
-    std::function<void(const Iterator&, const Iterator*)> collect_all_edges_impl =
-        [&](const Iterator& current, const Iterator* parent) {
-            const void* node_key = current.get_node_address();
-
-            // Add edge from parent to current (if parent exists)
-            if (parent) {
-                // Find the index of this child in parent's children
-                auto parent_children = parent->get_children();
-                for (size_t i = 0; i < parent_children.size(); ++i) {
-                    if (parent_children[i].get_node_address() == node_key) {
-                        edges.emplace_back(*parent, current, i);
-                        break;
-                    }
-                }
-            }
-
-            // Stop if we've already processed this node to avoid infinite loops
-            if (processed_nodes.find(node_key) != processed_nodes.end()) {
-                return;
-            }
-            processed_nodes.insert(node_key);
-
-            // Process all children
-            auto children = current.get_children();
-            for (const auto& child : children) {
-                collect_all_edges_impl(child, &current);
-            }
-        };
-
-    collect_all_edges_impl(root_iterator, nullptr);
-
-    return edges;
-}
-
-/**
  * @brief Collect all unique nodes from a DAG or tree in weak topological order
  *
  * This function traverses the structure in weak topological order and returns
