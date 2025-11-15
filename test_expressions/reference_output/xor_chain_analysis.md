@@ -15,34 +15,34 @@ The following diagram shows the parse tree of the logical expression:
 title: Expression Tree
 ---
 flowchart TD
-    N1["XOR"]
-    N2["XOR"]
+    N1(("a"))
+    N2(("b"))
     N3["XOR"]
-    N4["XOR"]
-    N5(("a"))
-    N6(("b"))
-    N7(("c"))
-    N8(("d"))
-    N9(("e"))
+    N4(("c"))
+    N5["XOR"]
+    N6(("d"))
+    N7["XOR"]
+    N8(("e"))
+    N9["XOR"]
 
-    N1 --> N2
-    N2 --> N3
-    N3 --> N4
-    N4 --> N5
-    N4 --> N6
-    N3 --> N7
-    N2 --> N8
-    N1 --> N9
+    N3 --> N1
+    N3 --> N2
+    N5 --> N3
+    N5 --> N4
+    N7 --> N5
+    N7 --> N6
+    N9 --> N7
+    N9 --> N8
 
-    class N1 xorOp
-    class N2 xorOp
+    class N1 variable
+    class N2 variable
     class N3 xorOp
-    class N4 xorOp
-    class N5 variable
+    class N4 variable
+    class N5 xorOp
     class N6 variable
-    class N7 variable
+    class N7 xorOp
     class N8 variable
-    class N9 variable
+    class N9 xorOp
 
     classDef variable fill:lightblue,stroke:#333,stroke-width:2px,color:#000
     classDef andOp fill:lightgreen,stroke:#333,stroke-width:2px,color:#000

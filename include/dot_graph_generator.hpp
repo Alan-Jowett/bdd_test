@@ -30,6 +30,7 @@
 
 #include "dag_walker.hpp"
 #include "graph_iterator_concepts.hpp"
+#include "graph_render_helpers.hpp"
 #include "node_id_allocator.hpp"
 
 namespace dot_graph {
@@ -272,51 +273,50 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
         return id_alloc.get_id(key);
     };
 
-    // Generate node attributes from iterator properties
+    // Generate node attributes from iterator properties using shared helpers
     auto build_node_attributes = [&](const Iterator& iter,
                                      const std::string& node_id) -> std::string {
-        std::string attrs = "[";
-        bool first = true;
+        std::vector<std::string> props;
 
         // Label (use iterator label or fallback to node_id)
         if constexpr (has_get_label<Iterator>) {
-            attrs += "label = \"" + iter.get_label() + "\"";
+            props.push_back("label = \"" + graph_render_helpers::escape_label(iter.get_label())
+                            + "\"");
         } else {
-            attrs += "label = \"" + node_id + "\"";
+            props.push_back("label = \"" + graph_render_helpers::escape_label(node_id) + "\"");
         }
-        first = false;
 
         // Optional node properties
         if constexpr (has_get_shape<Iterator>) {
-            attrs += ", shape=" + iter.get_shape();
+            props.push_back("shape=" + iter.get_shape());
         }
         if constexpr (has_get_style<Iterator>) {
-            attrs += ", style = " + iter.get_style();
+            props.push_back("style = " + iter.get_style());
         }
         if constexpr (has_get_fillcolor<Iterator>) {
-            attrs += ", fillcolor = " + iter.get_fillcolor();
+            props.push_back("fillcolor = " + iter.get_fillcolor());
         }
         if constexpr (has_get_fontcolor<Iterator>) {
-            attrs += ", fontcolor = " + iter.get_fontcolor();
+            props.push_back("fontcolor = " + iter.get_fontcolor());
         }
         if constexpr (has_get_tooltip<Iterator>) {
-            attrs += ", tooltip = \"" + iter.get_tooltip() + "\"";
+            props.push_back("tooltip = \"" + graph_render_helpers::escape_label(iter.get_tooltip())
+                            + "\"");
         }
 
-        attrs += "]";
-        return attrs;
+        return graph_render_helpers::join_dot_properties(props);
     };
 
     // Generate edge attributes from iterator properties
     auto build_edge_attributes = [](const Iterator& parent, const Iterator& child,
                                     size_t index) -> std::string {
-        std::string attrs;
         std::vector<std::string> properties;
 
         if constexpr (has_get_edge_label<Iterator>) {
             std::string label = parent.get_edge_label(child, index);
             if (!label.empty()) {
-                properties.push_back("label = \"" + label + "\"");
+                properties.push_back("label = \"" + graph_render_helpers::escape_label(label)
+                                     + "\"");
             }
         }
         if constexpr (has_get_edge_style<Iterator>) {
@@ -329,17 +329,7 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
             properties.push_back("fontcolor = " + parent.get_edge_fontcolor(child, index));
         }
 
-        if (!properties.empty()) {
-            attrs = "[";
-            for (size_t i = 0; i < properties.size(); ++i) {
-                if (i > 0)
-                    attrs += ", ";
-                attrs += properties[i];
-            }
-            attrs += "]";
-        }
-
-        return attrs;
+        return graph_render_helpers::join_dot_properties(properties);
     };
 
     // Use dag_walker to collect all unique nodes
@@ -384,17 +374,19 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
         // Output individual node declarations (without shape attributes for BDD format)
         for (const auto& node : unique_nodes) {
             std::string node_id = id_alloc.get_id(node.get_node_address());
-            out << "    " << node_id << " [label = \"";
+            std::vector<std::string> props;
             if constexpr (has_get_label<Iterator>) {
-                out << node.get_label();
+                props.push_back("label = \"" + graph_render_helpers::escape_label(node.get_label())
+                                + "\"");
             } else {
-                out << node_id;
+                props.push_back("label = \"" + graph_render_helpers::escape_label(node_id) + "\"");
             }
-            out << "\"";
             if constexpr (has_get_tooltip<Iterator>) {
-                out << ", tooltip = \"" << node.get_tooltip() << "\"";
+                props.push_back("tooltip = \""
+                                + graph_render_helpers::escape_label(node.get_tooltip()) + "\"");
             }
-            out << "];\n";
+            out << "    " << node_id << " " << graph_render_helpers::join_dot_properties(props)
+                << ";\n";
         }
     } else {
         // Standard format: individual node declarations with all attributes

@@ -15,88 +15,88 @@ The following diagram shows the parse tree of the logical expression:
 title: Expression Tree
 ---
 flowchart TD
-    N1["AND"]
-    N2["XOR"]
-    N3["OR"]
-    N4["AND"]
-    N5(("a"))
-    N6(("b"))
-    N7["AND"]
-    N8(("c"))
-    N9(("d"))
-    N10["AND"]
-    N11["OR"]
-    N12(("e"))
-    N13(("f"))
-    N14["XOR"]
-    N15(("g"))
-    N16(("h"))
-    N17["XOR"]
-    N18["OR"]
-    N19["NOT"]
-    N20(("i"))
-    N21(("j"))
-    N22["OR"]
-    N23["AND"]
-    N24(("k"))
-    N25(("l"))
-    N26["NOT"]
-    N27(("m"))
+    N1(("a"))
+    N2(("b"))
+    N3["AND"]
+    N4(("c"))
+    N5(("d"))
+    N6["AND"]
+    N7["OR"]
+    N8(("e"))
+    N9(("f"))
+    N10["OR"]
+    N11(("g"))
+    N12(("h"))
+    N13["XOR"]
+    N14["AND"]
+    N15["XOR"]
+    N16(("i"))
+    N17["NOT"]
+    N18(("j"))
+    N19["OR"]
+    N20(("k"))
+    N21(("l"))
+    N22["AND"]
+    N23(("m"))
+    N24["NOT"]
+    N25["OR"]
+    N26["XOR"]
+    N27["AND"]
 
-    N1 --> N2
-    N2 --> N3
-    N3 --> N4
-    N4 --> N5
-    N4 --> N6
-    N3 --> N7
-    N7 --> N8
-    N7 --> N9
-    N2 --> N10
-    N10 --> N11
-    N11 --> N12
-    N11 --> N13
-    N10 --> N14
-    N14 --> N15
-    N14 --> N16
-    N1 --> N17
-    N17 --> N18
-    N18 --> N19
-    N19 --> N20
-    N18 --> N21
-    N17 --> N22
-    N22 --> N23
-    N23 --> N24
-    N23 --> N25
-    N22 --> N26
-    N26 --> N27
+    N3 --> N1
+    N3 --> N2
+    N6 --> N4
+    N6 --> N5
+    N7 --> N3
+    N7 --> N6
+    N10 --> N8
+    N10 --> N9
+    N13 --> N11
+    N13 --> N12
+    N14 --> N10
+    N14 --> N13
+    N15 --> N7
+    N15 --> N14
+    N17 --> N16
+    N19 --> N17
+    N19 --> N18
+    N22 --> N20
+    N22 --> N21
+    N24 --> N23
+    N25 --> N22
+    N25 --> N24
+    N26 --> N19
+    N26 --> N25
+    N27 --> N15
+    N27 --> N26
 
-    class N1 andOp
-    class N2 xorOp
-    class N3 orOp
-    class N4 andOp
+    class N1 variable
+    class N2 variable
+    class N3 andOp
+    class N4 variable
     class N5 variable
-    class N6 variable
-    class N7 andOp
+    class N6 andOp
+    class N7 orOp
     class N8 variable
     class N9 variable
-    class N10 andOp
-    class N11 orOp
+    class N10 orOp
+    class N11 variable
     class N12 variable
-    class N13 variable
-    class N14 xorOp
-    class N15 variable
+    class N13 xorOp
+    class N14 andOp
+    class N15 xorOp
     class N16 variable
-    class N17 xorOp
-    class N18 orOp
-    class N19 notOp
+    class N17 notOp
+    class N18 variable
+    class N19 orOp
     class N20 variable
     class N21 variable
-    class N22 orOp
-    class N23 andOp
-    class N24 variable
-    class N25 variable
-    class N26 notOp
-    class N27 variable
+    class N22 andOp
+    class N23 variable
+    class N24 notOp
+    class N25 orOp
+    class N26 xorOp
+    class N27 andOp
 
     classDef variable fill:lightblue,stroke:#333,stroke-width:2px,color:#000
     classDef andOp fill:lightgreen,stroke:#333,stroke-width:2px,color:#000

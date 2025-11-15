@@ -33,8 +33,8 @@ class node_id_allocator {
      * @param prefix Textual prefix for generated IDs (default: "N").
      * @param start_index Starting numeric index for generated IDs (default: 0).
      */
-    explicit node_id_allocator(const std::string& prefix = "N", int start_index = 0)
-        : prefix_(prefix), next_(start_index) {}
+    explicit node_id_allocator(const std::string& prefix = "N", size_t start_index = 0)
+        : map_(), next_(start_index), prefix_(prefix), start_index_(start_index) {}
 
     /**
      * @brief Get (or create) the textual ID for the given node pointer.
@@ -59,13 +59,14 @@ class node_id_allocator {
      */
     void reset() {
         map_.clear();
-        next_ = 0;
+        next_ = start_index_;
     }
 
    private:
     std::unordered_map<const void*, std::string> map_;  ///< Pointer -> ID map.
-    int next_;                                          ///< Next numeric index to use.
+    size_t next_;                                       ///< Next numeric index to use.
     std::string prefix_;                                ///< ID prefix string.
+    size_t start_index_;                                ///< Initial index value.
 };
 
 }  // namespace graph_common

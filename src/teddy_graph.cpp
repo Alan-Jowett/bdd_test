@@ -59,8 +59,24 @@ void write_teddy_to_mermaid(const teddy::bdd_manager& manager,
     // Create iterator for the root node
     teddy_iterator root_iter(diagram.unsafe_get_root(), &variable_names);
 
-    // Use the generic Mermaid generator
-    mermaid_graph::generate_mermaid_graph(root_iter, out, graph_title);
+    // Configure Mermaid generator for BDD-specific output (match TeDDy numbering and classes)
+    mermaid_graph::MermaidConfig config;
+    config.graph_title = graph_title;
+    config.direction = "TD";
+    config.default_node_shape = "";
+    config.show_frontmatter = true;
+    config.show_css_classes = true;
+    config.node_id_prefix = "N";
+    config.node_id_start = 0;
+    config.show_node_ids = false;
+
+    // Add BDD-specific class definitions to match legacy output
+    config.class_definitions.push_back(
+        {"bddVariable", "fill:lightblue,stroke:#333,stroke-width:2px,color:#000"});
+    config.class_definitions.push_back(
+        {"terminal", "fill:lightgray,stroke:#333,stroke-width:2px,color:#000"});
+
+    mermaid_graph::generate_mermaid_graph(root_iter, out, config);
 }
 
 std::vector<teddy::bdd_manager::diagram_t::node_t*> collect_teddy_nodes_topological(

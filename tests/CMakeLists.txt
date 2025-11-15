@@ -87,6 +87,8 @@ add_executable(unit_tests
     unit/test_cudd_graph.cpp
     unit/test_expression_graph.cpp
     unit/test_bdd_iterators.cpp
+    unit/test_cudd_convert.cpp
+    unit/test_node_id_allocator.cpp
     # Uncomment to include example tests for demonstration:
     # unit/test_example.cpp
 )
