@@ -1,8 +1,5 @@
-#include <catch2/catch_test_macros.hpp>
-
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
-
 /**
  * @file tests/unit/test_node_id_helpers.cpp
  * @brief Tests for node id helper functions

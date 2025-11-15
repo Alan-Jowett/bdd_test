@@ -9,6 +9,7 @@
  * testing BDD construction, optimization, and analysis functionality.
  */
 
+#include <algorithm>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 #include <libteddy/core.hpp>
@@ -16,33 +17,11 @@
 #include <vector>
 
 #include "teddy_graph.hpp"
+#include "teddy_test_utils.hpp"
 
 using Catch::Matchers::ContainsSubstring;
 
-// Helper function to evaluate a TeDDy BDD with specific variable assignments
-// Returns true if the BDD evaluates to 1 for the given assignment
-bool evaluate_teddy_bdd(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t bdd,
-                        const std::vector<bool>& assignment) {
-    using namespace teddy::ops;
-
-    // Create a "cube" representing the complete assignment
-    teddy::bdd_manager::diagram_t cube = manager.constant(1);
-    for (size_t i = 0; i < assignment.size(); i++) {
-        teddy::bdd_manager::diagram_t var = manager.variable(i);
-        if (!assignment[i]) {
-            // If variable should be false, use NOT variable
-            teddy::bdd_manager::diagram_t one = manager.constant(1);
-            var = manager.apply<XOR>(var, one);
-        }
-        cube = manager.apply<AND>(cube, var);
-    }
-
-    // Check if BDD AND cube equals cube (meaning BDD is 1 for this assignment)
-    teddy::bdd_manager::diagram_t result = manager.apply<AND>(bdd, cube);
-
-    // If result equals cube, then BDD evaluates to 1 for this assignment
-    return result.unsafe_get_root() == cube.unsafe_get_root();
-}
+// evaluate_teddy_bdd provided by tests/unit/teddy_test_utils.hpp
 
 TEST_CASE("TeddyGraph - Basic BDD manager creation", "[teddy_graph][basic]") {
     teddy::bdd_manager manager(2, 1000);
@@ -216,13 +195,13 @@ TEST_CASE("TeddyGraph - DOT generation for AND operation", "[teddy_graph][dot]")
     REQUIRE_THAT(result, ContainsSubstring("1"));
 
     // Validate directed edges exist (multiple edges in BDD)
-    size_t edge_count = 0;
-    size_t pos = 0;
-    while ((pos = result.find("->", pos)) != std::string::npos) {
-        edge_count++;
-        pos += 2;
-    }
-    REQUIRE(edge_count >= 2);  // At least 2 edges for an AND operation
+    auto edge_count = std::count(result.begin(), result.end(), '-')
+                      - std::count(result.begin(), result.end(), ' ');  // rough heuristic
+    // A more precise check counts occurrences of the substring "->"
+    size_t arrow_count = 0;
+    for (size_t start = 0; (start = result.find("->", start)) != std::string::npos; start += 2)
+        ++arrow_count;
+    REQUIRE(arrow_count >= 2);  // At least 2 edges for an AND operation
 
     // Verify proper structure
     REQUIRE((result.find("{") < result.find("}")));
@@ -280,13 +259,10 @@ TEST_CASE("TeddyGraph - Mermaid generation for OR operation", "[teddy_graph][mer
     REQUIRE_THAT(result, ContainsSubstring("q"));
 
     // Validate edges exist (multiple for OR operation)
-    size_t edge_count = 0;
-    size_t pos = 0;
-    while ((pos = result.find("-->", pos)) != std::string::npos) {
-        edge_count++;
-        pos += 3;
-    }
-    REQUIRE(edge_count >= 2);  // At least 2 edges for OR operation
+    size_t arrow_count = 0;
+    for (size_t start = 0; (start = result.find("-->", start)) != std::string::npos; start += 3)
+        ++arrow_count;
+    REQUIRE(arrow_count >= 2);  // At least 2 edges for OR operation
 
     // Verify flowchart declaration is at the start
     // Flowchart declaration exists (may have YAML front matter before it)
@@ -368,11 +344,7 @@ TEST_CASE("TeddyGraph - Node table markdown format", "[teddy_graph][analysis]") 
     REQUIRE_THAT(result, ContainsSubstring("Variable"));
 
     // Validate markdown table alignment row (---) exists
-    size_t dash_count = 0;
-    for (char c : result) {
-        if (c == '-')
-            dash_count++;
-    }
+    size_t dash_count = std::count(result.begin(), result.end(), '-');
     REQUIRE(dash_count >= 3);  // Markdown tables need separator dashes
 
     // Validate variables appear in markdown table
@@ -442,21 +414,17 @@ TEST_CASE("TeddyGraph - negative: evaluation with mismatched assignment sizes an
     auto bdd = manager.apply<AND>(var0, var1);
 
     // Mismatched assignment (too few values) should not crash; may throw or return false
-    bool threw = false;
-    try {
+    REQUIRE_NOTHROW([&]() {
         bool val = evaluate_teddy_bdd(manager, bdd, {true});
         (void)val;
-    } catch (...) {
-        threw = true;
-    }
-    if (!threw) {
-        SUCCEED("evaluate_teddy_bdd handled short assignment without throwing");
-    }
+    }());
 
     // Too many values would index variables beyond manager's configured count
     // which can trigger undefined behavior in the Teddy manager internals
     // (e.g., divide-by-zero). Skip calling evaluate_teddy_bdd in this case.
-    if (4 > 3) {
+    // Use a named constant so the intent is explicit and easy to search for.
+    constexpr bool kSkipLongAssignmentEvaluation = true;
+    if (kSkipLongAssignmentEvaluation) {
         SUCCEED("Skipping long-assignment evaluation to avoid undefined behavior");
     }
 

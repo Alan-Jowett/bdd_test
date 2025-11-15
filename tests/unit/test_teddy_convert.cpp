@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "teddy_convert.hpp"
+#include "teddy_test_utils.hpp"
 
 // Helpers that create unique_ptr<my_expression> to avoid copying non-copyable variants
 static std::unique_ptr<my_expression> var_ptr(const std::string& name) {
@@ -40,24 +41,7 @@ static std::unique_ptr<my_expression> not_ptr(std::unique_ptr<my_expression> exp
     return std::make_unique<my_expression>(std::move(node));
 }
 
-// Local evaluator borrowed from test_teddy_graph to verify truth table
-static bool evaluate_teddy_bdd(teddy::bdd_manager& manager, teddy::bdd_manager::diagram_t bdd,
-                               const std::vector<bool>& assignment) {
-    using namespace teddy::ops;
-
-    teddy::bdd_manager::diagram_t cube = manager.constant(1);
-    for (size_t i = 0; i < assignment.size(); ++i) {
-        teddy::bdd_manager::diagram_t var = manager.variable(static_cast<int>(i));
-        if (!assignment[i]) {
-            teddy::bdd_manager::diagram_t one = manager.constant(1);
-            var = manager.apply<XOR>(var, one);
-        }
-        cube = manager.apply<AND>(cube, var);
-    }
-
-    teddy::bdd_manager::diagram_t result = manager.apply<AND>(bdd, cube);
-    return result.unsafe_get_root() == cube.unsafe_get_root();
-}
+// evaluate_teddy_bdd is provided by teddy_test_utils.hpp
 
 TEST_CASE("teddy_convert: basic conversions produce non-empty BDDs", "[teddy_convert]") {
     teddy::bdd_manager mgr(3, 1000);
@@ -98,11 +82,8 @@ TEST_CASE("teddy_convert - negative: empty expression and unknown variable",
     // Unknown variable name: create variable name that is unlikely to be mapped to an index
     auto unknown_var = var_ptr("__nonexistent_var__");
     // The adapter-based conversion may throw if it expects variable mapping; accept either outcome
-    bool threw = false;
-    try {
+    REQUIRE_NOTHROW([&]() {
         auto b2 = convert_to_bdd_with_teddy_adapter(*unknown_var, mgr);
         REQUIRE(b2.unsafe_get_root() != nullptr);
-    } catch (...) {
-        SUCCEED("convert_to_bdd_with_teddy_adapter threw for unknown variable as allowed");
-    }
+    }());
 }
