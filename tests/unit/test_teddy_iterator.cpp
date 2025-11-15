@@ -1,17 +1,3 @@
-// SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
-
-<<<<<<< HEAD
-/**
- * @file tests/unit/test_teddy_iterator.cpp
- * @brief Unit tests for the TeDDy BDD iterator wrapper
- *
- * Verifies iterator semantics, labels, terminal detection and edge styles for
- * the TeDDy-based iterator used by graph generators and walkers.
- */
-
-=======
->>>>>>> a7337d6 (tests: add multiple unit tests and update test configuration)
 #include <catch2/catch_test_macros.hpp>
 #include <string>
 #include <vector>

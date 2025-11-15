@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-<<<<<<< HEAD
 
 /**
  * @file tests/unit/test_node_table_generator.cpp
@@ -13,11 +12,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-=======
-#include <catch2/catch_test_macros.hpp>
-#include <sstream>
-#include <string>
->>>>>>> a7337d6 (tests: add multiple unit tests and update test configuration)
 
 #include "node_table_generator.hpp"
 
@@ -29,11 +23,7 @@ struct FakeIterator {
     std::vector<FakeIterator> children;
 
     // BaseGraphIterator requirements
-<<<<<<< HEAD
-    const std::vector<FakeIterator>& get_children() const {
-=======
     std::vector<FakeIterator> get_children() const {
->>>>>>> a7337d6 (tests: add multiple unit tests and update test configuration)
         return children;
     }
     const void* get_node_address() const {
@@ -54,17 +44,10 @@ struct FakeIterator {
     bool is_terminal() const {
         return children.empty();
     }
-<<<<<<< HEAD
-    const std::string& get_variable_name() const {
-        return var;
-    }
-    const std::string& get_type() const {
-=======
     std::string get_variable_name() const {
         return var;
     }
     std::string get_type() const {
->>>>>>> a7337d6 (tests: add multiple unit tests and update test configuration)
         return type;
     }
     int get_terminal_value() const {

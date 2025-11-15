@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
 
-<<<<<<< HEAD
 /**
  * @file tests/unit/test_cudd_iterator.cpp
  * @brief Unit tests for the CUDD BDD iterator wrapper
@@ -10,8 +9,6 @@
  * generation for the CUDD-based iterator interface.
  */
 
-=======
->>>>>>> a7337d6 (tests: add multiple unit tests and update test configuration)
 #include <cudd/cudd.h>
 
 #include <catch2/catch_test_macros.hpp>
