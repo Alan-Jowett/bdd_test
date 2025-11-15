@@ -275,6 +275,8 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
         edges_by_parent[edge.parent.get_node_address()].push_back(edge);
 
     std::vector<std::pair<std::string, const void*>> parent_ids_and_keys;
+    // Map node address -> emitted node id to avoid repeated linear searches
+    std::unordered_map<const void*, std::string> node_address_to_id;
 
     // Topological emission: collect nodes in numeric/topological order,
     // emit node definitions, and then emit edges grouped by parent id order.
@@ -282,27 +284,29 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
     for (const auto& node : unique_nodes) {
         std::string node_id = get_node_id(node);
         out << build_node_definition(node, node_id);
-
-        std::string css_class;
-        if constexpr (has_get_css_class<Iterator>) {
-            css_class = node.get_css_class();
-        } else if constexpr (has_get_label<Iterator>) {
-            auto it = config.label_to_class_map.find(node.get_label());
-            css_class =
-                (it != config.label_to_class_map.end()) ? it->second : config.default_css_class;
-        } else {
-            css_class = config.default_css_class;
+        // cache the node id for fast lookups later
+        node_address_to_id[node.get_node_address()] = node_id;
+        if (config.show_css_classes) {
+            std::string css_class;
+            if constexpr (has_get_css_class<Iterator>) {
+                css_class = node.get_css_class();
+            } else if constexpr (has_get_label<Iterator>) {
+                auto it = config.label_to_class_map.find(node.get_label());
+                css_class =
+                    (it != config.label_to_class_map.end()) ? it->second : config.default_css_class;
+            } else {
+                css_class = config.default_css_class;
+            }
+            if (!css_class.empty())
+                class_to_nodes[css_class].push_back(node_id);
         }
-        class_to_nodes[css_class].push_back(node_id);
     }
 
     // collect parent ids in numeric order-aware list for topological emission
     for (const auto& [parent_key, _] : edges_by_parent) {
-        auto it = std::find_if(
-            unique_nodes.begin(), unique_nodes.end(),
-            [parent_key](const auto& n) { return n.get_node_address() == parent_key; });
-        if (it != unique_nodes.end())
-            parent_ids_and_keys.push_back({get_node_id(*it), parent_key});
+        auto it = node_address_to_id.find(parent_key);
+        if (it != node_address_to_id.end())
+            parent_ids_and_keys.push_back({it->second, parent_key});
     }
 
     std::sort(
@@ -316,8 +320,15 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
         std::sort(parent_edges.begin(), parent_edges.end(),
                   [](const auto& a, const auto& b) { return a.child_index < b.child_index; });
         for (const auto& edge : parent_edges) {
-            out << build_edge_definition(edge.parent, edge.child, edge.child_index,
-                                         get_node_id(edge.parent), get_node_id(edge.child));
+            const void* parent_addr = edge.parent.get_node_address();
+            const void* child_addr = edge.child.get_node_address();
+            auto pit = node_address_to_id.find(parent_addr);
+            auto cit = node_address_to_id.find(child_addr);
+            const std::string& pid =
+                (pit != node_address_to_id.end()) ? pit->second : get_node_id(edge.parent);
+            const std::string& cid =
+                (cit != node_address_to_id.end()) ? cit->second : get_node_id(edge.child);
+            out << build_edge_definition(edge.parent, edge.child, edge.child_index, pid, cid);
         }
     }
 
