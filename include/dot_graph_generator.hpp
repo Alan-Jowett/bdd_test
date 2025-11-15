@@ -30,6 +30,7 @@
 
 #include "dag_walker.hpp"
 #include "graph_iterator_concepts.hpp"
+#include "node_id_allocator.hpp"
 
 namespace dot_graph {
 
@@ -263,18 +264,12 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
     out << "\n";
 
     // Node ID management for unique DOT identifiers
-    std::unordered_map<const void*, std::string> node_id_map;
-    int next_node_id = 0;
+    // Use shared node_id_allocator to produce stable node identifiers
+    graph_common::node_id_allocator id_alloc("node");
 
     auto get_node_id = [&](const Iterator& iter) -> std::string {
         const void* key = iter.get_node_address();
-        auto it = node_id_map.find(key);
-        if (it != node_id_map.end()) {
-            return it->second;
-        }
-        std::string id = std::format("node{}", next_node_id++);
-        node_id_map[key] = id;
-        return id;
+        return id_alloc.get_id(key);
     };
 
     // Generate node attributes from iterator properties
@@ -353,9 +348,9 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
     if (config.use_bdd_format) {
         // BDD-specific grouped shape format
 
-        // First, create node ID mapping
+        // First, create node ID mapping by touching each node
         for (const auto& node : unique_nodes) {
-            get_node_id(node);  // This populates the node_id_map
+            id_alloc.get_id(node.get_node_address());
         }
 
         // Group nodes by shape for BDD-style declarations
@@ -363,7 +358,7 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
         std::vector<std::string> circle_nodes;
 
         for (const auto& node : unique_nodes) {
-            std::string node_id = node_id_map[node.get_node_address()];
+            std::string node_id = id_alloc.get_id(node.get_node_address());
             std::string shape = "circle";  // default
             if constexpr (has_get_shape<Iterator>) {
                 shape = node.get_shape();
@@ -388,7 +383,7 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
 
         // Output individual node declarations (without shape attributes for BDD format)
         for (const auto& node : unique_nodes) {
-            std::string node_id = node_id_map[node.get_node_address()];
+            std::string node_id = id_alloc.get_id(node.get_node_address());
             out << "    " << node_id << " [label = \"";
             if constexpr (has_get_label<Iterator>) {
                 out << node.get_label();

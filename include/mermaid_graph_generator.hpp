@@ -32,6 +32,7 @@
 
 #include "dag_walker.hpp"
 #include "graph_iterator_concepts.hpp"
+#include "node_id_allocator.hpp"
 
 namespace mermaid_graph {
 
@@ -187,19 +188,13 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
     // Write flowchart header with direction
     out << "flowchart " << config.direction << "\n";
 
-    // Node ID management for unique Mermaid identifiers
-    std::unordered_map<const void*, std::string> node_id_map;
-    int next_node_id = 0;
+    // Node ID management for unique Mermaid identifiers (shared allocator)
+    // Start at 0 for BDD diagrams to match reference numbering
+    graph_common::node_id_allocator id_alloc("N", 0);
 
     auto get_node_id = [&](const Iterator& iter) -> std::string {
         const void* key = iter.get_node_address();
-        auto it = node_id_map.find(key);
-        if (it != node_id_map.end()) {
-            return it->second;
-        }
-        std::string id = std::format("N{}", next_node_id++);
-        node_id_map[key] = id;
-        return id;
+        return id_alloc.get_id(key);
     };
 
     // Generate node definition from iterator properties
