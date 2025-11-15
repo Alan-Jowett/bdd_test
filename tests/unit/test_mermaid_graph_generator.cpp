@@ -16,11 +16,6 @@
 #include "expression_graph.hpp"
 #include "expression_types.hpp"
 
-// Product files under test:
-// - include/expression_graph.hpp
-// - include/expression_types.hpp
-// - include/mermaid_graph_generator.hpp
-
 using Catch::Matchers::ContainsSubstring;
 
 TEST_CASE("Mermaid generation - single variable and simple AND/OR", "[mermaid]") {

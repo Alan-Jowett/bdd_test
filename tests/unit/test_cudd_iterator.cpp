@@ -12,9 +12,6 @@
 #include <cudd/cudd.h>
 
 #include <catch2/catch_test_macros.hpp>
-// Product files under test:
-// - include/cudd_iterator.hpp
-// - include/cudd_graph.hpp
 #include <cudd/cuddObj.hh>
 #include <string>
 #include <vector>

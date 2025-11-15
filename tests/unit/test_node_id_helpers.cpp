@@ -11,6 +11,8 @@
  * ordering node ids naturally (e.g., N2 < N10).
  */
 
+#include <catch2/catch_test_macros.hpp>
+
 #include "node_id_helpers.hpp"
 
 TEST_CASE("node_id_numeric parses numeric suffixes correctly", "[node_id_helpers]") {

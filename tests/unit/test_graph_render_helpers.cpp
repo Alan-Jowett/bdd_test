@@ -9,8 +9,6 @@
  */
 
 #include <catch2/catch_test_macros.hpp>
-// Product files under test:
-// - include/graph_render_helpers.hpp
 #include <unordered_map>
 #include <vector>
 
