@@ -9,6 +9,10 @@
  * the TeDDy-based iterator used by graph generators and walkers.
  */
 
+#Product files under test:
+#- include / teddy_iterator.hpp
+#- include / teddy_convert.hpp
+
 #include <catch2/catch_test_macros.hpp>
 #include <string>
 #include <vector>

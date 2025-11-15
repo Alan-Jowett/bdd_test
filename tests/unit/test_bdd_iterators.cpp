@@ -10,6 +10,14 @@
  * produces matching node labels and ordering between implementations.
  */
 
+// Product files under test:
+// - include/cudd_convert.hpp
+// - include/cudd_iterator.hpp
+// - include/dag_walker.hpp
+// - include/expression_parser.hpp
+// - include/teddy_convert.hpp
+// - include/teddy_iterator.hpp
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
 

@@ -9,6 +9,10 @@
  */
 
 #include <catch2/catch_test_macros.hpp>
+// Product files under test:
+// - include/dot_graph_generator.hpp
+// - include/expression_iterator.hpp
+// - include/expression_types.hpp
 #include <sstream>
 
 #include "dot_graph_generator.hpp"
