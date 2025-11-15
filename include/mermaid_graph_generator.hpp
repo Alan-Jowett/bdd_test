@@ -173,12 +173,6 @@ struct MermaidConfig {
      * @brief Starting index for node id allocation.
      */
     std::size_t node_id_start = 0;
-
-    /**
-     * @brief When true append the generated node id to the displayed label.
-     */
-    bool show_node_ids = false;
-
     /**
      * @brief When true render edge labels if the iterator exposes them.
      */
@@ -240,8 +234,6 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
         std::string label = node_id;
         if constexpr (has_get_label<Iterator>)
             label = iter.get_label();
-        if (config.show_node_ids)
-            label = label + " (" + node_id + ")";
         std::string shape = config.default_node_shape;
         if constexpr (has_get_shape<Iterator>)
             shape = iter.get_shape();
