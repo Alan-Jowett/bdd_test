@@ -1,5 +1,5 @@
-#// SPDX-License-Identifier: MIT
-#// SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
 
 /**
  * @file tests/unit/test_dot_graph_generator.cpp

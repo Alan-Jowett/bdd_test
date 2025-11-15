@@ -1,4 +1,4 @@
-#// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 
 /**
  * @file tests/unit/test_teddy_convert.cpp
