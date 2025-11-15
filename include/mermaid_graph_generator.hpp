@@ -172,7 +172,7 @@ struct MermaidConfig {
     /**
      * @brief Starting index for node id allocation.
      */
-    std::uint64_t node_id_start = 0;
+    std::size_t node_id_start = 0;
 
     /**
      * @brief When true append the generated node id to the displayed label.
