@@ -251,3 +251,60 @@ TEST_CASE("DAGWalker - Collect edges from nested expression", "[dag_walker][edge
     // Expected edges: OR->AND, OR->c, AND->a, AND->b = 4 edges total
     REQUIRE(edges.size() == 4);
 }
+
+TEST_CASE("DAGWalker - Collect all edges including revisits (collect_all_edges)",
+          "[dag_walker][edges][collect_all]") {
+    // Create a simple copyable iterator type backed by shared nodes to simulate a DAG
+    struct SimpleNode {
+        std::string name;
+        std::vector<std::shared_ptr<SimpleNode>> children;
+        SimpleNode(const std::string& n) : name(n) {}
+    };
+
+    struct simple_iter {
+        std::shared_ptr<SimpleNode> node;
+        simple_iter() = default;
+        explicit simple_iter(std::shared_ptr<SimpleNode> n) : node(std::move(n)) {}
+
+        std::vector<simple_iter> get_children() const {
+            std::vector<simple_iter> out;
+            for (const auto& c : node->children) {
+                out.emplace_back(c);
+            }
+            return out;
+        }
+
+        const void* get_node_address() const {
+            return reinterpret_cast<const void*>(node.get());
+        }
+
+        bool operator==(const simple_iter& other) const {
+            return node.get() == other.node.get();
+        }
+        bool operator!=(const simple_iter& other) const {
+            return node.get() != other.node.get();
+        }
+    };
+
+    // Build nodes and a DAG: root -> and_node, root -> shared; and_node -> shared, and_node -> b
+    auto shared = std::make_shared<SimpleNode>("shared");
+    auto b = std::make_shared<SimpleNode>("b");
+    auto and_node = std::make_shared<SimpleNode>("and");
+    and_node->children = {shared, b};
+    auto root = std::make_shared<SimpleNode>("root");
+    root->children = {and_node, shared};
+
+    simple_iter root_iter(root);
+
+    dag_walker::WalkConfig config;
+    config.collect_all_edges = true;
+
+    auto edges_all = dag_walker::collect_edges(root_iter, config);
+
+    // Expected edges: root->and, root->shared, and->shared, and->b = 4 edges
+    REQUIRE(edges_all.size() == 4);
+
+    // Topological collection should list the 4 unique nodes
+    auto topo_nodes = dag_walker::collect_unique_nodes_topological(root_iter);
+    REQUIRE(topo_nodes.size() == 4);
+}

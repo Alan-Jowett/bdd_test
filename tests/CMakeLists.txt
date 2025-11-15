@@ -88,7 +88,15 @@ add_executable(unit_tests
     unit/test_expression_graph.cpp
     unit/test_bdd_iterators.cpp
     unit/test_cudd_convert.cpp
+    unit/test_cudd_iterator.cpp
+    unit/test_dot_graph_generator.cpp
+    unit/test_graph_render_helpers.cpp
+    unit/test_mermaid_graph_generator.cpp
     unit/test_node_id_allocator.cpp
+    unit/test_node_id_helpers.cpp
+    unit/test_node_table_generator.cpp
+    unit/test_teddy_convert.cpp
+    unit/test_teddy_iterator.cpp
     # Uncomment to include example tests for demonstration:
     # unit/test_example.cpp
 )
