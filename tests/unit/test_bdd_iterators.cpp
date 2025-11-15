@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
 
+/**
+ * @file tests/unit/test_bdd_iterators.cpp
+ * @brief Tests comparing TeDDy and CUDD BDD iterator outputs
+ *
+ * These Catch2 tests parse expression files, convert them to both TeDDy and
+ * CUDD BDD representations and verify that the iterator-based traversal
+ * produces matching node labels and ordering between implementations.
+ */
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
 

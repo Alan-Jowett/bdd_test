@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Unit tests for `graph_common::node_id_allocator`.
+/**
+ * @file tests/unit/test_node_id_allocator.cpp
+ * @brief Tests for the node id allocator utility
+ *
+ * Verifies unique id generation, prefix handling, stable mapping for keys, and
+ * reset/start-index behaviors expected from the allocator.
+ */
 
 #include <catch2/catch_test_macros.hpp>
 #include <set>
@@ -8,7 +15,7 @@
 
 TEST_CASE("node_id_allocator - unique ids and prefix", "[node_id_allocator]") {
     graph_common::node_id_allocator alloc("X", 1);
-    int a, b, c;
+    int a = 0, b = 0, c = 0;
     const void* pa = &a;
     const void* pb = &b;
     const void* pc = &c;
@@ -24,7 +31,7 @@ TEST_CASE("node_id_allocator - unique ids and prefix", "[node_id_allocator]") {
 
 TEST_CASE("node_id_allocator - stable ids for same key", "[node_id_allocator]") {
     graph_common::node_id_allocator alloc("N", 0);
-    int x;
+    int x = 0;
     const void* px = &x;
     auto id1 = alloc.get_id(px);
     auto id2 = alloc.get_id(px);
@@ -33,7 +40,7 @@ TEST_CASE("node_id_allocator - stable ids for same key", "[node_id_allocator]") 
 
 TEST_CASE("node_id_allocator - start index and reset", "[node_id_allocator]") {
     graph_common::node_id_allocator alloc("P", 5);
-    int x, y;
+    int x = 0, y = 0;
     const void* px = &x;
     const void* py = &y;
     auto id1 = alloc.get_id(px);

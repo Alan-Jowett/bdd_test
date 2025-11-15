@@ -74,7 +74,8 @@
  * - NOT -> XOR with constant 1
  * - Variable -> BDD variable node
  */
-teddy::bdd_manager::diagram_t convert_to_bdd(const my_expression& expr, teddy::bdd_manager& mgr) {
+teddy::bdd_manager::diagram_t inline convert_to_bdd(const my_expression& expr,
+                                                    teddy::bdd_manager& mgr) {
     using bdd_t = teddy::bdd_manager::diagram_t;
     using namespace teddy::ops;
 
@@ -159,8 +160,8 @@ teddy::bdd_manager::diagram_t convert_to_bdd(const my_expression& expr, teddy::b
  * @note This is an experimental alternative to compare performance and behavior
  *       with our custom recursive conversion approach.
  */
-teddy::bdd_manager::diagram_t convert_to_bdd_with_teddy_adapter(const my_expression& expr,
-                                                                teddy::bdd_manager& mgr) {
+teddy::bdd_manager::diagram_t inline convert_to_bdd_with_teddy_adapter(const my_expression& expr,
+                                                                       teddy::bdd_manager& mgr) {
     // First pass: collect all unique variable names using dag_walker
     std::unordered_set<std::string> variable_names;
     collect_variables_with_dag_walker(expr, variable_names);
