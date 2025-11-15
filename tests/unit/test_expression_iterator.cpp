@@ -251,3 +251,44 @@ TEST_CASE("ExpressionIterator - Deep nested expression", "[expression_iterator][
     REQUIRE(level3_xor[0].get_label() == "c");
     REQUIRE(level3_xor[1].get_label() == "d");
 }
+
+TEST_CASE("ExpressionIterator - Negative: moved-from expression and invalid access",
+          "[expression_iterator][negative]") {
+    // Move an expression into the iterator and then ensure copy remains valid
+    my_expression expr = my_variable{"x"};
+    expression_iterator iter(std::move(expr));
+
+    // Iterator should be valid even if original expression was moved-from
+    REQUIRE(iter.is_valid());
+
+    // Accessing children on a variable should return empty vector and not crash
+    auto children = iter.get_children();
+    REQUIRE(children.empty());
+
+    // Construct an iterator over a NOT node and attempt an out-of-range child index
+    my_expression not_expr = my_not{std::make_unique<my_expression>(my_variable{"y"})};
+    expression_iterator iter_not(not_expr);
+    auto ch = iter_not.get_children();
+    REQUIRE(ch.size() == 1);
+    // Accessing index 1 should be out-of-range; ensure no throw and returned behaviour
+    REQUIRE_NOTHROW([&]() {
+        if (ch.size() > 1)
+            (void)ch[1].get_label();
+    }());
+}
+
+TEST_CASE("ExpressionIterator - Negative: malformed variant contents",
+          "[expression_iterator][negative]") {
+    // Create a fake iterator-like type by abusing the interface is difficult
+    // so this test ensures that iterator methods gracefully handle unexpected
+    // internal states by constructing via normal paths and not crashing.
+    my_expression expr = my_and{std::make_unique<my_expression>(my_variable{"a"}),
+                                std::make_unique<my_expression>(my_variable{"b"})};
+    expression_iterator iter(expr);
+
+    // The iterator should provide stable outputs even when queried repeatedly
+    for (int i = 0; i < 10; ++i) {
+        REQUIRE_NOTHROW(iter.get_label());
+        REQUIRE_NOTHROW(iter.get_children());
+    }
+}

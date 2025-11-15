@@ -48,22 +48,10 @@ void test_expression_to_cudd_and_teddy(const std::string& file_name) {
 
     REQUIRE(!teddy_nodes.empty());
 
-    // Print node labels in order
-    std::cout << "TeDDy BDD nodes in visited order:" << std::endl;
-    for (const auto& iter : teddy_nodes) {
-        std::cout << "Node ID: " << iter.get_label() << std::endl;
-    }
-
     // Get list of nodes using dag_walker for CUDD BDD in topological order
     cudd_iterator cudd_it(*cudd_manager, cudd_bdd.getNode(), &sorted_variable_names);
     auto cudd_nodes = dag_walker::collect_unique_nodes_topological(cudd_it);
     REQUIRE(!cudd_nodes.empty());
-
-    // Print each node label in order
-    std::cout << "CUDD BDD nodes in topological order:" << std::endl;
-    for (const auto iter : cudd_nodes) {
-        std::cout << "Node ID: " << iter.get_label() << std::endl;
-    }
 
     REQUIRE(teddy_nodes.size() == cudd_nodes.size());
 
@@ -78,6 +66,19 @@ void test_expression_to_cudd_and_teddy(const std::string& file_name) {
         test_expression_to_cudd_and_teddy(file); \
     }
 
-// TODO: Fix working directory configuration for these unit tests
-DECLARE_TEST_CASE("test_expressions/simple_expression.txt")
 DECLARE_TEST_CASE("test_expressions/all_operators.txt")
+DECLARE_TEST_CASE("test_expressions/deeply_nested.txt")
+DECLARE_TEST_CASE("test_expressions/eight_queens.txt")
+DECLARE_TEST_CASE("test_expressions/filter_expression.txt")
+DECLARE_TEST_CASE("test_expressions/four_queens.txt")
+DECLARE_TEST_CASE("test_expressions/many_variables.txt")
+DECLARE_TEST_CASE("test_expressions/multiple_not.txt")
+DECLARE_TEST_CASE("test_expressions/my_test_expression.txt")
+DECLARE_TEST_CASE("test_expressions/same_variable.txt")
+DECLARE_TEST_CASE("test_expressions/simple_expression.txt")
+DECLARE_TEST_CASE("test_expressions/single_variable.txt")
+DECLARE_TEST_CASE("test_expressions/single_variable_unusual_name.txt")
+DECLARE_TEST_CASE("test_expressions/six_queens.txt")
+DECLARE_TEST_CASE("test_expressions/test_subdir_expression.txt")
+DECLARE_TEST_CASE("test_expressions/underscore_vars.txt")
+DECLARE_TEST_CASE("test_expressions/xor_chain.txt")

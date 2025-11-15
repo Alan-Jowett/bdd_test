@@ -51,3 +51,21 @@ TEST_CASE("node_id_allocator - start index and reset", "[node_id_allocator]") {
     auto id3 = alloc.get_id(px);
     REQUIRE(id3 == std::format("P{}", 5));
 }
+
+TEST_CASE("node_id_allocator - nullptr key handling (negative)", "[node_id_allocator][negative]") {
+    graph_common::node_id_allocator alloc("Z", 0);
+
+    const void* n1 = nullptr;
+    const void* n2 = nullptr;
+
+    // Asking for id for nullptr twice should return the same id
+    auto id_first = alloc.get_id(n1);
+    auto id_second = alloc.get_id(n2);
+    REQUIRE(id_first == id_second);
+
+    // Asking for ids for two different addresses should be different
+    int a = 0;
+    const void* pa = &a;
+    auto id_pa = alloc.get_id(pa);
+    REQUIRE(id_pa != id_first);
+}

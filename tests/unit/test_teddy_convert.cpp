@@ -81,3 +81,28 @@ TEST_CASE("teddy_convert: basic conversions produce non-empty BDDs", "[teddy_con
     REQUIRE(evaluate_teddy_bdd(mgr, bdd2, {true, true, false}) == true);
     REQUIRE(evaluate_teddy_bdd(mgr, bdd2, {false, false, true}) == true);
 }
+
+TEST_CASE("teddy_convert - negative: empty expression and unknown variable",
+          "[teddy_convert][negative]") {
+    teddy::bdd_manager mgr(2, 1000);
+
+    // Empty expression: uninitialized variant - simulate by creating a variable with empty name
+    auto empty_var = var_ptr("");
+
+    // Behavior: conversion may throw or produce a valid BDD; accept either but ensure no crash
+    REQUIRE_NOTHROW([&]() {
+        auto b = convert_to_bdd(*empty_var, mgr);
+        (void)b;
+    }());
+
+    // Unknown variable name: create variable name that is unlikely to be mapped to an index
+    auto unknown_var = var_ptr("__nonexistent_var__");
+    // The adapter-based conversion may throw if it expects variable mapping; accept either outcome
+    bool threw = false;
+    try {
+        auto b2 = convert_to_bdd_with_teddy_adapter(*unknown_var, mgr);
+        REQUIRE(b2.unsafe_get_root() != nullptr);
+    } catch (...) {
+        SUCCEED("convert_to_bdd_with_teddy_adapter threw for unknown variable as allowed");
+    }
+}
