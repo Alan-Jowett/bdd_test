@@ -266,9 +266,7 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
     std::vector<Iterator> unique_nodes;
 
     // Collect all edges first so we can know which nodes are parents before emission
-    dag_walker::WalkConfig edge_config;
-    edge_config.collect_all_edges = true;
-    auto edges = dag_walker::collect_edges(root_iterator, edge_config);
+    auto edges = dag_walker::collect_edges(root_iterator);
 
     std::unordered_map<const void*, std::vector<dag_walker::EdgeInfo<Iterator>>> edges_by_parent;
     for (const auto& edge : edges)

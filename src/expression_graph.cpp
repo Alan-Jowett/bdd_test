@@ -62,24 +62,22 @@ void collect_variables_with_dag_walker(const my_expression& expr,
                                        std::unordered_set<std::string>& variables) {
     expression_iterator root_iter(expr);
 
-    dag_walker::walk_dag_topological(
+    dag_walker::walk_dag_topological_order(
         root_iter, [&](const dag_walker::NodeInfo<expression_iterator>& node_info) {
-            if (!node_info.is_revisit) {
-                // Type-safe variable detection using direct variant access
-                const my_expression* current_expr =
-                    reinterpret_cast<const my_expression*>(node_info.node.get_node_address());
+            // Type-safe variable detection using direct variant access
+            const my_expression* current_expr =
+                reinterpret_cast<const my_expression*>(node_info.node.get_node_address());
 
-                if (current_expr) {
-                    std::visit(
-                        [&](const auto& variant_expr) {
-                            using T = std::decay_t<decltype(variant_expr)>;
-                            if constexpr (std::is_same_v<T, my_variable>) {
-                                variables.insert(variant_expr.variable_name);
-                            }
-                            // Operators are ignored - only variables are collected
-                        },
-                        *current_expr);
-                }
+            if (current_expr) {
+                std::visit(
+                    [&](const auto& variant_expr) {
+                        using T = std::decay_t<decltype(variant_expr)>;
+                        if constexpr (std::is_same_v<T, my_variable>) {
+                            variables.insert(variant_expr.variable_name);
+                        }
+                        // Operators are ignored - only variables are collected
+                    },
+                    *current_expr);
             }
         });
 }
