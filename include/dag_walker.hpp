@@ -304,12 +304,17 @@ std::vector<EdgeInfo<Iterator>> collect_edges_topological(const Iterator& root_i
         "Iterator must satisfy DagWalkerIterator concept for topological edge collection");
 
     std::vector<EdgeInfo<Iterator>> edges;
-
-    walk_dag_topological_order(root_iterator, [&](const NodeInfo<Iterator>& node_info) {
-        if (node_info.parent) {
-            edges.emplace_back(*node_info.parent, node_info.node, node_info.index_from_parent);
+    // Collect nodes in weak topological order (children before parents), then
+    // enumerate each parent's children to ensure we capture every parent->child
+    // relationship. This preserves topological ordering while including edges
+    // to nodes that may have been visited earlier via other paths.
+    auto topo_nodes = collect_unique_nodes_topological(root_iterator);
+    for (const auto& parent : topo_nodes) {
+        auto children = parent.get_children();
+        for (size_t i = 0; i < children.size(); ++i) {
+            edges.emplace_back(parent, children[i], i);
         }
-    });
+    }
 
     return edges;
 }

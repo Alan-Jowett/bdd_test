@@ -49,8 +49,8 @@ flowchart TD
     N1["0"]
     N2(("x"))
 
-    N2 -.-> N0
     N2 --> N1
+    N2 -.-> N0
 
     class N0 terminal
     class N1 terminal

@@ -61,14 +61,14 @@ flowchart TD
     N4(("NOT_multiple_AND_keywords"))
     N5(("at_end_NOT"))
 
-    N2 -.-> N0
     N2 --> N1
-    N3 -.-> N0
+    N2 -.-> N0
     N3 --> N2
-    N4 -.-> N0
+    N3 -.-> N0
     N4 --> N3
-    N5 -.-> N0
+    N4 -.-> N0
     N5 --> N4
+    N5 -.-> N0
 
     class N0 terminal
     class N1 terminal

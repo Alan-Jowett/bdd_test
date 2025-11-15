@@ -13,18 +13,18 @@ digraph DD {
     node7 [label = "bar_AND_baz_789", tooltip = "0"];
     node8 [label = "final_XOR_test", tooltip = "1"];
 
-    node8 -> node3 [style = dashed];
-    node3 -> node2 [style = dashed];
     node2 -> node0 [style = dashed];
     node2 -> node1 [style = solid];
     node3 -> node1 [style = solid];
-    node8 -> node7 [style = solid];
-    node7 -> node6 [style = dashed];
-    node6 -> node4 [style = dashed];
+    node3 -> node2 [style = dashed];
     node4 -> node0 [style = dashed];
     node4 -> node1 [style = solid];
-    node6 -> node5 [style = solid];
-    node5 -> node1 [style = dashed];
     node5 -> node0 [style = solid];
+    node5 -> node1 [style = dashed];
+    node6 -> node4 [style = dashed];
+    node6 -> node5 [style = solid];
     node7 -> node5 [style = solid];
+    node7 -> node6 [style = dashed];
+    node8 -> node3 [style = dashed];
+    node8 -> node7 [style = solid];
 }

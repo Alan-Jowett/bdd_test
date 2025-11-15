@@ -5,14 +5,6 @@ digraph ExpressionTree {
 
     node0 [label = "x1", shape=ellipse, style = filled, fillcolor = lightblue];
     node1 [label = "x2", shape=ellipse, style = filled, fillcolor = lightblue];
-    node2 [label = "OR", shape=box, style = filled, fillcolor = lightcoral];
-    node3 [label = "x3", shape=ellipse, style = filled, fillcolor = lightblue];
-    node4 [label = "OR", shape=box, style = filled, fillcolor = lightcoral];
-    node5 [label = "x4", shape=ellipse, style = filled, fillcolor = lightblue];
-    node6 [label = "OR", shape=box, style = filled, fillcolor = lightcoral];
-    node7 [label = "x5", shape=ellipse, style = filled, fillcolor = lightblue];
-    node8 [label = "OR", shape=box, style = filled, fillcolor = lightcoral];
-    node9 [label = "x6", shape=ellipse, style = filled, fillcolor = lightblue];
     node10 [label = "OR", shape=box, style = filled, fillcolor = lightcoral];
     node11 [label = "x7", shape=ellipse, style = filled, fillcolor = lightblue];
     node12 [label = "OR", shape=box, style = filled, fillcolor = lightcoral];
@@ -22,23 +14,31 @@ digraph ExpressionTree {
     node16 [label = "OR", shape=box, style = filled, fillcolor = lightcoral];
     node17 [label = "x10", shape=ellipse, style = filled, fillcolor = lightblue];
     node18 [label = "OR", shape=box, style = filled, fillcolor = lightcoral];
+    node2 [label = "OR", shape=box, style = filled, fillcolor = lightcoral];
+    node3 [label = "x3", shape=ellipse, style = filled, fillcolor = lightblue];
+    node4 [label = "OR", shape=box, style = filled, fillcolor = lightcoral];
+    node5 [label = "x4", shape=ellipse, style = filled, fillcolor = lightblue];
+    node6 [label = "OR", shape=box, style = filled, fillcolor = lightcoral];
+    node7 [label = "x5", shape=ellipse, style = filled, fillcolor = lightblue];
+    node8 [label = "OR", shape=box, style = filled, fillcolor = lightcoral];
+    node9 [label = "x6", shape=ellipse, style = filled, fillcolor = lightblue];
 
-    node18 -> node16 [label = "L"];
-    node16 -> node14 [label = "L"];
-    node14 -> node12 [label = "L"];
-    node12 -> node10 [label = "L"];
     node10 -> node8 [label = "L"];
-    node8 -> node6 [label = "L"];
-    node6 -> node4 [label = "L"];
-    node4 -> node2 [label = "L"];
+    node10 -> node9 [label = "R"];
+    node12 -> node10 [label = "L"];
+    node12 -> node11 [label = "R"];
+    node14 -> node12 [label = "L"];
+    node14 -> node13 [label = "R"];
+    node16 -> node14 [label = "L"];
+    node16 -> node15 [label = "R"];
+    node18 -> node16 [label = "L"];
+    node18 -> node17 [label = "R"];
     node2 -> node0 [label = "L"];
     node2 -> node1 [label = "R"];
+    node4 -> node2 [label = "L"];
     node4 -> node3 [label = "R"];
+    node6 -> node4 [label = "L"];
     node6 -> node5 [label = "R"];
+    node8 -> node6 [label = "L"];
     node8 -> node7 [label = "R"];
-    node10 -> node9 [label = "R"];
-    node12 -> node11 [label = "R"];
-    node14 -> node13 [label = "R"];
-    node16 -> node15 [label = "R"];
-    node18 -> node17 [label = "R"];
 }

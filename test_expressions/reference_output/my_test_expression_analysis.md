@@ -57,12 +57,12 @@ flowchart TD
     N3(("b"))
     N4(("a"))
 
-    N2 -.-> N0
     N2 --> N1
-    N3 -.-> N2
+    N2 -.-> N0
     N3 --> N0
-    N4 -.-> N3
+    N3 -.-> N2
     N4 --> N0
+    N4 -.-> N3
 
     class N0 terminal
     class N1 terminal

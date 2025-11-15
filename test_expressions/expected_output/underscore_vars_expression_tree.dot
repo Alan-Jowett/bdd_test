@@ -9,8 +9,8 @@ digraph ExpressionTree {
     node3 [label = "var_3", shape=ellipse, style = filled, fillcolor = lightblue];
     node4 [label = "OR", shape=box, style = filled, fillcolor = lightcoral];
 
-    node4 -> node2 [label = "L"];
     node2 -> node0 [label = "L"];
     node2 -> node1 [label = "R"];
+    node4 -> node2 [label = "L"];
     node4 -> node3 [label = "R"];
 }

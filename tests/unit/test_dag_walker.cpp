@@ -151,7 +151,7 @@ TEST_CASE("DAGWalker - Collect edges", "[dag_walker][edges]") {
                                 std::make_unique<my_expression>(my_variable{"b"})};
     expression_iterator root_iter(expr);
 
-    auto edges = dag_walker::collect_edges(root_iter);
+    auto edges = dag_walker::collect_edges_topological(root_iter);
 
     // Should have 2 edges: AND->a and AND->b
     REQUIRE(edges.size() == 2);
@@ -165,7 +165,7 @@ TEST_CASE("DAGWalker - Collect edges from nested expression", "[dag_walker][edge
         std::make_unique<my_expression>(my_variable{"c"})};
     expression_iterator root_iter(expr);
 
-    auto edges = dag_walker::collect_edges(root_iter);
+    auto edges = dag_walker::collect_edges_topological(root_iter);
 
     // Expected edges: OR->AND, OR->c, AND->a, AND->b = 4 edges total
     REQUIRE(edges.size() == 4);
@@ -214,7 +214,7 @@ TEST_CASE("DAGWalker - Collect all edges including revisits (collect_all_edges)"
 
     simple_iter root_iter(root);
 
-    auto edges_all = dag_walker::collect_edges(root_iter);
+    auto edges_all = dag_walker::collect_edges_topological(root_iter);
 
     // Expected edges: root->and, root->shared, and->shared, and->b = 4 edges
     REQUIRE(edges_all.size() == 4);

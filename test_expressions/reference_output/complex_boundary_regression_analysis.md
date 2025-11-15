@@ -64,20 +64,20 @@ flowchart TD
     N7(("final_XOR_test"))
     N8(("bar_AND_baz_789"))
 
-    N2 -.-> N0
     N2 --> N1
-    N3 -.-> N0
+    N2 -.-> N0
     N3 --> N1
-    N4 -.-> N1
+    N3 -.-> N0
     N4 --> N0
-    N5 -.-> N3
+    N4 -.-> N1
     N5 --> N4
-    N6 -.-> N2
+    N5 -.-> N3
     N6 --> N5
-    N7 -.-> N1
+    N6 -.-> N2
     N7 --> N4
-    N8 -.-> N6
+    N7 -.-> N1
     N8 --> N7
+    N8 -.-> N6
 
     class N0 terminal
     class N1 terminal

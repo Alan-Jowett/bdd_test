@@ -9,10 +9,10 @@ digraph DD {
     node3 [label = "b", tooltip = "1"];
     node4 [label = "a", tooltip = "0"];
 
-    node4 -> node3 [style = dashed];
-    node3 -> node2 [style = dashed];
     node2 -> node0 [style = dashed];
     node2 -> node1 [style = solid];
     node3 -> node0 [style = solid];
+    node3 -> node2 [style = dashed];
     node4 -> node0 [style = solid];
+    node4 -> node3 [style = dashed];
 }

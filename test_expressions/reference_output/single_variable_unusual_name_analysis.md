@@ -39,8 +39,8 @@ flowchart TD
     N1["1"]
     N2(("variable_with_unusual$characters@123"))
 
-    N2 -.-> N0
     N2 --> N1
+    N2 -.-> N0
 
     class N0 terminal
     class N1 terminal

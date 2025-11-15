@@ -64,20 +64,20 @@ flowchart TD
     N7(("café_münü"))
     N8(("résumé_naïve"))
 
-    N2 -.-> N0
     N2 --> N1
-    N3 -.-> N0
+    N2 -.-> N0
     N3 --> N2
-    N4 -.-> N3
+    N3 -.-> N0
     N4 --> N1
-    N5 -.-> N1
+    N4 -.-> N3
     N5 --> N0
-    N6 -.-> N1
+    N5 -.-> N1
     N6 --> N5
-    N7 -.-> N6
+    N6 -.-> N1
     N7 --> N0
-    N8 -.-> N4
+    N7 -.-> N6
     N8 --> N7
+    N8 -.-> N4
 
     class N0 terminal
     class N1 terminal

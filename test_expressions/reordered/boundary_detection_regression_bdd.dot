@@ -10,12 +10,12 @@ digraph DD {
     node4 [label = "bar_OR_baz", tooltip = "0"];
     node5 [label = "qux_XOR_alpha", tooltip = "3"];
 
-    node5 -> node0 [style = dashed];
-    node5 -> node4 [style = solid];
-    node4 -> node0 [style = dashed];
-    node4 -> node3 [style = solid];
-    node3 -> node0 [style = dashed];
-    node3 -> node2 [style = solid];
     node2 -> node0 [style = dashed];
     node2 -> node1 [style = solid];
+    node3 -> node0 [style = dashed];
+    node3 -> node2 [style = solid];
+    node4 -> node0 [style = dashed];
+    node4 -> node3 [style = solid];
+    node5 -> node0 [style = dashed];
+    node5 -> node4 [style = solid];
 }

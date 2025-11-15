@@ -271,11 +271,14 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
     // Topological emission: collect nodes in numeric/topological order,
     // emit node definitions, and then emit edges grouped by parent id order.
     unique_nodes = dag_walker::collect_unique_nodes_topological(root_iterator);
+    // Collect node definition lines so we can sort them lexicographically
+    std::vector<std::string> node_lines;
+    node_lines.reserve(unique_nodes.size());
     for (const auto& node : unique_nodes) {
         std::string node_id = get_node_id(node);
-        out << build_node_definition(node, node_id);
-        // cache the node id for fast lookups later
         node_address_to_id[node.get_node_address()] = node_id;
+        node_lines.push_back(build_node_definition(node, node_id));
+
         if (config.show_css_classes) {
             std::string css_class;
             if constexpr (has_get_css_class<Iterator>) {
@@ -292,6 +295,11 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
         }
     }
 
+    // Sort node lines lexicographically and emit
+    std::sort(node_lines.begin(), node_lines.end());
+    for (const auto& line : node_lines)
+        out << line;
+
     // collect parent ids in numeric order-aware list for topological emission
     for (const auto& [parent_key, _] : edges_by_parent) {
         auto it = node_address_to_id.find(parent_key);
@@ -305,6 +313,9 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
     if (!edges.empty() && !unique_nodes.empty())
         out << "\n";
 
+    // Collect all edge definition lines, sort lexicographically, then emit.
+    std::vector<std::string> edge_lines;
+    edge_lines.reserve(edges.size());
     for (const auto& [parent_id, parent_key] : parent_ids_and_keys) {
         auto& parent_edges = edges_by_parent[parent_key];
         std::sort(parent_edges.begin(), parent_edges.end(),
@@ -318,9 +329,14 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
                 (pit != node_address_to_id.end()) ? pit->second : get_node_id(edge.parent);
             const std::string& cid =
                 (cit != node_address_to_id.end()) ? cit->second : get_node_id(edge.child);
-            out << build_edge_definition(edge.parent, edge.child, edge.child_index, pid, cid);
+            edge_lines.push_back(
+                build_edge_definition(edge.parent, edge.child, edge.child_index, pid, cid));
         }
     }
+
+    std::sort(edge_lines.begin(), edge_lines.end());
+    for (const auto& line : edge_lines)
+        out << line;
 
     if (config.show_css_classes && !class_to_nodes.empty()) {
         out << "\n";

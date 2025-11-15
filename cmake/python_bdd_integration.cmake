@@ -104,7 +104,7 @@ get_filename_component(BASE_NAME \"\${EXPRESSION_FILE}\" NAME_WE)
 
 # Compare node table files (Python output vs TeDDy expected output)
 set(PYTHON_NODES_FILE \"${CMAKE_SOURCE_DIR}/test_expressions/\${BASE_NAME}_bdd_nodes.txt\")
-set(TEDDY_NODES_FILE "${CMAKE_SOURCE_DIR}/test_expressions/expected_output/\${BASE_NAME}_bdd_nodes.txt")
+set(TEDDY_NODES_FILE \"${CMAKE_SOURCE_DIR}/test_expressions/expected_output/\${BASE_NAME}_bdd_nodes.txt\")
 
 # Check if both files exist
 if(NOT EXISTS \"\${PYTHON_NODES_FILE}\")

@@ -61,6 +61,7 @@ title: BDD
 ---
 flowchart TD
     N0["0"]
+    N10(("a"))
     N1["1"]
     N2(("e"))
     N3(("e"))
@@ -70,26 +71,25 @@ flowchart TD
     N7(("c"))
     N8(("b"))
     N9(("b"))
-    N10(("a"))
 
-    N2 -.-> N0
-    N2 --> N1
-    N3 -.-> N1
-    N3 --> N0
-    N4 -.-> N2
-    N4 --> N3
-    N5 -.-> N3
-    N5 --> N2
-    N6 -.-> N4
-    N6 --> N5
-    N7 -.-> N5
-    N7 --> N4
-    N8 -.-> N6
-    N8 --> N7
-    N9 -.-> N7
-    N9 --> N6
-    N10 -.-> N8
     N10 --> N9
+    N10 -.-> N8
+    N2 --> N1
+    N2 -.-> N0
+    N3 --> N0
+    N3 -.-> N1
+    N4 --> N3
+    N4 -.-> N2
+    N5 --> N2
+    N5 -.-> N3
+    N6 --> N5
+    N6 -.-> N4
+    N7 --> N4
+    N7 -.-> N5
+    N8 --> N7
+    N8 -.-> N6
+    N9 --> N6
+    N9 -.-> N7
 
     class N0 terminal
     class N1 terminal
