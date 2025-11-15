@@ -6,8 +6,10 @@
  * @brief Tests DOT generator BDD-specific formatting and optional iterator properties
  */
 
+#include <algorithm>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
+#include <iterator>
 #include <memory>
 #include <sstream>
 
@@ -34,8 +36,8 @@ struct bdd_iter {
         std::vector<bdd_iter> out;
         if (!node)
             return out;
-        for (const auto& c : node->children)
-            out.emplace_back(c);
+        std::transform(node->children.begin(), node->children.end(), std::back_inserter(out),
+                       [](const std::shared_ptr<BddNode>& c) { return bdd_iter(c); });
         return out;
     }
 
@@ -99,8 +101,7 @@ TEST_CASE("DotGenerator - BDD format and optional properties", "[dot_graph][bdd_
     std::ostringstream out;
     dot_graph::DotConfig cfg;
     cfg.graph_name = "BDDTest";
-    cfg.use_bdd_format = true;     // exercise BDD grouping branch
-    cfg.collect_all_edges = true;  // force dag_walker collect_all_edges path
+    cfg.use_bdd_format = true;  // exercise BDD grouping branch
 
     REQUIRE_NOTHROW(dot_graph::generate_dot_graph(root_iter, out, cfg));
 

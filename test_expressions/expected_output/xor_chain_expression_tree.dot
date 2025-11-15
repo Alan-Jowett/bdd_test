@@ -3,22 +3,22 @@ digraph ExpressionTree {
     node [fontname="Arial"];
     edge [fontname="Arial"];
 
-    node0 [label = "XOR", shape=box, style = filled, fillcolor = lightpink];
-    node1 [label = "XOR", shape=box, style = filled, fillcolor = lightpink];
+    node0 [label = "a", shape=ellipse, style = filled, fillcolor = lightblue];
+    node1 [label = "b", shape=ellipse, style = filled, fillcolor = lightblue];
     node2 [label = "XOR", shape=box, style = filled, fillcolor = lightpink];
-    node3 [label = "XOR", shape=box, style = filled, fillcolor = lightpink];
-    node4 [label = "a", shape=ellipse, style = filled, fillcolor = lightblue];
-    node5 [label = "b", shape=ellipse, style = filled, fillcolor = lightblue];
-    node6 [label = "c", shape=ellipse, style = filled, fillcolor = lightblue];
-    node7 [label = "d", shape=ellipse, style = filled, fillcolor = lightblue];
-    node8 [label = "e", shape=ellipse, style = filled, fillcolor = lightblue];
+    node3 [label = "c", shape=ellipse, style = filled, fillcolor = lightblue];
+    node4 [label = "XOR", shape=box, style = filled, fillcolor = lightpink];
+    node5 [label = "d", shape=ellipse, style = filled, fillcolor = lightblue];
+    node6 [label = "XOR", shape=box, style = filled, fillcolor = lightpink];
+    node7 [label = "e", shape=ellipse, style = filled, fillcolor = lightblue];
+    node8 [label = "XOR", shape=box, style = filled, fillcolor = lightpink];
 
-    node0 -> node1 [label = "L"];
-    node1 -> node2 [label = "L"];
-    node2 -> node3 [label = "L"];
-    node3 -> node4 [label = "L"];
-    node3 -> node5 [label = "R"];
-    node2 -> node6 [label = "R"];
-    node1 -> node7 [label = "R"];
-    node0 -> node8 [label = "R"];
+    node8 -> node6 [label = "L"];
+    node6 -> node4 [label = "L"];
+    node4 -> node2 [label = "L"];
+    node2 -> node0 [label = "L"];
+    node2 -> node1 [label = "R"];
+    node4 -> node3 [label = "R"];
+    node6 -> node5 [label = "R"];
+    node8 -> node7 [label = "R"];
 }

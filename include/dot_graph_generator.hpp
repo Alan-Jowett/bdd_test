@@ -183,8 +183,7 @@ struct DotConfig {
     std::string default_node_style = "filled";  ///< Default style for nodes
     std::string default_edge_style = "solid";   ///< Default style for edges
     bool show_node_ids = false;                 ///< Whether to show internal node IDs
-    bool use_bdd_format = false;     ///< Whether to use BDD-specific grouped shape format
-    bool collect_all_edges = false;  ///< Whether to collect ALL edges, including to revisited nodes
+    bool use_bdd_format = false;  ///< Whether to use BDD-specific grouped shape format
 
     // C++20 spaceship operator for automatic comparison generation
     auto operator<=>(const DotConfig& other) const = default;
@@ -399,11 +398,7 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
 
     // Use dag_walker to collect edges with appropriate configuration
     out << "\n";
-    dag_walker::WalkConfig walk_config;
-    if (config.collect_all_edges) {
-        walk_config.collect_all_edges = true;
-    }
-    auto edges = dag_walker::collect_edges(root_iterator, walk_config);
+    auto edges = dag_walker::collect_edges(root_iterator);
     for (const auto& edge : edges) {
         std::string parent_id = get_node_id(edge.parent);
         std::string child_id = get_node_id(edge.child);

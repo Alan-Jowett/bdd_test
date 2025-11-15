@@ -1,8 +1,8 @@
 Index | Variable | False Child | True Child | Type
 ------|----------|-------------|------------|----------
-    0 | bar_OR_baz |           5 |          1 | Variable
-    1 | baz_NOT_qux |           5 |          2 | Variable
-    2 | foo_AND_bar |           5 |          3 | Variable
-    3 | qux_XOR_alpha |           5 |          4 | Variable
+    0 | qux_XOR_alpha |           5 |          1 | Variable
+    1 | bar_OR_baz |           5 |          2 | Variable
+    2 | baz_NOT_qux |           5 |          3 | Variable
+    3 | foo_AND_bar |           5 |          4 | Variable
     4 |        - |           - |          - | Terminal(1)
     5 |        - |           - |          - | Terminal(0)

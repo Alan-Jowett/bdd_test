@@ -58,25 +58,25 @@ flowchart TD
     N1["1"]
     N2(("ñoñ_ascii_123"))
     N3(("var_with_éxtended_chars"))
-    N4(("ñoñ_ascii_123"))
-    N5(("var_with_éxtended_chars"))
-    N6(("résumé_naïve"))
-    N7(("résumé_naïve"))
-    N8(("café_münü"))
+    N4(("café_münü"))
+    N5(("ñoñ_ascii_123"))
+    N6(("var_with_éxtended_chars"))
+    N7(("café_münü"))
+    N8(("résumé_naïve"))
 
     N2 -.-> N0
     N2 --> N1
     N3 -.-> N0
     N3 --> N2
-    N4 -.-> N1
-    N4 --> N0
+    N4 -.-> N3
+    N4 --> N1
     N5 -.-> N1
-    N5 --> N4
-    N6 -.-> N3
+    N5 --> N0
+    N6 -.-> N1
     N6 --> N5
-    N7 -.-> N1
+    N7 -.-> N6
     N7 --> N0
-    N8 -.-> N6
+    N8 -.-> N4
     N8 --> N7
 
     class N0 terminal
@@ -105,11 +105,11 @@ The following table shows the internal structure of the BDD with node relationsh
 
 | Index | Variable | False Child | True Child | Type |
 |-------|----------|-------------|------------|------|
-| 0 | café_münü | 2 | 1 | Variable |
-| 1 | résumé_naïve | 7 | 8 | Variable |
-| 2 | résumé_naïve | 5 | 3 | Variable |
-| 3 | var_with_éxtended_chars | 7 | 4 | Variable |
-| 4 | ñoñ_ascii_123 | 7 | 8 | Variable |
+| 0 | résumé_naïve | 4 | 1 | Variable |
+| 1 | café_münü | 2 | 8 | Variable |
+| 2 | var_with_éxtended_chars | 7 | 3 | Variable |
+| 3 | ñoñ_ascii_123 | 7 | 8 | Variable |
+| 4 | café_münü | 5 | 7 | Variable |
 | 5 | var_with_éxtended_chars | 8 | 6 | Variable |
 | 6 | ñoñ_ascii_123 | 8 | 7 | Variable |
 | 7 | - | - | - | Terminal(1) |

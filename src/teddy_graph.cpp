@@ -39,14 +39,13 @@ void write_teddy_to_dot(const teddy::bdd_manager& manager, teddy::bdd_manager::d
     // Configure the generic DOT generator for BDD-specific format
     dot_graph::DotConfig config;
     config.graph_name = graph_name;
-    config.rankdir = "";              // No rankdir to match original format
-    config.font_name = "";            // No font declarations to match original
-    config.default_node_shape = "";   // Shapes specified per node
-    config.default_node_style = "";   // No default style
-    config.default_edge_style = "";   // Edge styles specified per edge
-    config.show_node_ids = false;     // Don't show internal IDs
-    config.use_bdd_format = true;     // Enable BDD-specific formatting
-    config.collect_all_edges = true;  // Collect all edges including to revisited nodes
+    config.rankdir = "";             // No rankdir to match original format
+    config.font_name = "";           // No font declarations to match original
+    config.default_node_shape = "";  // Shapes specified per node
+    config.default_node_style = "";  // No default style
+    config.default_edge_style = "";  // Edge styles specified per edge
+    config.show_node_ids = false;    // Don't show internal IDs
+    config.use_bdd_format = true;    // Enable BDD-specific formatting
 
     // Use the generic DOT graph generator
     dot_graph::generate_dot_graph(root_iter, out, config);
