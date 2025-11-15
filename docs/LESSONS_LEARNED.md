@@ -245,7 +245,7 @@ auto result = mgr.apply<teddy::ops::AND>(left_bdd, right_bdd);
 ```cpp
 // Adaptable to any tree/DAG structure
 template <typename NodeType, typename Iterator>
-void walk_dag_topological_order(const NodeType& root, Iterator iter, WalkConfig config = {});
+void walk_dag_topological_order(const NodeType& root, Iterator iter);
 ```
 
 **Production Value**: Essential for any system working with expression trees, dependency graphs, or hierarchical data structures.

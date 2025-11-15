@@ -182,7 +182,6 @@ struct DotConfig {
     std::string default_node_shape = "circle";  ///< Default shape for nodes
     std::string default_node_style = "filled";  ///< Default style for nodes
     std::string default_edge_style = "solid";   ///< Default style for edges
-    bool show_node_ids = false;                 ///< Whether to show internal node IDs
     bool use_bdd_format = false;  ///< Whether to use BDD-specific grouped shape format
 
     // C++20 spaceship operator for automatic comparison generation

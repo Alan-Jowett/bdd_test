@@ -42,7 +42,6 @@ void write_cudd_to_dot(const Cudd& cudd_manager, const BDD& bdd,
     config.default_node_shape = "";  // Shapes specified per node
     config.default_node_style = "";  // No default style
     config.default_edge_style = "";  // Edge styles specified per edge
-    config.show_node_ids = false;    // Don't show internal IDs
     config.use_bdd_format = true;    // Enable BDD-specific formatting
 
     // Use the generic DOT graph generator
@@ -64,7 +63,6 @@ void write_cudd_to_mermaid(const Cudd& cudd_manager, const BDD& bdd,
     config.show_css_classes = true;
     config.node_id_prefix = "N";
     config.node_id_start = 0;
-    config.show_node_ids = false;
 
     // Add BDD-specific class definitions to match legacy output
     config.class_definitions.push_back(

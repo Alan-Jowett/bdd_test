@@ -47,7 +47,7 @@ void write_expression_to_dot(const my_expression& expr, std::ostream& out,
         .default_node_shape = "",  // Don't add default shape (overridden anyway)
         .default_node_style = "",  // Don't add default style (overridden anyway)
         .default_edge_style = "",  // Don't add default edge style
-        .show_node_ids = false     // Don't show internal IDs
+
     };
 
     // Generate the DOT graph using the template system
@@ -100,7 +100,7 @@ void write_expression_to_mermaid(const my_expression& expr, std::ostream& out,
     config.default_css_class = "variable";
     config.node_id_prefix = "N";
     config.node_id_start = 1;
-    config.show_node_ids = false;
+
     config.show_edge_labels = false;
     // Preserve Expression-specific class mapping and definitions to match reference output
     config.label_to_class_map = {
