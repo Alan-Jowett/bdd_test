@@ -8,10 +8,6 @@
  * truth table semantics for converted diagrams.
  */
 
-// Product files under test:
-// - include/teddy_convert.hpp
-// - include/expression_types.hpp
-
 #include <catch2/catch_test_macros.hpp>
 #include <string>
 #include <vector>

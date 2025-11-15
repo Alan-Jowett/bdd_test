@@ -1,4 +1,4 @@
-#// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 
 /**
  * @file tests/unit/test_node_table_generator.cpp
@@ -8,13 +8,10 @@
  * including headers, counts, and terminal/internal node representations.
  */
 
-// Product files under test:
-// - include/node_table_generator.hpp
-// - include/graph_iterator_concepts.hpp
-
 #include <catch2/catch_test_macros.hpp>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "node_table_generator.hpp"
 
@@ -26,7 +23,7 @@ struct FakeIterator {
     std::vector<FakeIterator> children;
 
     // BaseGraphIterator requirements
-    std::vector<FakeIterator> get_children() const {
+    const std::vector<FakeIterator>& get_children() const {
         return children;
     }
     const void* get_node_address() const {
@@ -47,10 +44,10 @@ struct FakeIterator {
     bool is_terminal() const {
         return children.empty();
     }
-    std::string get_variable_name() const {
+    const std::string& get_variable_name() const {
         return var;
     }
-    std::string get_type() const {
+    const std::string& get_type() const {
         return type;
     }
     int get_terminal_value() const {

@@ -26,13 +26,6 @@
 // ============================================================================
 
 /**
- * @brief Iterator for traversing TeDDy BDD structures with generic template properties
- *
- * This iterator provides the interface needed for both DOT and Mermaid generation
- * using the generic template systems. It wraps TeDDy library BDD nodes and provides
- * all the required interface methods for both graph generators.
- */
-/**
  * @class teddy_iterator
  * @brief Iterator for traversing TeDDy Binary Decision Diagrams
  *

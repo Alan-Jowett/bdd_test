@@ -11,10 +11,6 @@
  * ordering node ids naturally (e.g., N2 < N10).
  */
 
-// Product files under test:
-// - include/node_id_helpers.hpp
-// - include/node_id_allocator.hpp (related utilities)
-
 #include <catch2/catch_test_macros.hpp>
 
 #include "node_id_helpers.hpp"
