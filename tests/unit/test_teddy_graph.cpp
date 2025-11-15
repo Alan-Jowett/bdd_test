@@ -195,9 +195,7 @@ TEST_CASE("TeddyGraph - DOT generation for AND operation", "[teddy_graph][dot]")
     REQUIRE_THAT(result, ContainsSubstring("1"));
 
     // Validate directed edges exist (multiple edges in BDD)
-    auto edge_count = std::count(result.begin(), result.end(), '-')
-                      - std::count(result.begin(), result.end(), ' ');  // rough heuristic
-    // A more precise check counts occurrences of the substring "->"
+    // Count precise occurrences of the substring "->"
     size_t arrow_count = 0;
     for (size_t start = 0; (start = result.find("->", start)) != std::string::npos; start += 2)
         ++arrow_count;
