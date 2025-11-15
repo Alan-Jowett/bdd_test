@@ -26,6 +26,7 @@
 #include "dag_walker.hpp"
 #include "dot_graph_generator.hpp"
 #include "expression_iterator.hpp"
+#include "node_id_allocator.hpp"
 
 // ============================================================================
 // Expression DOT Generation Functions Implementation
@@ -93,22 +94,16 @@ void write_expression_to_mermaid(const my_expression& expr, std::ostream& out,
     out << "flowchart TD\n";
 
     // Simple recursive approach for Mermaid generation
-    std::unordered_map<const void*, std::string> node_ids;
     std::vector<std::string> node_definitions;
     std::vector<std::string> edges;
     std::vector<std::string> class_assignments;
-    int next_id = 1;
 
-    // Helper function to get/create node ID
+    // Use node_id_allocator to generate stable node IDs
+    graph_common::node_id_allocator id_alloc("N", 1);
+
     auto get_node_id = [&](const my_expression* expr_ptr) -> std::string {
         const void* ptr = static_cast<const void*>(expr_ptr);
-        auto it = node_ids.find(ptr);
-        if (it != node_ids.end()) {
-            return it->second;
-        }
-        std::string id = "N" + std::to_string(next_id++);
-        node_ids[ptr] = id;
-        return id;
+        return id_alloc.get_id(ptr);
     };
 
     // Recursive function to process expressions
