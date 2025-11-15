@@ -3,20 +3,20 @@
 
 /**
  * @file mermaid_graph_generator.hpp
- * @brief Specialized template for generating Mermaid flowchart diagrams from tree and DAG
- * structures
+ * @brief Mermaid flowchart generator with configurable options
  *
- * This header provides Mermaid-specific formatting and output generation for tree and DAG
- * structures. It uses the generic dag_walker.hpp for traversal logic and focuses purely
- * on Mermaid format generation, including node and edge styling.
+ * This header provides a generic, iterator-based Mermaid flowchart generator
+ * intended to produce stable, deterministic Mermaid markup suitable for
+ * automated reference comparisons. The generator is configurable via
+ * `MermaidConfig` so callers can reproduce legacy output (e.g. TeDDy
+ * expression trees or BDD visualizations) by selecting node-id prefixes,
+ * emission ordering and class-definitions.
  *
- * The iterator represents both the current node and the traversal logic,
- * eliminating the need for separate data types or property classes. Iterator methods
- * return Mermaid attribute strings directly for maximum simplicity.
- *
- * @author Alan Jowett
- * @date 2025
- * @copyright Copyright (c) 2025 Alan Jowett. Licensed under the MIT License
+ * The implementation is intentionally header-only and relies on the
+ * `dag_walker` utilities for traversal. It is designed to accept iterator
+ * types that conform to the project's `BaseGraphIterator` concept; optional
+ * properties (labels, shapes, tooltips, edge labels/styles) are detected
+ * via C++20 concepts and used when available.
  */
 
 #pragma once
@@ -32,373 +32,330 @@
 
 #include "dag_walker.hpp"
 #include "graph_iterator_concepts.hpp"
+#include "graph_render_helpers.hpp"
 #include "node_id_allocator.hpp"
+#include "node_id_helpers.hpp"
 
 namespace mermaid_graph {
 
-/// @name C++20 Concepts for optional property methods
-/// @{
-
-// Node property concepts
 /**
- * @brief Concept for iterators that provide node labels
- * @tparam T The iterator type to check
+ * @concept has_get_label
+ * @brief True if the iterator exposes a `get_label()` returning a string.
  *
- * This concept verifies that the iterator can provide string labels
- * for nodes in the graph, essential for generating readable Mermaid diagrams.
+ * Iterators meeting this concept provide a textual label for the node
+ * which is used as the Mermaid node label when present.
  */
 template <typename T>
 concept has_get_label = requires(T t) {
     { t.get_label() } -> std::convertible_to<std::string>;
 };
-
 /**
- * @brief Concept for iterators that provide node shapes
- * @tparam T The iterator type to check
+ * @concept has_get_shape
+ * @brief True if the iterator exposes a `get_shape()` returning a string.
  *
- * Enables custom node shapes in Mermaid diagrams (circle, rect, diamond, etc.)
- * for visual distinction of different node types.
+ * This indicates the iterator can describe a preferred Mermaid node shape
+ * (for example `circle`, `square`), which will be used instead of the
+ * `MermaidConfig::default_node_shape` when available.
  */
 template <typename T>
 concept has_get_shape = requires(T t) {
     { t.get_shape() } -> std::convertible_to<std::string>;
 };
-
 /**
- * @brief Concept for iterators that provide CSS classes
- * @tparam T The iterator type to check
+ * @concept has_get_css_class
+ * @brief True if the iterator exposes a `get_css_class()` returning a string.
  *
- * Allows custom styling through CSS classes, enabling rich visual
- * customization in web-based Mermaid diagram renderings.
+ * When present this value is used to assign a Mermaid CSS class to the
+ * generated node (via `class <node> <class>` statements).
  */
 template <typename T>
 concept has_get_css_class = requires(T t) {
     { t.get_css_class() } -> std::convertible_to<std::string>;
 };
-
 /**
- * @brief Concept for iterators that provide tooltips
- * @tparam T The iterator type to check
+ * @concept has_get_tooltip
+ * @brief True if the iterator exposes a `get_tooltip()` returning a string.
  *
- * Enables interactive tooltips in Mermaid diagrams, providing additional
- * information when users hover over nodes.
+ * Tooltips are not always emitted by the generator, but this concept marks
+ * the iterator as capable of providing one for future use or extensions.
  */
 template <typename T>
 concept has_get_tooltip = requires(T t) {
     { t.get_tooltip() } -> std::convertible_to<std::string>;
 };
-
-// Edge property concepts
 /**
- * @brief Concept for iterators that provide edge labels
- * @tparam T The iterator type to check
+ * @concept has_get_edge_label
+ * @brief True if the iterator exposes `get_edge_label(child, idx)`.
  *
- * Enables custom labels on edges between nodes, useful for showing
- * decision conditions or probability values in BDD structures.
+ * Edge labels are used when `MermaidConfig::show_edge_labels` is enabled
+ * to annotate edges with additional information (for example branch
+ * conditions in expression trees).
  */
 template <typename T>
-concept has_get_edge_label = requires(T t, T child, std::size_t index) {
-    { t.get_edge_label(child, index) } -> std::convertible_to<std::string>;
+concept has_get_edge_label = requires(T t, T child, std::size_t idx) {
+    { t.get_edge_label(child, idx) } -> std::convertible_to<std::string>;
+};
+/**
+ * @concept has_get_edge_style
+ * @brief True if the iterator exposes `get_edge_style(child, idx)`.
+ *
+ * Edge styles are rendered as Mermaid link labels or attributes when
+ * supported by the iterator and configuration.
+ */
+template <typename T>
+concept has_get_edge_style = requires(T t, T child, std::size_t idx) {
+    { t.get_edge_style(child, idx) } -> std::convertible_to<std::string>;
 };
 
 /**
- * @brief Concept for iterators that provide edge styles
- * @tparam T The iterator type to check
+ * @brief Concept alias for the project's `BaseGraphIterator`.
  *
- * Allows customization of edge appearance (solid, dashed, dotted, etc.)
- * for visual distinction of different edge types in Mermaid diagrams.
- */
-template <typename T>
-concept has_get_edge_style = requires(T t, T child, std::size_t index) {
-    { t.get_edge_style(child, index) } -> std::convertible_to<std::string>;
-};
-
-/// @}
-
-/**
- * @brief Core concept for Mermaid graph iterators
- *
- * Defines the minimum interface required for generating Mermaid graphs.
- * All Mermaid generation functions require iterators that satisfy this concept.
- * This extends the base graph iterator interface.
+ * @tparam T type to check
  */
 template <typename T>
 concept MermaidGraphIterator = BaseGraphIterator<T>;
 
 /**
- * @brief Configuration settings for Mermaid graph generation
+ * @concept MermaidGraphIterator
+ * @brief Alias for the project's `BaseGraphIterator` used by the Mermaid
+ *        generator.
+ *
+ * This concept documents the iterator requirements expected by the
+ * `generate_mermaid_graph` template. Additional optional capabilities
+ * (labels, shapes, edge labels/styles) are detected via the `has_get_*`
+ * concepts above and used when available.
  */
-struct MermaidConfig {
-    std::string graph_title = "Graph";          ///< Title of the Mermaid graph
-    std::string direction = "TD";               ///< Graph direction (TD, BT, LR, RL)
-    std::string default_node_shape = "circle";  ///< Default shape for nodes (circle, square, etc.)
-    bool show_frontmatter = true;               ///< Whether to include YAML frontmatter
-    bool show_css_classes = true;               ///< Whether to include CSS class definitions
-    std::string default_css_class = "default";  ///< Default CSS class for nodes
 
-    // C++20 spaceship operator for automatic comparison generation
+struct MermaidConfig {
+    /**
+     * Title placed in the Mermaid frontmatter. When `show_frontmatter` is
+     * enabled a YAML frontmatter block is emitted containing this title.
+     */
+
+    /**
+     * @brief Human-readable title emitted in YAML frontmatter (when
+     *        `show_frontmatter` is true).
+     */
+    std::string graph_title = "Graph";
+
+    /**
+     * @brief Mermaid graph direction (e.g. "TD", "LR").
+     */
+    std::string direction = "TD";
+
+    /**
+     * @brief Default node shape used when the iterator doesn't provide one.
+     */
+    std::string default_node_shape = "circle";
+
+    /**
+     * @brief Emit a YAML frontmatter block with the graph title.
+     */
+    bool show_frontmatter = true;
+
+    /**
+     * @brief Emit `class` assignments and `classDef` blocks.
+     */
+    bool show_css_classes = true;
+
+    /**
+     * @brief Default CSS class assigned to nodes when the iterator doesn't
+     *        provide one and no mapping exists for the node label.
+     */
+    std::string default_css_class = "default";
+
+    /**
+     * @brief Prefix applied to generated node ids (e.g. "N").
+     */
+    std::string node_id_prefix = "N";
+
+    /**
+     * @brief Starting index for node id allocation.
+     */
+    std::uint64_t node_id_start = 0;
+
+    /**
+     * @brief When true append the generated node id to the displayed label.
+     */
+    bool show_node_ids = false;
+
+    /**
+     * @brief When true render edge labels if the iterator exposes them.
+     */
+    bool show_edge_labels = true;
+
+    /**
+     * @brief Mapping from node label to CSS class name used when the
+     *        iterator does not directly provide a CSS class.
+     */
+    std::unordered_map<std::string, std::string> label_to_class_map;
+
+    /**
+     * @brief Ordered list of `classDef` entries to emit at the end of the
+     *        graph. Each pair contains the class name and the definition body.
+     */
+    std::vector<std::pair<std::string, std::string>> class_definitions;
+
     auto operator<=>(const MermaidConfig& other) const = default;
 };
 
 /**
- * @brief Pure iterator-based Mermaid generation using dag_walker for traversal
+ * @brief Generate a Mermaid flowchart for the graph rooted at `root_iterator`.
  *
- * This function generates Mermaid flowchart format from tree/DAG structures by leveraging
- * the dag_walker for all traversal logic and focusing purely on Mermaid formatting.
+ * The function traverses the graph using `dag_walker` and emits a deterministic
+ * Mermaid flowchart block to the provided output stream.
  *
- * Required iterator interface (enforced by MermaidGraphIterator concept):
- * - std::vector<Iterator> get_children() const
- * - const void* get_node_address() const (for unique node identification)
- * - bool operator==(const Iterator&) const / bool operator!=(const Iterator&) const
+ * The generator detects optional iterator capabilities (labels, shapes,
+ * css-classes, edge labels and styles) at compile-time via concepts and
+ * uses them when available. The output is intended to be stable and suitable
+ * for automated reference comparisons.
  *
- * Optional node property methods (auto-detected via C++20 concepts):
- * - std::string get_label() const
- * - std::string get_shape() const (circle, square, etc.)
- * - std::string get_css_class() const
- * - std::string get_tooltip() const
- *
- * Optional edge property methods (auto-detected via C++20 concepts):
- * - std::string get_edge_label(const Iterator& child, size_t index) const
- * - std::string get_edge_style(const Iterator& child, size_t index) const (solid, dashed, dotted)
- *
- * Optional filtering:
- * - bool should_process() const (handled by dag_walker)
- *
- * @tparam Iterator The iterator type that represents tree/DAG nodes
- * @param root_iterator The root iterator to start traversal from
- * @param out Output stream for the Mermaid content
- * @param config Configuration for the Mermaid graph appearance
- *
- * @requires MermaidGraphIterator<Iterator>
+ * @tparam Iterator Iterator type satisfying `MermaidGraphIterator`.
+ * @param root_iterator Iterator pointing at the root of the graph to render.
+ * @param out Output stream to which Mermaid markup will be written.
+ * @param config Configuration object controlling formatting, ordering, and
+ *               CSS/class emission. If omitted, a default-initialized
+ *               `MermaidConfig` is used.
  */
 template <MermaidGraphIterator Iterator>
 void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
                             const MermaidConfig& config = MermaidConfig()) {
-    static_assert(
-        MermaidGraphIterator<Iterator>,
-        "Iterator must satisfy MermaidGraphIterator concept for Mermaid graph generation");
+    static_assert(MermaidGraphIterator<Iterator>);
 
-    // Write YAML frontmatter if enabled
     if (config.show_frontmatter) {
         out << "---\n";
         out << "title: " << config.graph_title << "\n";
         out << "---\n";
     }
 
-    // Write flowchart header with direction
     out << "flowchart " << config.direction << "\n";
 
-    // Node ID management for unique Mermaid identifiers (shared allocator)
-    // Start at 0 for BDD diagrams to match reference numbering
-    graph_common::node_id_allocator id_alloc("N", 0);
-
+    graph_common::node_id_allocator id_alloc(config.node_id_prefix,
+                                             static_cast<int>(config.node_id_start));
     auto get_node_id = [&](const Iterator& iter) -> std::string {
-        const void* key = iter.get_node_address();
-        return id_alloc.get_id(key);
+        return id_alloc.get_id(iter.get_node_address());
     };
 
-    // Generate node definition from iterator properties
-    auto build_node_definition = [&](const Iterator& iter,
-                                     const std::string& node_id) -> std::string {
-        std::string label;
-        if constexpr (has_get_label<Iterator>) {
+    using graph_render_helpers::render_node_line;
+    auto build_node_definition = [&](const Iterator& iter, const std::string& node_id) {
+        std::string label = node_id;
+        if constexpr (has_get_label<Iterator>)
             label = iter.get_label();
-        } else {
-            label = node_id;
-        }
-
-        // Determine shape and format
+        if (config.show_node_ids)
+            label = label + " (" + node_id + ")";
         std::string shape = config.default_node_shape;
-        if constexpr (has_get_shape<Iterator>) {
+        if constexpr (has_get_shape<Iterator>)
             shape = iter.get_shape();
-        }
-
-        // Format node based on shape
-        if (shape == "square") {
-            return std::format("    {}[\"{}\"]\n", node_id, label);
-        } else if (shape == "circle") {
-            return "    " + node_id + "((\"" + label + "\"))\n";
-        } else if (shape == "diamond") {
-            return "    " + node_id + "{\"" + label + "\"}\n";
-        } else if (shape == "hexagon") {
-            return "    " + node_id + "{{\"" + label + "\"}}\n";
-        } else {
-            // Default to circle
-            return "    " + node_id + "((\"" + label + "\"))\n";
-        }
+        return render_node_line(node_id, label, shape);
     };
 
-    // Generate edge definition from iterator properties
-    auto build_edge_definition = [](const Iterator& parent, const Iterator& child, size_t index,
-                                    const std::string& parent_id,
-                                    const std::string& child_id) -> std::string {
-        std::string edge_style = " --> ";
-        if constexpr (has_get_edge_style<Iterator>) {
-            std::string style = parent.get_edge_style(child, index);
-            if (style == "dashed") {
-                edge_style = " -.-> ";
-            } else if (style == "dotted") {
-                edge_style = " -..-> ";
-            } else if (style == "thick") {
-                edge_style = " ==> ";
-            }
-            // Default remains solid: " --> "
+    using graph_render_helpers::render_edge_line;
+    auto build_edge_definition = [&](const Iterator& parent, const Iterator& child, size_t index,
+                                     const std::string& parent_id, const std::string& child_id) {
+        std::string style;
+        if constexpr (has_get_edge_style<Iterator>)
+            style = parent.get_edge_style(child, index);
+        std::string label;
+        if (config.show_edge_labels) {
+            if constexpr (has_get_edge_label<Iterator>)
+                label = parent.get_edge_label(child, index);
         }
-
-        std::string edge_label;
-        if constexpr (has_get_edge_label<Iterator>) {
-            edge_label = parent.get_edge_label(child, index);
-        }
-
-        if (!edge_label.empty()) {
-            return std::format("    {}{} |\"{}\"| {}\n", parent_id, edge_style, edge_label,
-                               child_id);
-        } else {
-            return std::format("    {}{}{}\n", parent_id, edge_style, child_id);
-        }
+        return render_edge_line(parent_id, child_id, style, label);
     };
 
-    // Use dag_walker to collect all unique nodes in topological order and output them
-    auto unique_nodes = dag_walker::collect_unique_nodes_topological(root_iterator);
-    for (const auto& node : unique_nodes) {
-        std::string node_id = get_node_id(node);
-        std::string node_def = build_node_definition(node, node_id);
-        out << node_def;
-    }
+    std::unordered_map<std::string, std::vector<std::string>> class_to_nodes;
+    std::vector<Iterator> unique_nodes;
 
-    // Collect and output edges to match original TeDDy ordering
-    // TeDDy outputs edges grouped by parent, in ascending node ID order (not topological)
+    // Collect all edges first so we can know which nodes are parents before emission
     dag_walker::WalkConfig edge_config;
     edge_config.collect_all_edges = true;
     auto edges = dag_walker::collect_edges(root_iterator, edge_config);
-    if (!edges.empty() && !unique_nodes.empty()) {
-        out << "\n";
-    }
 
-    // Group edges by their parent node and collect parent info
     std::unordered_map<const void*, std::vector<dag_walker::EdgeInfo<Iterator>>> edges_by_parent;
+    for (const auto& edge : edges)
+        edges_by_parent[edge.parent.get_node_address()].push_back(edge);
+
     std::vector<std::pair<std::string, const void*>> parent_ids_and_keys;
 
-    for (const auto& edge : edges) {
-        const void* parent_key = edge.parent.get_node_address();
-        edges_by_parent[parent_key].push_back(edge);
+    // Topological emission: collect nodes in numeric/topological order,
+    // emit node definitions, and then emit edges grouped by parent id order.
+    unique_nodes = dag_walker::collect_unique_nodes_topological(root_iterator);
+    for (const auto& node : unique_nodes) {
+        std::string node_id = get_node_id(node);
+        out << build_node_definition(node, node_id);
+
+        std::string css_class;
+        if constexpr (has_get_css_class<Iterator>) {
+            css_class = node.get_css_class();
+        } else if constexpr (has_get_label<Iterator>) {
+            auto it = config.label_to_class_map.find(node.get_label());
+            css_class =
+                (it != config.label_to_class_map.end()) ? it->second : config.default_css_class;
+        } else {
+            css_class = config.default_css_class;
+        }
+        class_to_nodes[css_class].push_back(node_id);
     }
 
-    // Collect parent node IDs to sort them
+    // collect parent ids in numeric order-aware list for topological emission
     for (const auto& [parent_key, _] : edges_by_parent) {
-        // Find the parent iterator to get its ID
         auto it = std::find_if(
             unique_nodes.begin(), unique_nodes.end(),
-            [parent_key](const auto& node) { return node.get_node_address() == parent_key; });
-        if (it != unique_nodes.end()) {
-            std::string parent_id = get_node_id(*it);
-            parent_ids_and_keys.push_back({parent_id, parent_key});
-        }
+            [parent_key](const auto& n) { return n.get_node_address() == parent_key; });
+        if (it != unique_nodes.end())
+            parent_ids_and_keys.push_back({get_node_id(*it), parent_key});
     }
 
-    // Sort by node ID numerically to get consistent TeDDy ordering
-    std::sort(parent_ids_and_keys.begin(), parent_ids_and_keys.end(),
-              [](const auto& a, const auto& b) {
-                  // Extract numeric part from node ID (e.g., "N2" -> 2)
-                  int num_a = std::stoi(a.first.substr(1));
-                  int num_b = std::stoi(b.first.substr(1));
-                  return num_a < num_b;
-              });
+    std::sort(
+        parent_ids_and_keys.begin(), parent_ids_and_keys.end(),
+        [](const auto& a, const auto& b) { return graph_common::node_id_less(a.first, b.first); });
+    if (!edges.empty() && !unique_nodes.empty())
+        out << "\n";
 
-    // Output edges in sorted parent ID order
     for (const auto& [parent_id, parent_key] : parent_ids_and_keys) {
         auto& parent_edges = edges_by_parent[parent_key];
-        // Sort edges within each parent: false edge first, then true edge
         std::sort(parent_edges.begin(), parent_edges.end(),
                   [](const auto& a, const auto& b) { return a.child_index < b.child_index; });
-
         for (const auto& edge : parent_edges) {
-            std::string parent_id_str = get_node_id(edge.parent);
-            std::string child_id = get_node_id(edge.child);
-            std::string edge_def = build_edge_definition(edge.parent, edge.child, edge.child_index,
-                                                         parent_id_str, child_id);
-            out << edge_def;
+            out << build_edge_definition(edge.parent, edge.child, edge.child_index,
+                                         get_node_id(edge.parent), get_node_id(edge.child));
         }
     }
 
-    // Collect CSS classes and output them if enabled
-    if (config.show_css_classes) {
-        std::unordered_map<std::string, std::vector<std::string>> class_to_nodes;
-
-        for (const auto& node : unique_nodes) {
-            std::string node_id = get_node_id(node);
-            std::string css_class = config.default_css_class;
-
-            if constexpr (has_get_css_class<Iterator>) {
-                css_class = node.get_css_class();
-            }
-
-            class_to_nodes[css_class].push_back(node_id);
+    if (config.show_css_classes && !class_to_nodes.empty()) {
+        out << "\n";
+        auto sorted_class_assignments =
+            graph_render_helpers::flatten_and_sort_class_assignments(class_to_nodes);
+        for (const auto& [node_id, class_name] : sorted_class_assignments) {
+            out << "    class " << node_id << " " << class_name << "\n";
         }
 
-        if (!class_to_nodes.empty()) {
+        if (!config.class_definitions.empty()) {
             out << "\n";
-
-            // Sort CSS class assignments by node ID for consistent output
-            std::vector<std::pair<std::string, std::string>> sorted_class_assignments;
-            for (const auto& [class_name, node_ids] : class_to_nodes) {
-                std::transform(node_ids.begin(), node_ids.end(),
-                               std::back_inserter(sorted_class_assignments),
-                               [&class_name](const std::string& node_id) {
-                                   return std::make_pair(node_id, class_name);
-                               });
-            }
-            std::sort(sorted_class_assignments.begin(), sorted_class_assignments.end(),
-                      [](const auto& a, const auto& b) {
-                          // Sort by node ID numerically (e.g., N1, N2, N3...)
-                          int num_a = std::stoi(a.first.substr(1));
-                          int num_b = std::stoi(b.first.substr(1));
-                          return num_a < num_b;
-                      });
-
-            for (const auto& [node_id, class_name] : sorted_class_assignments) {
-                out << "    class " << node_id << " " << class_name << "\n";
-            }
-        }
-
-        // Add CSS class definitions for BDD-specific styling (matching TeDDy format)
-        bool has_bdd_variable = class_to_nodes.find("bddVariable") != class_to_nodes.end();
-        bool has_terminal = class_to_nodes.find("terminal") != class_to_nodes.end();
-
-        if (has_bdd_variable || has_terminal) {
-            out << "\n";
-            if (has_bdd_variable) {
-                out << "    classDef bddVariable "
-                       "fill:lightblue,stroke:#333,stroke-width:2px,color:#000\n";
-            }
-            if (has_terminal) {
-                out << "    classDef terminal "
-                       "fill:lightgray,stroke:#333,stroke-width:2px,color:#000\n";
+            for (const auto& [class_name, def_body] : config.class_definitions) {
+                out << "    classDef " << class_name << " " << def_body << "\n";
             }
         }
     }
 }
 
-/**
- * @brief Convenience function for Mermaid generation with simple graph title
- *
- * @tparam Iterator The iterator type that represents tree/DAG nodes
- * @param root_iterator The root iterator to start traversal from
- * @param out Output stream for the Mermaid content
- * @param graph_title Title for the generated graph
- *
- * @requires MermaidGraphIterator<Iterator>
- */
 template <MermaidGraphIterator Iterator>
+/**
+ * @brief Convenience overload that accepts a graph title.
+ *
+ * This overload constructs a `MermaidConfig`, sets the `graph_title` and
+ * forwards to the primary `generate_mermaid_graph` implementation.
+ *
+ * @tparam Iterator Iterator type satisfying `MermaidGraphIterator`.
+ * @param root_iterator Iterator pointing at the root of the graph to render.
+ * @param out Output stream to which Mermaid markup will be written.
+ * @param graph_title Title to place in the emitted frontmatter.
+ */
 void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
                             const std::string& graph_title) {
-    static_assert(
-        MermaidGraphIterator<Iterator>,
-        "Iterator must satisfy MermaidGraphIterator concept for Mermaid graph generation");
-
-    MermaidConfig config;
-    config.graph_title = graph_title;
-    generate_mermaid_graph(root_iterator, out, config);
+    MermaidConfig cfg;
+    cfg.graph_title = graph_title;
+    generate_mermaid_graph(root_iterator, out, cfg);
 }
 
 }  // namespace mermaid_graph

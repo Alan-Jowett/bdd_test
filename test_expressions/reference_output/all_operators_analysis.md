@@ -15,52 +15,52 @@ The following diagram shows the parse tree of the logical expression:
 title: Expression Tree
 ---
 flowchart TD
-    N1["XOR"]
-    N2["OR"]
+    N1(("var1"))
+    N2(("var2"))
     N3["AND"]
-    N4(("var1"))
-    N5(("var2"))
-    N6["NOT"]
-    N7(("var3"))
-    N8["AND"]
+    N4(("var3"))
+    N5["NOT"]
+    N6["OR"]
+    N7(("var4"))
+    N8(("var5"))
     N9["OR"]
-    N10(("var4"))
-    N11(("var5"))
-    N12["NOT"]
-    N13["XOR"]
-    N14(("var6"))
-    N15(("var7"))
+    N10(("var6"))
+    N11(("var7"))
+    N12["XOR"]
+    N13["NOT"]
+    N14["AND"]
+    N15["XOR"]
 
-    N1 --> N2
-    N2 --> N3
-    N3 --> N4
-    N3 --> N5
-    N2 --> N6
-    N6 --> N7
-    N1 --> N8
-    N8 --> N9
-    N9 --> N10
-    N9 --> N11
-    N8 --> N12
-    N12 --> N13
-    N13 --> N14
-    N13 --> N15
+    N3 --> N1
+    N3 --> N2
+    N5 --> N4
+    N6 --> N3
+    N6 --> N5
+    N9 --> N7
+    N9 --> N8
+    N12 --> N10
+    N12 --> N11
+    N13 --> N12
+    N14 --> N9
+    N14 --> N13
+    N15 --> N6
+    N15 --> N14
 
-    class N1 xorOp
-    class N2 orOp
+    class N1 variable
+    class N2 variable
     class N3 andOp
     class N4 variable
-    class N5 variable
-    class N6 notOp
+    class N5 notOp
+    class N6 orOp
     class N7 variable
-    class N8 andOp
+    class N8 variable
     class N9 orOp
     class N10 variable
     class N11 variable
-    class N12 notOp
-    class N13 xorOp
-    class N14 variable
-    class N15 variable
+    class N12 xorOp
+    class N13 notOp
+    class N14 andOp
+    class N15 xorOp
 
     classDef variable fill:lightblue,stroke:#333,stroke-width:2px,color:#000
     classDef andOp fill:lightgreen,stroke:#333,stroke-width:2px,color:#000

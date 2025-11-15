@@ -26,6 +26,8 @@
 #include "dag_walker.hpp"
 #include "dot_graph_generator.hpp"
 #include "expression_iterator.hpp"
+#include "graph_render_helpers.hpp"
+#include "mermaid_graph_generator.hpp"
 #include "node_id_allocator.hpp"
 
 // ============================================================================
@@ -88,127 +90,29 @@ void collect_variables_with_dag_walker(const my_expression& expr,
 
 void write_expression_to_mermaid(const my_expression& expr, std::ostream& out,
                                  const std::string& graph_title) {
-    out << "---\n";
-    out << "title: " << graph_title << "\n";
-    out << "---\n";
-    out << "flowchart TD\n";
+    // Use the generic expression iterator and the Mermaid generator to
+    // produce the same output as the previous custom implementation.
+    expression_iterator root_iter(expr);
+    mermaid_graph::MermaidConfig config;
+    config.graph_title = graph_title;
+    config.direction = "TD";  // default top-down
+    config.default_node_shape = "circle";
+    config.show_frontmatter = true;
+    config.show_css_classes = true;
+    config.default_css_class = "variable";
+    config.node_id_prefix = "N";
+    config.node_id_start = 1;
+    config.show_node_ids = false;
+    config.show_edge_labels = false;
+    // Preserve Expression-specific class mapping and definitions to match reference output
+    config.label_to_class_map = {
+        {"OR", "orOp"}, {"AND", "andOp"}, {"NOT", "notOp"}, {"XOR", "xorOp"}};
+    config.class_definitions = {
+        {"variable", "fill:lightblue,stroke:#333,stroke-width:2px,color:#000"},
+        {"andOp", "fill:lightgreen,stroke:#333,stroke-width:2px,color:#000"},
+        {"orOp", "fill:lightcoral,stroke:#333,stroke-width:2px,color:#000"},
+        {"notOp", "fill:yellow,stroke:#333,stroke-width:2px,color:#000"},
+        {"xorOp", "fill:lightpink,stroke:#333,stroke-width:2px,color:#000"}};
 
-    // Simple recursive approach for Mermaid generation
-    std::vector<std::string> node_definitions;
-    std::vector<std::string> edges;
-    std::vector<std::string> class_assignments;
-
-    // Use node_id_allocator to generate stable node IDs
-    graph_common::node_id_allocator id_alloc("N", 1);
-
-    auto get_node_id = [&](const my_expression* expr_ptr) -> std::string {
-        const void* ptr = static_cast<const void*>(expr_ptr);
-        return id_alloc.get_id(ptr);
-    };
-
-    // Recursive function to process expressions
-    std::function<void(const my_expression*)> process_expr = [&](const my_expression* expr_ptr) {
-        if (!expr_ptr)
-            return;
-
-        std::string node_id = get_node_id(expr_ptr);
-        std::string css_class;
-
-        // Generate node definition based on expression type
-        std::string node_def = std::visit(
-            [&](const auto& variant_expr) -> std::string {
-                using T = std::decay_t<decltype(variant_expr)>;
-                if constexpr (std::is_same_v<T, my_variable>) {
-                    // Variables as circles: N1(("var_name"))
-                    css_class = "variable";
-                    return node_id + "((\"" + variant_expr.variable_name + "\"))";
-                } else if constexpr (std::is_same_v<T, my_and>) {
-                    // Operators as rectangles: N1["AND"]
-                    css_class = "andOp";
-                    return node_id + "[\"AND\"]";
-                } else if constexpr (std::is_same_v<T, my_or>) {
-                    css_class = "orOp";
-                    return node_id + "[\"OR\"]";
-                } else if constexpr (std::is_same_v<T, my_not>) {
-                    css_class = "notOp";
-                    return node_id + "[\"NOT\"]";
-                } else if constexpr (std::is_same_v<T, my_xor>) {
-                    css_class = "xorOp";
-                    return node_id + "[\"XOR\"]";
-                }
-                return "";
-            },
-            *expr_ptr);
-
-        node_definitions.push_back("    " + node_def);
-
-        // Add CSS class assignment for this node
-        if (!css_class.empty()) {
-            class_assignments.push_back("    class " + node_id + " " + css_class);
-        }
-
-        // Process children and create edges
-        std::visit(
-            [&](const auto& variant_expr) {
-                using T = std::decay_t<decltype(variant_expr)>;
-                if constexpr (std::is_same_v<T, my_and> || std::is_same_v<T, my_or>
-                              || std::is_same_v<T, my_xor>) {
-                    // Binary operators have two children
-                    if (variant_expr.left) {
-                        std::string left_id = get_node_id(variant_expr.left.get());
-                        edges.push_back("    " + node_id + " --> " + left_id);
-                        process_expr(variant_expr.left.get());
-                    }
-                    if (variant_expr.right) {
-                        std::string right_id = get_node_id(variant_expr.right.get());
-                        edges.push_back("    " + node_id + " --> " + right_id);
-                        process_expr(variant_expr.right.get());
-                    }
-                } else if constexpr (std::is_same_v<T, my_not>) {
-                    // Unary operator has one child
-                    if (variant_expr.expr) {
-                        std::string child_id = get_node_id(variant_expr.expr.get());
-                        edges.push_back("    " + node_id + " --> " + child_id);
-                        process_expr(variant_expr.expr.get());
-                    }
-                }
-                // Variables have no children
-            },
-            *expr_ptr);
-    };
-
-    // Start processing from the root
-    process_expr(&expr);
-
-    // Output nodes first, then edges, then class assignments
-    for (const auto& node_def : node_definitions) {
-        out << node_def << "\n";
-    }
-    if (!node_definitions.empty() && !edges.empty()) {
-        out << "\n";
-    }
-    for (const auto& edge : edges) {
-        out << edge << "\n";
-    }
-
-    // Add CSS class assignments
-    if (!class_assignments.empty()) {
-        out << "\n";
-        for (const auto& class_assign : class_assignments) {
-            out << class_assign << "\n";
-        }
-    }
-
-    // Add CSS class definitions for colors (matching DOT color scheme)
-    out << "\n";
-    out << "    classDef variable fill:" << expression_constants::variable_color()
-        << ",stroke:#333,stroke-width:2px,color:#000\n";
-    out << "    classDef andOp fill:" << expression_constants::and_color()
-        << ",stroke:#333,stroke-width:2px,color:#000\n";
-    out << "    classDef orOp fill:" << expression_constants::or_color()
-        << ",stroke:#333,stroke-width:2px,color:#000\n";
-    out << "    classDef notOp fill:" << expression_constants::not_color()
-        << ",stroke:#333,stroke-width:2px,color:#000\n";
-    out << "    classDef xorOp fill:" << expression_constants::xor_color()
-        << ",stroke:#333,stroke-width:2px,color:#000\n";
+    mermaid_graph::generate_mermaid_graph(root_iter, out, config);
 }

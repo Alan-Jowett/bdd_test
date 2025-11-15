@@ -15,19 +15,19 @@ The following diagram shows the parse tree of the logical expression:
 title: Expression Tree
 ---
 flowchart TD
-    N1["NOT"]
+    N1(("x"))
     N2["NOT"]
     N3["NOT"]
-    N4(("x"))
+    N4["NOT"]
 
-    N1 --> N2
-    N2 --> N3
-    N3 --> N4
+    N2 --> N1
+    N3 --> N2
+    N4 --> N3
 
-    class N1 notOp
+    class N1 variable
     class N2 notOp
     class N3 notOp
-    class N4 variable
+    class N4 notOp
 
     classDef variable fill:lightblue,stroke:#333,stroke-width:2px,color:#000
     classDef andOp fill:lightgreen,stroke:#333,stroke-width:2px,color:#000

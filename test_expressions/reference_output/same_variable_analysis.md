@@ -15,16 +15,16 @@ The following diagram shows the parse tree of the logical expression:
 title: Expression Tree
 ---
 flowchart TD
-    N1["AND"]
+    N1(("x0"))
     N2(("x0"))
-    N3(("x0"))
+    N3["AND"]
 
-    N1 --> N2
-    N1 --> N3
+    N3 --> N1
+    N3 --> N2
 
-    class N1 andOp
+    class N1 variable
     class N2 variable
-    class N3 variable
+    class N3 andOp
 
     classDef variable fill:lightblue,stroke:#333,stroke-width:2px,color:#000
     classDef andOp fill:lightgreen,stroke:#333,stroke-width:2px,color:#000

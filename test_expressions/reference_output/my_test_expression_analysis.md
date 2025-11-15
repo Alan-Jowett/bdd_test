@@ -15,25 +15,25 @@ The following diagram shows the parse tree of the logical expression:
 title: Expression Tree
 ---
 flowchart TD
-    N1["AND"]
-    N2["NOT"]
+    N1(("a"))
+    N2(("b"))
     N3["OR"]
-    N4(("a"))
-    N5(("b"))
-    N6(("c"))
+    N4["NOT"]
+    N5(("c"))
+    N6["AND"]
 
-    N1 --> N2
-    N2 --> N3
-    N3 --> N4
-    N3 --> N5
-    N1 --> N6
+    N3 --> N1
+    N3 --> N2
+    N4 --> N3
+    N6 --> N4
+    N6 --> N5
 
-    class N1 andOp
-    class N2 notOp
+    class N1 variable
+    class N2 variable
     class N3 orOp
-    class N4 variable
+    class N4 notOp
     class N5 variable
-    class N6 variable
+    class N6 andOp
 
     classDef variable fill:lightblue,stroke:#333,stroke-width:2px,color:#000
     classDef andOp fill:lightgreen,stroke:#333,stroke-width:2px,color:#000
