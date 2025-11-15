@@ -270,7 +270,7 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
 
     // Topological emission: collect nodes in numeric/topological order,
     // emit node definitions, and then emit edges grouped by parent id order.
-    unique_nodes = dag_walker::collect_unique_nodes_topological(root_iterator);
+    unique_nodes = dag_walker::collect_nodes_topological(root_iterator);
     // Collect node definition lines so we can sort them lexicographically
     std::vector<std::string> node_lines;
     node_lines.reserve(unique_nodes.size());

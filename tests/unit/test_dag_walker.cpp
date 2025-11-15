@@ -104,7 +104,7 @@ TEST_CASE("DAGWalker - Collect unique nodes topological", "[dag_walker][collecti
                                 std::make_unique<my_expression>(my_variable{"b"})};
     expression_iterator root_iter(expr);
 
-    auto nodes = dag_walker::collect_unique_nodes_topological(root_iter);
+    auto nodes = dag_walker::collect_nodes_topological(root_iter);
 
     REQUIRE(nodes.size() == 3);
     // In topological order, children come before parents
@@ -120,7 +120,7 @@ TEST_CASE("DAGWalker - Collect nodes from expression with repeated variable name
         std::make_unique<my_expression>(my_variable{"a"})};
     expression_iterator root_iter(expr);
 
-    auto nodes = dag_walker::collect_unique_nodes_topological(root_iter);
+    auto nodes = dag_walker::collect_nodes_topological(root_iter);
 
     // In expression trees, each node is unique even if variable names repeat
     // Expect: 5 nodes total (a, b, AND, a, OR) - two separate 'a' nodes
@@ -220,7 +220,7 @@ TEST_CASE("DAGWalker - Collect all edges including revisits (collect_all_edges)"
     REQUIRE(edges_all.size() == 4);
 
     // Topological collection should list the 4 unique nodes
-    auto topo_nodes = dag_walker::collect_unique_nodes_topological(root_iter);
+    auto topo_nodes = dag_walker::collect_nodes_topological(root_iter);
     REQUIRE(topo_nodes.size() == 4);
 }
 
@@ -234,7 +234,7 @@ TEST_CASE("DAGWalker - Null visitor and invalid inputs", "[dag_walker][negative]
     auto noop = [](const dag_walker::NodeInfo<expression_iterator>&) {};
     REQUIRE_NOTHROW(dag_walker::walk_dag_topological_order(root_iter, noop));
 
-    // Ensure collect_unique_nodes_topological handles an empty graph-like iterator
+    // Ensure collect_nodes_topological handles an empty graph-like iterator
     struct empty_iter {
         std::vector<empty_iter> get_children() const {
             return {};
@@ -251,7 +251,7 @@ TEST_CASE("DAGWalker - Null visitor and invalid inputs", "[dag_walker][negative]
     };
 
     empty_iter ei;
-    auto nodes = dag_walker::collect_unique_nodes_topological(ei);
+    auto nodes = dag_walker::collect_nodes_topological(ei);
     // Nothing to assert reliably here other than the call succeeded
     SUCCEED();
 }

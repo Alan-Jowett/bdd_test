@@ -332,7 +332,7 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
     };
 
     // Use dag_walker to collect all unique nodes
-    auto unique_nodes = dag_walker::collect_unique_nodes(root_iterator);
+    auto unique_nodes = dag_walker::collect_nodes_topological(root_iterator);
 
     if (config.use_bdd_format) {
         // BDD-specific grouped shape format

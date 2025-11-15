@@ -82,8 +82,7 @@ std::vector<teddy::bdd_manager::diagram_t::node_t*> collect_teddy_nodes_topologi
 
     // Create TeDDy iterator and collect nodes in topological order
     teddy_iterator root_iter(diagram.unsafe_get_root(), &variable_names);
-    std::vector<teddy_iterator> nodes_in_order =
-        dag_walker::collect_unique_nodes_topological(root_iter);
+    std::vector<teddy_iterator> nodes_in_order = dag_walker::collect_nodes_topological(root_iter);
 
     // Convert iterator vector to node pointer vector using type-safe access
     std::vector<node_t*> result;

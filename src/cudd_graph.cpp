@@ -79,8 +79,7 @@ std::vector<DdNode*> collect_cudd_nodes_topological(
     cudd_iterator root_iter(cudd_manager, bdd.getNode(), &variable_names);
 
     // Collect nodes using DAG walker
-    std::vector<cudd_iterator> nodes_in_order =
-        dag_walker::collect_unique_nodes_topological(root_iter);
+    std::vector<cudd_iterator> nodes_in_order = dag_walker::collect_nodes_topological(root_iter);
 
     // Convert iterator vector to node pointer vector
     std::vector<DdNode*> result;
