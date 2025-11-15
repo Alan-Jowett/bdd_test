@@ -1,18 +1,18 @@
 digraph DD {
 
-    node [shape = square] node2 node3;
+    node [shape = square] node0 node1;
     node [shape = circle];
 
-    node0 [label = "x", tooltip = "0"];
-    node1 [label = "z", tooltip = "2"];
-    node2 [label = "0", tooltip = "0"];
-    node3 [label = "1", tooltip = "1"];
-    node4 [label = "y", tooltip = "1"];
+    node0 [label = "0", tooltip = "0"];
+    node1 [label = "1", tooltip = "1"];
+    node2 [label = "z", tooltip = "2"];
+    node3 [label = "y", tooltip = "1"];
+    node4 [label = "x", tooltip = "0"];
 
-    node0 -> node1 [style = dashed];
-    node1 -> node2 [style = dashed];
-    node1 -> node3 [style = solid];
-    node0 -> node4 [style = solid];
-    node4 -> node1 [style = dashed];
+    node4 -> node2 [style = dashed];
+    node2 -> node0 [style = dashed];
+    node2 -> node1 [style = solid];
     node4 -> node3 [style = solid];
+    node3 -> node2 [style = dashed];
+    node3 -> node1 [style = solid];
 }

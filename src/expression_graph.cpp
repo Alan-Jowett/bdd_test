@@ -62,7 +62,7 @@ void collect_variables_with_dag_walker(const my_expression& expr,
                                        std::unordered_set<std::string>& variables) {
     expression_iterator root_iter(expr);
 
-    dag_walker::walk_dag_preorder(
+    dag_walker::walk_dag_topological(
         root_iter, [&](const dag_walker::NodeInfo<expression_iterator>& node_info) {
             if (!node_info.is_revisit) {
                 // Type-safe variable detection using direct variant access

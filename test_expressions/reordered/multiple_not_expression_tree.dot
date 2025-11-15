@@ -3,12 +3,12 @@ digraph ExpressionTree {
     node [fontname="Arial"];
     edge [fontname="Arial"];
 
-    node0 [label = "NOT", shape=box, style = filled, fillcolor = yellow];
+    node0 [label = "x", shape=ellipse, style = filled, fillcolor = lightblue];
     node1 [label = "NOT", shape=box, style = filled, fillcolor = yellow];
     node2 [label = "NOT", shape=box, style = filled, fillcolor = yellow];
-    node3 [label = "x", shape=ellipse, style = filled, fillcolor = lightblue];
+    node3 [label = "NOT", shape=box, style = filled, fillcolor = yellow];
 
-    node0 -> node1;
-    node1 -> node2;
-    node2 -> node3;
+    node3 -> node2;
+    node2 -> node1;
+    node1 -> node0;
 }

@@ -56,10 +56,10 @@ title: BDD
 flowchart TD
     N0["0"]
     N1["1"]
-    N2(("qux_XOR_alpha"))
-    N3(("foo_AND_bar"))
-    N4(("baz_NOT_qux"))
-    N5(("bar_OR_baz"))
+    N2(("foo_AND_bar"))
+    N3(("baz_NOT_qux"))
+    N4(("bar_OR_baz"))
+    N5(("qux_XOR_alpha"))
 
     N2 -.-> N0
     N2 --> N1
@@ -93,10 +93,10 @@ The following table shows the internal structure of the BDD with node relationsh
 
 | Index | Variable | False Child | True Child | Type |
 |-------|----------|-------------|------------|------|
-| 0 | bar_OR_baz | 5 | 1 | Variable |
-| 1 | baz_NOT_qux | 5 | 2 | Variable |
-| 2 | foo_AND_bar | 5 | 3 | Variable |
-| 3 | qux_XOR_alpha | 5 | 4 | Variable |
+| 0 | qux_XOR_alpha | 5 | 1 | Variable |
+| 1 | bar_OR_baz | 5 | 2 | Variable |
+| 2 | baz_NOT_qux | 5 | 3 | Variable |
+| 3 | foo_AND_bar | 5 | 4 | Variable |
 | 4 | - | - | - | Terminal(1) |
 | 5 | - | - | - | Terminal(0) |
 

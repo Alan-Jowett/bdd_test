@@ -56,10 +56,10 @@ title: BDD
 flowchart TD
     N0["0"]
     N1["1"]
-    N2(("at_end_NOT"))
-    N3(("OR_in_middle"))
+    N2(("OR_in_middle"))
+    N3(("AND_at_start"))
     N4(("NOT_multiple_AND_keywords"))
-    N5(("AND_at_start"))
+    N5(("at_end_NOT"))
 
     N2 -.-> N0
     N2 --> N1
@@ -93,10 +93,10 @@ The following table shows the internal structure of the BDD with node relationsh
 
 | Index | Variable | False Child | True Child | Type |
 |-------|----------|-------------|------------|------|
-| 0 | AND_at_start | 5 | 1 | Variable |
+| 0 | at_end_NOT | 5 | 1 | Variable |
 | 1 | NOT_multiple_AND_keywords | 5 | 2 | Variable |
-| 2 | OR_in_middle | 5 | 3 | Variable |
-| 3 | at_end_NOT | 5 | 4 | Variable |
+| 2 | AND_at_start | 5 | 3 | Variable |
+| 3 | OR_in_middle | 5 | 4 | Variable |
 | 4 | - | - | - | Terminal(1) |
 | 5 | - | - | - | Terminal(0) |
 

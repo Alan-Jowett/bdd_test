@@ -1,0 +1,21 @@
+digraph DD {
+
+    node [shape = square] node0 node1;
+    node [shape = circle];
+
+    node0 [label = "0", tooltip = "0"];
+    node1 [label = "1", tooltip = "1"];
+    node2 [label = "foo_AND_bar", tooltip = "2"];
+    node3 [label = "baz_NOT_qux", tooltip = "1"];
+    node4 [label = "bar_OR_baz", tooltip = "0"];
+    node5 [label = "qux_XOR_alpha", tooltip = "3"];
+
+    node5 -> node0 [style = dashed];
+    node5 -> node4 [style = solid];
+    node4 -> node0 [style = dashed];
+    node4 -> node3 [style = solid];
+    node3 -> node0 [style = dashed];
+    node3 -> node2 [style = solid];
+    node2 -> node0 [style = dashed];
+    node2 -> node1 [style = solid];
+}

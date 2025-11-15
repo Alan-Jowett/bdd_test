@@ -1,0 +1,20 @@
+digraph ExpressionTree {
+    rankdir=TB;
+    node [fontname="Arial"];
+    edge [fontname="Arial"];
+
+    node0 [label = "AND_at_start", shape=ellipse, style = filled, fillcolor = lightblue];
+    node1 [label = "OR_in_middle", shape=ellipse, style = filled, fillcolor = lightblue];
+    node2 [label = "AND", shape=box, style = filled, fillcolor = lightgreen];
+    node3 [label = "at_end_NOT", shape=ellipse, style = filled, fillcolor = lightblue];
+    node4 [label = "AND", shape=box, style = filled, fillcolor = lightgreen];
+    node5 [label = "NOT_multiple_AND_keywords", shape=ellipse, style = filled, fillcolor = lightblue];
+    node6 [label = "AND", shape=box, style = filled, fillcolor = lightgreen];
+
+    node6 -> node4 [label = "L"];
+    node4 -> node2 [label = "L"];
+    node2 -> node0 [label = "L"];
+    node2 -> node1 [label = "R"];
+    node4 -> node3 [label = "R"];
+    node6 -> node5 [label = "R"];
+}

@@ -307,7 +307,7 @@ std::vector<Iterator> collect_unique_nodes(const Iterator& root_iterator,
 
     std::vector<Iterator> unique_nodes;
 
-    walk_dag_preorder(
+    walk_dag_topological(
         root_iterator,
         [&](const NodeInfo<Iterator>& node_info) {
             if (!node_info.is_revisit) {
@@ -449,7 +449,7 @@ template <DagWalkerIterator Iterator>
 size_t get_max_depth(const Iterator& root_iterator) {
     size_t max_depth = 0;
 
-    walk_dag_preorder(root_iterator, [&](const NodeInfo<Iterator>& node_info) {
+    walk_dag_topological(root_iterator, [&](const NodeInfo<Iterator>& node_info) {
         if (!node_info.is_revisit) {
             max_depth = std::max(max_depth, node_info.depth);
         }
