@@ -32,7 +32,9 @@
 
 #include "dag_walker.hpp"
 #include "graph_iterator_concepts.hpp"
+#include "graph_render_helpers.hpp"
 #include "node_id_allocator.hpp"
+#include "node_id_helpers.hpp"
 
 namespace mermaid_graph {
 
@@ -197,65 +199,39 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
         return id_alloc.get_id(key);
     };
 
-    // Generate node definition from iterator properties
+    // Generate node definition from iterator properties using helpers
+    using graph_render_helpers::render_node_line;
     auto build_node_definition = [&](const Iterator& iter,
                                      const std::string& node_id) -> std::string {
-        std::string label;
+        std::string label = node_id;
         if constexpr (has_get_label<Iterator>) {
             label = iter.get_label();
-        } else {
-            label = node_id;
         }
 
-        // Determine shape and format
         std::string shape = config.default_node_shape;
         if constexpr (has_get_shape<Iterator>) {
             shape = iter.get_shape();
         }
 
-        // Format node based on shape
-        if (shape == "square") {
-            return std::format("    {}[\"{}\"]\n", node_id, label);
-        } else if (shape == "circle") {
-            return "    " + node_id + "((\"" + label + "\"))\n";
-        } else if (shape == "diamond") {
-            return "    " + node_id + "{\"" + label + "\"}\n";
-        } else if (shape == "hexagon") {
-            return "    " + node_id + "{{\"" + label + "\"}}\n";
-        } else {
-            // Default to circle
-            return "    " + node_id + "((\"" + label + "\"))\n";
-        }
+        return render_node_line(node_id, label, shape);
     };
 
-    // Generate edge definition from iterator properties
-    auto build_edge_definition = [](const Iterator& parent, const Iterator& child, size_t index,
-                                    const std::string& parent_id,
-                                    const std::string& child_id) -> std::string {
-        std::string edge_style = " --> ";
+    // Generate edge definition from iterator properties using helpers
+    using graph_render_helpers::render_edge_line;
+    auto build_edge_definition = [&](const Iterator& parent, const Iterator& child, size_t index,
+                                     const std::string& parent_id,
+                                     const std::string& child_id) -> std::string {
+        std::string style;
         if constexpr (has_get_edge_style<Iterator>) {
-            std::string style = parent.get_edge_style(child, index);
-            if (style == "dashed") {
-                edge_style = " -.-> ";
-            } else if (style == "dotted") {
-                edge_style = " -..-> ";
-            } else if (style == "thick") {
-                edge_style = " ==> ";
-            }
-            // Default remains solid: " --> "
+            style = parent.get_edge_style(child, index);
         }
 
-        std::string edge_label;
+        std::string label;
         if constexpr (has_get_edge_label<Iterator>) {
-            edge_label = parent.get_edge_label(child, index);
+            label = parent.get_edge_label(child, index);
         }
 
-        if (!edge_label.empty()) {
-            return std::format("    {}{} |\"{}\"| {}\n", parent_id, edge_style, edge_label,
-                               child_id);
-        } else {
-            return std::format("    {}{}{}\n", parent_id, edge_style, child_id);
-        }
+        return render_edge_line(parent_id, child_id, style, label);
     };
 
     // Use dag_walker to collect all unique nodes in topological order and output them
@@ -297,13 +273,9 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
     }
 
     // Sort by node ID numerically to get consistent TeDDy ordering
-    std::sort(parent_ids_and_keys.begin(), parent_ids_and_keys.end(),
-              [](const auto& a, const auto& b) {
-                  // Extract numeric part from node ID (e.g., "N2" -> 2)
-                  int num_a = std::stoi(a.first.substr(1));
-                  int num_b = std::stoi(b.first.substr(1));
-                  return num_a < num_b;
-              });
+    std::sort(
+        parent_ids_and_keys.begin(), parent_ids_and_keys.end(),
+        [](const auto& a, const auto& b) { return graph_common::node_id_less(a.first, b.first); });
 
     // Output edges in sorted parent ID order
     for (const auto& [parent_id, parent_key] : parent_ids_and_keys) {
@@ -340,22 +312,8 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
             out << "\n";
 
             // Sort CSS class assignments by node ID for consistent output
-            std::vector<std::pair<std::string, std::string>> sorted_class_assignments;
-            for (const auto& [class_name, node_ids] : class_to_nodes) {
-                std::transform(node_ids.begin(), node_ids.end(),
-                               std::back_inserter(sorted_class_assignments),
-                               [&class_name](const std::string& node_id) {
-                                   return std::make_pair(node_id, class_name);
-                               });
-            }
-            std::sort(sorted_class_assignments.begin(), sorted_class_assignments.end(),
-                      [](const auto& a, const auto& b) {
-                          // Sort by node ID numerically (e.g., N1, N2, N3...)
-                          int num_a = std::stoi(a.first.substr(1));
-                          int num_b = std::stoi(b.first.substr(1));
-                          return num_a < num_b;
-                      });
-
+            auto sorted_class_assignments =
+                graph_render_helpers::flatten_and_sort_class_assignments(class_to_nodes);
             for (const auto& [node_id, class_name] : sorted_class_assignments) {
                 out << "    class " << node_id << " " << class_name << "\n";
             }

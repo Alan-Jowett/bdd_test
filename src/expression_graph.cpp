@@ -26,6 +26,7 @@
 #include "dag_walker.hpp"
 #include "dot_graph_generator.hpp"
 #include "expression_iterator.hpp"
+#include "graph_render_helpers.hpp"
 #include "node_id_allocator.hpp"
 
 // ============================================================================
@@ -96,7 +97,7 @@ void write_expression_to_mermaid(const my_expression& expr, std::ostream& out,
     // Simple recursive approach for Mermaid generation
     std::vector<std::string> node_definitions;
     std::vector<std::string> edges;
-    std::vector<std::string> class_assignments;
+    std::unordered_map<std::string, std::vector<std::string>> class_assignments_map;
 
     // Use node_id_allocator to generate stable node IDs
     graph_common::node_id_allocator id_alloc("N", 1);
@@ -114,37 +115,41 @@ void write_expression_to_mermaid(const my_expression& expr, std::ostream& out,
         std::string node_id = get_node_id(expr_ptr);
         std::string css_class;
 
-        // Generate node definition based on expression type
-        std::string node_def = std::visit(
-            [&](const auto& variant_expr) -> std::string {
+        // Generate node definition based on expression type, using render helper
+        std::string node_label;
+        std::string node_shape = "circle";
+        std::visit(
+            [&](const auto& variant_expr) {
                 using T = std::decay_t<decltype(variant_expr)>;
                 if constexpr (std::is_same_v<T, my_variable>) {
-                    // Variables as circles: N1(("var_name"))
                     css_class = "variable";
-                    return node_id + "((\"" + variant_expr.variable_name + "\"))";
+                    node_label = variant_expr.variable_name;
+                    node_shape = "circle";
                 } else if constexpr (std::is_same_v<T, my_and>) {
-                    // Operators as rectangles: N1["AND"]
                     css_class = "andOp";
-                    return node_id + "[\"AND\"]";
+                    node_label = "AND";
+                    node_shape = "square";
                 } else if constexpr (std::is_same_v<T, my_or>) {
                     css_class = "orOp";
-                    return node_id + "[\"OR\"]";
+                    node_label = "OR";
+                    node_shape = "square";
                 } else if constexpr (std::is_same_v<T, my_not>) {
                     css_class = "notOp";
-                    return node_id + "[\"NOT\"]";
+                    node_label = "NOT";
+                    node_shape = "square";
                 } else if constexpr (std::is_same_v<T, my_xor>) {
                     css_class = "xorOp";
-                    return node_id + "[\"XOR\"]";
+                    node_label = "XOR";
+                    node_shape = "square";
                 }
-                return "";
             },
             *expr_ptr);
 
-        node_definitions.push_back("    " + node_def);
+        node_definitions.push_back(
+            graph_render_helpers::render_node_line(node_id, node_label, node_shape));
 
-        // Add CSS class assignment for this node
         if (!css_class.empty()) {
-            class_assignments.push_back("    class " + node_id + " " + css_class);
+            class_assignments_map[css_class].push_back(node_id);
         }
 
         // Process children and create edges
@@ -153,26 +158,26 @@ void write_expression_to_mermaid(const my_expression& expr, std::ostream& out,
                 using T = std::decay_t<decltype(variant_expr)>;
                 if constexpr (std::is_same_v<T, my_and> || std::is_same_v<T, my_or>
                               || std::is_same_v<T, my_xor>) {
-                    // Binary operators have two children
                     if (variant_expr.left) {
                         std::string left_id = get_node_id(variant_expr.left.get());
-                        edges.push_back("    " + node_id + " --> " + left_id);
+                        edges.push_back(
+                            graph_render_helpers::render_edge_line(node_id, left_id, "", ""));
                         process_expr(variant_expr.left.get());
                     }
                     if (variant_expr.right) {
                         std::string right_id = get_node_id(variant_expr.right.get());
-                        edges.push_back("    " + node_id + " --> " + right_id);
+                        edges.push_back(
+                            graph_render_helpers::render_edge_line(node_id, right_id, "", ""));
                         process_expr(variant_expr.right.get());
                     }
                 } else if constexpr (std::is_same_v<T, my_not>) {
-                    // Unary operator has one child
                     if (variant_expr.expr) {
                         std::string child_id = get_node_id(variant_expr.expr.get());
-                        edges.push_back("    " + node_id + " --> " + child_id);
+                        edges.push_back(
+                            graph_render_helpers::render_edge_line(node_id, child_id, "", ""));
                         process_expr(variant_expr.expr.get());
                     }
                 }
-                // Variables have no children
             },
             *expr_ptr);
     };
@@ -182,20 +187,22 @@ void write_expression_to_mermaid(const my_expression& expr, std::ostream& out,
 
     // Output nodes first, then edges, then class assignments
     for (const auto& node_def : node_definitions) {
-        out << node_def << "\n";
+        out << node_def;
     }
     if (!node_definitions.empty() && !edges.empty()) {
         out << "\n";
     }
     for (const auto& edge : edges) {
-        out << edge << "\n";
+        out << edge;
     }
 
-    // Add CSS class assignments
-    if (!class_assignments.empty()) {
+    // Add CSS class assignments (flatten and sort for deterministic output)
+    if (!class_assignments_map.empty()) {
         out << "\n";
-        for (const auto& class_assign : class_assignments) {
-            out << class_assign << "\n";
+        auto sorted =
+            graph_render_helpers::flatten_and_sort_class_assignments(class_assignments_map);
+        for (const auto& [node_id, class_name] : sorted) {
+            out << "    class " << node_id << " " << class_name << "\n";
         }
     }
 
