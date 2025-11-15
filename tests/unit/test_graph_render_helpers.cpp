@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
 
+<<<<<<< HEAD
 /**
  * @file tests/unit/test_graph_render_helpers.cpp
  * @brief Tests for graph rendering helper functions
@@ -9,6 +10,8 @@
  * class assignment flattening used across DOT and Mermaid generators.
  */
 
+=======
+>>>>>>> a7337d6 (tests: add multiple unit tests and update test configuration)
 #include <catch2/catch_test_macros.hpp>
 #include <unordered_map>
 #include <vector>

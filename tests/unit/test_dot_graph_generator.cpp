@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
 
+<<<<<<< HEAD
 /**
  * @file tests/unit/test_dot_graph_generator.cpp
  * @brief Tests for DOT graph generation helpers
@@ -8,6 +9,8 @@
  * Confirms that DOT output contains expected graph and node labels and edges.
  */
 
+=======
+>>>>>>> a7337d6 (tests: add multiple unit tests and update test configuration)
 #include <catch2/catch_test_macros.hpp>
 #include <sstream>
 

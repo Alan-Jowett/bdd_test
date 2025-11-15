@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+<<<<<<< HEAD
 
 /**
  * @file tests/unit/test_teddy_convert.cpp
@@ -8,6 +9,8 @@
  * truth table semantics for converted diagrams.
  */
 
+=======
+>>>>>>> a7337d6 (tests: add multiple unit tests and update test configuration)
 #include <catch2/catch_test_macros.hpp>
 #include <string>
 #include <vector>

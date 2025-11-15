@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 
+<<<<<<< HEAD
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
 
@@ -13,6 +14,8 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+=======
+>>>>>>> a7337d6 (tests: add multiple unit tests and update test configuration)
 #include "node_id_helpers.hpp"
 
 TEST_CASE("node_id_numeric parses numeric suffixes correctly", "[node_id_helpers]") {
