@@ -1,3 +1,14 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
+
+/**
+ * @file tests/unit/test_mermaid_graph_generator.cpp
+ * @brief Tests for Mermaid flowchart generation
+ *
+ * Ensures Mermaid output contains expected nodes, edges, and class definitions
+ * for different operator types and variable nodes.
+ */
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 #include <sstream>

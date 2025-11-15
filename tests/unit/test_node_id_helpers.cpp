@@ -1,5 +1,18 @@
 #include <catch2/catch_test_macros.hpp>
 
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
+
+/**
+ * @file tests/unit/test_node_id_helpers.cpp
+ * @brief Tests for node id helper functions
+ *
+ * Validates numeric suffix parsing and numeric-aware comparison used for
+ * ordering node ids naturally (e.g., N2 < N10).
+ */
+
+#include <catch2/catch_test_macros.hpp>
+
 #include "node_id_helpers.hpp"
 
 TEST_CASE("node_id_numeric parses numeric suffixes correctly", "[node_id_helpers]") {

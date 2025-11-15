@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
 
+/**
+ * @file tests/unit/test_cudd_iterator.cpp
+ * @brief Unit tests for the CUDD BDD iterator wrapper
+ *
+ * Verifies iterator semantics, labels, terminal detection and DOT attribute
+ * generation for the CUDD-based iterator interface.
+ */
+
 #include <cudd/cudd.h>
 
 #include <catch2/catch_test_macros.hpp>

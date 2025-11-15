@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Unit tests for `graph_common::node_id_allocator`.
+/**
+ * @file tests/unit/test_node_id_allocator.cpp
+ * @brief Tests for the node id allocator utility
+ *
+ * Verifies unique id generation, prefix handling, stable mapping for keys, and
+ * reset/start-index behaviors expected from the allocator.
+ */
 
 #include <catch2/catch_test_macros.hpp>
 #include <set>

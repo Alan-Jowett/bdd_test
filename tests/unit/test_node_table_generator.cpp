@@ -1,4 +1,13 @@
-// SPDX-License-Identifier: MIT
+#// SPDX-License-Identifier: MIT
+
+/**
+ * @file tests/unit/test_node_table_generator.cpp
+ * @brief Unit tests for node table generation (text/markdown/csv)
+ *
+ * Verifies that the node table generators produce correctly formatted output
+ * including headers, counts, and terminal/internal node representations.
+ */
+
 #include <catch2/catch_test_macros.hpp>
 #include <sstream>
 #include <string>

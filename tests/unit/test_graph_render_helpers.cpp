@@ -1,5 +1,13 @@
-// SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
+#// SPDX-License-Identifier: MIT
+#// SPDX-FileCopyrightText: Copyright (c) 2025 Alan Jowett
+
+/**
+ * @file tests/unit/test_graph_render_helpers.cpp
+ * @brief Tests for graph rendering helper functions
+ *
+ * Validates label escaping, node/edge rendering helpers, property joining and
+ * class assignment flattening used across DOT and Mermaid generators.
+ */
 
 #include <catch2/catch_test_macros.hpp>
 #include <unordered_map>
