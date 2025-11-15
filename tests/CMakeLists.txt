@@ -90,6 +90,9 @@ add_executable(unit_tests
     unit/test_cudd_convert.cpp
     unit/test_cudd_iterator.cpp
     unit/test_dot_graph_generator.cpp
+    unit/test_dot_graph_bdd_format.cpp
+    unit/test_dot_graph_fallback_iterator.cpp
+    unit/test_node_table_edge_cases.cpp
     unit/test_graph_render_helpers.cpp
     unit/test_mermaid_graph_generator.cpp
     unit/test_node_id_allocator.cpp
