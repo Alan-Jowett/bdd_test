@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <format>
+#include <iterator>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -132,9 +133,9 @@ inline std::vector<std::pair<std::string, std::string>> flatten_and_sort_class_a
     out.reserve(256);
     for (const auto& p : class_to_nodes) {
         const auto& class_name = p.first;
-        for (const auto& id : p.second) {
-            out.emplace_back(id, class_name);
-        }
+        const auto& ids = p.second;
+        std::transform(ids.begin(), ids.end(), std::back_inserter(out),
+                       [&](const std::string& id) { return std::make_pair(id, class_name); });
     }
     std::sort(out.begin(), out.end(), [](const auto& a, const auto& b) {
         return graph_common::node_id_less(a.first, b.first);
