@@ -1,3 +1,12 @@
+// SPDX-License-Identifier: MIT
+/**
+ * @file tests/unit/test_teddy_convert.cpp
+ * @brief Tests for converting expression ASTs to TeDDy BDDs
+ *
+ * Ensures conversion functions produce non-empty BDDs and validates basic
+ * truth table semantics for converted diagrams.
+ */
+
 #include <catch2/catch_test_macros.hpp>
 #include <string>
 #include <vector>

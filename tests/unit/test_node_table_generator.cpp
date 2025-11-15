@@ -8,6 +8,10 @@
  * including headers, counts, and terminal/internal node representations.
  */
 
+// Product files under test:
+// - include/node_table_generator.hpp
+// - include/graph_iterator_concepts.hpp
+
 #include <catch2/catch_test_macros.hpp>
 #include <sstream>
 #include <string>

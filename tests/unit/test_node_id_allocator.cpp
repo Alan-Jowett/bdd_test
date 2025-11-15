@@ -9,6 +9,8 @@
  */
 
 #include <catch2/catch_test_macros.hpp>
+// Product files under test:
+// - include/node_id_allocator.hpp
 #include <set>
 
 #include "node_id_allocator.hpp"
