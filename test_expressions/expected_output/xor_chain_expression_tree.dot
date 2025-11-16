@@ -13,12 +13,12 @@ digraph ExpressionTree {
     node7 [label = "e", shape=ellipse, style = filled, fillcolor = lightblue];
     node8 [label = "XOR", shape=box, style = filled, fillcolor = lightpink];
 
-    node8 -> node6 [label = "L"];
-    node6 -> node4 [label = "L"];
-    node4 -> node2 [label = "L"];
     node2 -> node0 [label = "L"];
     node2 -> node1 [label = "R"];
+    node4 -> node2 [label = "L"];
     node4 -> node3 [label = "R"];
+    node6 -> node4 [label = "L"];
     node6 -> node5 [label = "R"];
+    node8 -> node6 [label = "L"];
     node8 -> node7 [label = "R"];
 }

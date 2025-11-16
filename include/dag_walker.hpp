@@ -158,32 +158,6 @@ void walk_dag_topological_order(const Iterator& root_iterator, V&& visitor) {
 }
 
 /**
- * @brief Collect all unique nodes from a DAG or tree structure
- *
- * This function traverses the structure and returns a vector of all unique nodes
- * encountered, useful for operations that need to process each node exactly once.
- *
- * @tparam Iterator The iterator type that represents tree/DAG nodes
- * @param root_iterator The root iterator to start traversal from
- * @return std::vector<Iterator> Vector of all unique nodes found
- *
- * @requires Iterator must satisfy DagWalkerIterator concept
- */
-template <DagWalkerIterator Iterator>
-std::vector<Iterator> collect_unique_nodes(const Iterator& root_iterator) {
-    static_assert(DagWalkerIterator<Iterator>,
-                  "Iterator must satisfy DagWalkerIterator concept for node collection");
-
-    std::vector<Iterator> unique_nodes;
-
-    walk_dag_topological_order(root_iterator, [&](const NodeInfo<Iterator>& node_info) {
-        unique_nodes.push_back(node_info.node);
-    });
-
-    return unique_nodes;
-}
-
-/**
  * @brief Collect all edges (parent-child relationships) from a DAG or tree structure
  *
  * This function traverses the structure and returns information about all edges,
@@ -202,85 +176,31 @@ struct EdgeInfo {
 };
 
 /**
- * @brief Collect all edges from a DAG or tree structure
- *
- * @tparam Iterator The iterator type that represents tree/DAG nodes
- * @param root_iterator The root iterator to start traversal from
- * @return std::vector<EdgeInfo<Iterator>> Vector of all edges found
- *
- * @requires Iterator must satisfy DagWalkerIterator concept
- */
-template <DagWalkerIterator Iterator>
-std::vector<EdgeInfo<Iterator>> collect_edges(const Iterator& root_iterator) {
-    static_assert(DagWalkerIterator<Iterator>,
-                  "Iterator must satisfy DagWalkerIterator concept for edge collection");
-
-    std::vector<EdgeInfo<Iterator>> edges;
-
-    // Special mode: collect ALL edges including those to revisited nodes
-    // This ensures we get the same edge set as manual BDD traversal
-    std::unordered_set<const void*> processed_nodes;
-
-    std::function<void(const Iterator&, const Iterator*)> collect_all_edges_impl =
-        [&](const Iterator& current, const Iterator* parent) {
-            const void* node_key = current.get_node_address();
-
-            // Add edge from parent to current (if parent exists)
-            if (parent) {
-                // Find the index of this child in parent's children
-                auto parent_children = parent->get_children();
-                for (size_t i = 0; i < parent_children.size(); ++i) {
-                    if (parent_children[i].get_node_address() == node_key) {
-                        edges.emplace_back(*parent, current, i);
-                        break;
-                    }
-                }
-            }
-
-            // Stop if we've already processed this node to avoid infinite loops
-            if (processed_nodes.find(node_key) != processed_nodes.end()) {
-                return;
-            }
-            processed_nodes.insert(node_key);
-
-            // Process all children
-            auto children = current.get_children();
-            for (const auto& child : children) {
-                collect_all_edges_impl(child, &current);
-            }
-        };
-
-    collect_all_edges_impl(root_iterator, nullptr);
-
-    return edges;
-}
-
-/**
- * @brief Collect all unique nodes from a DAG or tree in weak topological order
+ * @brief Collect all nodes from a DAG or tree in weak topological order
  *
  * This function traverses the structure in weak topological order and returns
- * a vector of all unique nodes, with each node appearing after all its dependencies.
+ * a vector of all nodes, with each node appearing after all its dependencies.
  * This is useful for operations that need to process nodes after their children.
  *
  * @tparam Iterator The iterator type that represents tree/DAG nodes
  * @param root_iterator The root iterator to start traversal from
- * @return std::vector<Iterator> Vector of all unique nodes in topological order
+ * @return std::vector<Iterator> Vector of all nodes in topological order
  *
  * @requires Iterator must satisfy DagWalkerIterator concept
  */
 template <DagWalkerIterator Iterator>
-std::vector<Iterator> collect_unique_nodes_topological(const Iterator& root_iterator) {
+std::vector<Iterator> collect_nodes_topological(const Iterator& root_iterator) {
     static_assert(
         DagWalkerIterator<Iterator>,
         "Iterator must satisfy DagWalkerIterator concept for topological node collection");
 
-    std::vector<Iterator> unique_nodes;
+    std::vector<Iterator> nodes;
 
     walk_dag_topological_order(root_iterator, [&](const NodeInfo<Iterator>& node_info) {
-        unique_nodes.push_back(node_info.node);
+        nodes.push_back(node_info.node);
     });
 
-    return unique_nodes;
+    return nodes;
 }
 
 /**
@@ -304,12 +224,17 @@ std::vector<EdgeInfo<Iterator>> collect_edges_topological(const Iterator& root_i
         "Iterator must satisfy DagWalkerIterator concept for topological edge collection");
 
     std::vector<EdgeInfo<Iterator>> edges;
-
-    walk_dag_topological_order(root_iterator, [&](const NodeInfo<Iterator>& node_info) {
-        if (node_info.parent) {
-            edges.emplace_back(*node_info.parent, node_info.node, node_info.index_from_parent);
+    // Collect nodes in weak topological order (children before parents), then
+    // enumerate each parent's children to ensure we capture every parent->child
+    // relationship. This preserves topological ordering while including edges
+    // to nodes that may have been visited earlier via other paths.
+    auto topo_nodes = collect_nodes_topological(root_iterator);
+    for (const auto& parent : topo_nodes) {
+        auto children = parent.get_children();
+        for (size_t i = 0; i < children.size(); ++i) {
+            edges.emplace_back(parent, children[i], i);
         }
-    });
+    }
 
     return edges;
 }

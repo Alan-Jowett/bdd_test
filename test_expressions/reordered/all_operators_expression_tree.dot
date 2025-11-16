@@ -5,6 +5,11 @@ digraph ExpressionTree {
 
     node0 [label = "var1", shape=ellipse, style = filled, fillcolor = lightblue];
     node1 [label = "var2", shape=ellipse, style = filled, fillcolor = lightblue];
+    node10 [label = "var7", shape=ellipse, style = filled, fillcolor = lightblue];
+    node11 [label = "XOR", shape=box, style = filled, fillcolor = lightpink];
+    node12 [label = "NOT", shape=box, style = filled, fillcolor = yellow];
+    node13 [label = "AND", shape=box, style = filled, fillcolor = lightgreen];
+    node14 [label = "XOR", shape=box, style = filled, fillcolor = lightpink];
     node2 [label = "AND", shape=box, style = filled, fillcolor = lightgreen];
     node3 [label = "var3", shape=ellipse, style = filled, fillcolor = lightblue];
     node4 [label = "NOT", shape=box, style = filled, fillcolor = yellow];
@@ -13,24 +18,19 @@ digraph ExpressionTree {
     node7 [label = "var5", shape=ellipse, style = filled, fillcolor = lightblue];
     node8 [label = "OR", shape=box, style = filled, fillcolor = lightcoral];
     node9 [label = "var6", shape=ellipse, style = filled, fillcolor = lightblue];
-    node10 [label = "var7", shape=ellipse, style = filled, fillcolor = lightblue];
-    node11 [label = "XOR", shape=box, style = filled, fillcolor = lightpink];
-    node12 [label = "NOT", shape=box, style = filled, fillcolor = yellow];
-    node13 [label = "AND", shape=box, style = filled, fillcolor = lightgreen];
-    node14 [label = "XOR", shape=box, style = filled, fillcolor = lightpink];
 
+    node11 -> node10 [label = "R"];
+    node11 -> node9 [label = "L"];
+    node12 -> node11;
+    node13 -> node12 [label = "R"];
+    node13 -> node8 [label = "L"];
+    node14 -> node13 [label = "R"];
     node14 -> node5 [label = "L"];
-    node5 -> node2 [label = "L"];
     node2 -> node0 [label = "L"];
     node2 -> node1 [label = "R"];
-    node5 -> node4 [label = "R"];
     node4 -> node3;
-    node14 -> node13 [label = "R"];
-    node13 -> node8 [label = "L"];
+    node5 -> node2 [label = "L"];
+    node5 -> node4 [label = "R"];
     node8 -> node6 [label = "L"];
     node8 -> node7 [label = "R"];
-    node13 -> node12 [label = "R"];
-    node12 -> node11;
-    node11 -> node9 [label = "L"];
-    node11 -> node10 [label = "R"];
 }

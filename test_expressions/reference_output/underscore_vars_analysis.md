@@ -54,12 +54,12 @@ flowchart TD
     N3(("var_2"))
     N4(("var_1"))
 
-    N2 -.-> N0
     N2 --> N1
-    N3 -.-> N2
+    N2 -.-> N0
     N3 --> N1
-    N4 -.-> N2
+    N3 -.-> N2
     N4 --> N3
+    N4 -.-> N2
 
     class N0 terminal
     class N1 terminal

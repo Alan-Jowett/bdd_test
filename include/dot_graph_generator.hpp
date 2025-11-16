@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <concepts>
 #include <format>
 #include <iostream>
@@ -331,7 +332,7 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
     };
 
     // Use dag_walker to collect all unique nodes
-    auto unique_nodes = dag_walker::collect_unique_nodes(root_iterator);
+    auto unique_nodes = dag_walker::collect_nodes_topological(root_iterator);
 
     if (config.use_bdd_format) {
         // BDD-specific grouped shape format
@@ -370,6 +371,8 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
         }
 
         // Output individual node declarations (without shape attributes for BDD format)
+        std::vector<std::string> node_lines;
+        node_lines.reserve(unique_nodes.size());
         for (const auto& node : unique_nodes) {
             std::string node_id = id_alloc.get_id(node.get_node_address());
             std::vector<std::string> props;
@@ -383,31 +386,51 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
                 props.push_back("tooltip = \""
                                 + graph_render_helpers::escape_label(node.get_tooltip()) + "\"");
             }
-            out << "    " << node_id << " " << graph_render_helpers::join_dot_properties(props)
-                << ";\n";
+            node_lines.push_back("    " + node_id + " "
+                                 + graph_render_helpers::join_dot_properties(props) + ";\n");
+        }
+
+        std::sort(node_lines.begin(), node_lines.end());
+        for (const auto& line : node_lines) {
+            out << line;
         }
     } else {
         // Standard format: individual node declarations with all attributes
+        std::vector<std::string> node_lines;
+        node_lines.reserve(unique_nodes.size());
         for (const auto& node : unique_nodes) {
             std::string node_id = get_node_id(node);
             std::string node_attrs = build_node_attributes(node, node_id);
-            out << "    " << node_id << " " << node_attrs << ";\n";
+            node_lines.push_back("    " + node_id + " " + node_attrs + ";\n");
+        }
+
+        std::sort(node_lines.begin(), node_lines.end());
+        for (const auto& line : node_lines) {
+            out << line;
         }
     }
 
     // Use dag_walker to collect edges with appropriate configuration
     out << "\n";
-    auto edges = dag_walker::collect_edges(root_iterator);
+    auto edges = dag_walker::collect_edges_topological(root_iterator);
+    std::vector<std::string> edge_lines;
+    edge_lines.reserve(edges.size());
     for (const auto& edge : edges) {
         std::string parent_id = get_node_id(edge.parent);
         std::string child_id = get_node_id(edge.child);
         std::string edge_attrs = build_edge_attributes(edge.parent, edge.child, edge.child_index);
 
-        out << "    " << parent_id << " -> " << child_id;
+        std::string line = "    " + parent_id + " -> " + child_id;
         if (!edge_attrs.empty()) {
-            out << " " << edge_attrs;
+            line += " " + edge_attrs;
         }
-        out << ";\n";
+        line += ";\n";
+        edge_lines.push_back(std::move(line));
+    }
+
+    std::sort(edge_lines.begin(), edge_lines.end());
+    for (const auto& line : edge_lines) {
+        out << line;
     }
 
     out << "}\n";

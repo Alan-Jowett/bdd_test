@@ -16,6 +16,12 @@ title: Expression Tree
 ---
 flowchart TD
     N1(("var1"))
+    N10(("var6"))
+    N11(("var7"))
+    N12["XOR"]
+    N13["NOT"]
+    N14["AND"]
+    N15["XOR"]
     N2(("var2"))
     N3["AND"]
     N4(("var3"))
@@ -24,13 +30,14 @@ flowchart TD
     N7(("var4"))
     N8(("var5"))
     N9["OR"]
-    N10(("var6"))
-    N11(("var7"))
-    N12["XOR"]
-    N13["NOT"]
-    N14["AND"]
-    N15["XOR"]
 
+    N12 --> N10
+    N12 --> N11
+    N13 --> N12
+    N14 --> N13
+    N14 --> N9
+    N15 --> N14
+    N15 --> N6
     N3 --> N1
     N3 --> N2
     N5 --> N4
@@ -38,13 +45,6 @@ flowchart TD
     N6 --> N5
     N9 --> N7
     N9 --> N8
-    N12 --> N10
-    N12 --> N11
-    N13 --> N12
-    N14 --> N9
-    N14 --> N13
-    N15 --> N6
-    N15 --> N14
 
     class N1 variable
     class N2 variable
@@ -79,6 +79,9 @@ title: BDD
 ---
 flowchart TD
     N0["1"]
+    N10(("var3"))
+    N11(("var2"))
+    N12(("var1"))
     N1["0"]
     N2(("var7"))
     N3(("var7"))
@@ -88,32 +91,29 @@ flowchart TD
     N7(("var6"))
     N8(("var5"))
     N9(("var4"))
-    N10(("var3"))
-    N11(("var2"))
-    N12(("var1"))
 
-    N2 -.-> N1
-    N2 --> N0
-    N3 -.-> N0
-    N3 --> N1
-    N4 -.-> N2
-    N4 --> N3
-    N5 -.-> N0
-    N5 --> N4
-    N6 -.-> N5
-    N6 --> N4
-    N7 -.-> N3
-    N7 --> N2
-    N8 -.-> N1
-    N8 --> N7
-    N9 -.-> N8
-    N9 --> N7
-    N10 -.-> N6
     N10 --> N9
-    N11 -.-> N10
+    N10 -.-> N6
     N11 --> N6
-    N12 -.-> N10
+    N11 -.-> N10
     N12 --> N11
+    N12 -.-> N10
+    N2 --> N0
+    N2 -.-> N1
+    N3 --> N1
+    N3 -.-> N0
+    N4 --> N3
+    N4 -.-> N2
+    N5 --> N4
+    N5 -.-> N0
+    N6 --> N4
+    N6 -.-> N5
+    N7 --> N2
+    N7 -.-> N3
+    N8 --> N7
+    N8 -.-> N1
+    N9 --> N7
+    N9 -.-> N8
 
     class N0 terminal
     class N1 terminal

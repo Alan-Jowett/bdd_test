@@ -61,14 +61,14 @@ flowchart TD
     N4(("bar_OR_baz"))
     N5(("qux_XOR_alpha"))
 
-    N2 -.-> N0
     N2 --> N1
-    N3 -.-> N0
+    N2 -.-> N0
     N3 --> N2
-    N4 -.-> N0
+    N3 -.-> N0
     N4 --> N3
-    N5 -.-> N0
+    N4 -.-> N0
     N5 --> N4
+    N5 -.-> N0
 
     class N0 terminal
     class N1 terminal
