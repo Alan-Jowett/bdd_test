@@ -153,6 +153,7 @@ class teddy_iterator {
      */
     std::vector<teddy_iterator> get_children() const {
         std::vector<teddy_iterator> children;
+        children.reserve(2);
 
         if (!current_node_ || current_node_->is_terminal()) {
             return children;

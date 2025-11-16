@@ -257,8 +257,10 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
     std::unordered_map<std::string, std::vector<std::string>> class_to_nodes;
     std::vector<Iterator> unique_nodes;
 
-    // Collect all edges first so we can know which nodes are parents before emission
-    auto edges = dag_walker::collect_edges_topological(root_iterator);
+    // Collect nodes and edges in a single traversal to avoid double-walking
+    auto [unique_nodes_local, edges] =
+        dag_walker::collect_nodes_and_edges_topological(root_iterator);
+    unique_nodes = std::move(unique_nodes_local);
 
     std::unordered_map<const void*, std::vector<dag_walker::EdgeInfo<Iterator>>> edges_by_parent;
     for (const auto& edge : edges)
@@ -267,10 +269,6 @@ void generate_mermaid_graph(const Iterator& root_iterator, std::ostream& out,
     std::vector<std::pair<std::string, const void*>> parent_ids_and_keys;
     // Map node address -> emitted node id to avoid repeated linear searches
     std::unordered_map<const void*, std::string> node_address_to_id;
-
-    // Topological emission: collect nodes in numeric/topological order,
-    // emit node definitions, and then emit edges grouped by parent id order.
-    unique_nodes = dag_walker::collect_nodes_topological(root_iterator);
     // Collect node definition lines so we can sort them lexicographically
     std::vector<std::string> node_lines;
     node_lines.reserve(unique_nodes.size());

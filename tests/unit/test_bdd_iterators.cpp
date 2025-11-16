@@ -44,13 +44,15 @@ void test_expression_to_cudd_and_teddy(const std::string& file_name) {
     teddy_iterator teddy_it(teddy_bdd.unsafe_get_root(), &sorted_variable_names);
 
     // Collect unique nodes using dag_walker
-    auto teddy_nodes = dag_walker::collect_nodes_topological(teddy_it);
+    auto [teddy_nodes, teddy_edges] = dag_walker::collect_nodes_and_edges_topological(teddy_it);
+    (void)teddy_edges;
 
     REQUIRE(!teddy_nodes.empty());
 
     // Get list of nodes using dag_walker for CUDD BDD in topological order
     cudd_iterator cudd_it(*cudd_manager, cudd_bdd.getNode(), &sorted_variable_names);
-    auto cudd_nodes = dag_walker::collect_nodes_topological(cudd_it);
+    auto [cudd_nodes, cudd_edges] = dag_walker::collect_nodes_and_edges_topological(cudd_it);
+    (void)cudd_edges;
     REQUIRE(!cudd_nodes.empty());
 
     REQUIRE(teddy_nodes.size() == cudd_nodes.size());

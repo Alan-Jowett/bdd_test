@@ -76,24 +76,6 @@ void write_teddy_to_mermaid(const teddy::bdd_manager& manager,
     mermaid_graph::generate_mermaid_graph(root_iter, out, config);
 }
 
-std::vector<teddy::bdd_manager::diagram_t::node_t*> collect_teddy_nodes_topological(
-    teddy::bdd_manager::diagram_t diagram, const std::vector<std::string>& variable_names) {
-    using node_t = teddy::bdd_manager::diagram_t::node_t;
-
-    // Create TeDDy iterator and collect nodes in topological order
-    teddy_iterator root_iter(diagram.unsafe_get_root(), &variable_names);
-    std::vector<teddy_iterator> nodes_in_order = dag_walker::collect_nodes_topological(root_iter);
-
-    // Convert iterator vector to node pointer vector using type-safe access
-    std::vector<node_t*> result;
-    result.reserve(nodes_in_order.size());
-
-    std::ranges::transform(nodes_in_order, std::back_inserter(result),
-                           [](const auto& node_iter) { return node_iter.get_node(); });
-
-    return result;
-}
-
 void write_teddy_nodes_to_stream(const teddy::bdd_manager& manager,
                                  teddy::bdd_manager::diagram_t diagram,
                                  const std::vector<std::string>& variable_names, std::ostream& out,
