@@ -207,7 +207,7 @@ collect_nodes_and_edges_topological(const Iterator& root_iterator) {
         for (size_t i = 0; i < children.size(); ++i) {
             edges.emplace_back(info.node, children[i], i);
         }
-    }
+    });
 
     return {nodes, edges};
 }

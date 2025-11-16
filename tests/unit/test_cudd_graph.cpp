@@ -371,7 +371,8 @@ TEST_CASE("CuddGraph - Node table markdown format", "[cudd_graph][analysis]") {
     REQUIRE_THAT(result, ContainsSubstring("Variable"));
 
     // Validate markdown table alignment row (---) exists
-    size_t dash_count = std::count_if(result.begin(), result.end(), [&](char c) {
+    size_t dash_count = 0;
+    std::count_if(result.begin(), result.end(), [&](char c) {
         if (c == '-') {
             dash_count++;
         }
