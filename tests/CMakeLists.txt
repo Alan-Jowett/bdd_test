@@ -100,6 +100,10 @@ add_executable(unit_tests
     unit/test_node_table_generator.cpp
     unit/test_teddy_convert.cpp
     unit/test_teddy_iterator.cpp
+    unit/test_teddy_view.cpp
+    unit/test_cudd_view.cpp
+    unit/test_graph.cpp
+    unit/test_expression_view.cpp
     # Uncomment to include example tests for demonstration:
     # unit/test_example.cpp
 )
