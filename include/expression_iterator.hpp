@@ -302,6 +302,7 @@ class expression_iterator {
      */
     std::vector<expression_iterator> get_children() const {
         std::vector<expression_iterator> children;
+        children.reserve(2);
 
         if (!current_expr_)
             return children;

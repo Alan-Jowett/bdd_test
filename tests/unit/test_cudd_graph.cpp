@@ -313,20 +313,6 @@ TEST_CASE("CuddGraph - Mermaid generation for OR operation", "[cudd_graph][merma
     REQUIRE_THAT(result, ContainsSubstring("flowchart TD"));
 }
 
-TEST_CASE("CuddGraph - Node collection topological order", "[cudd_graph][analysis]") {
-    Cudd manager(2);
-    BDD var0 = manager.bddVar(0);
-    BDD var1 = manager.bddVar(1);
-    BDD and_result = var0 * var1;
-
-    std::vector<std::string> var_names = {"a", "b"};
-
-    auto nodes = collect_cudd_nodes_topological(manager, and_result, var_names);
-
-    // Should have at least terminal nodes plus variable nodes
-    REQUIRE(nodes.size() >= 2);
-}
-
 TEST_CASE("CuddGraph - Node table text format", "[cudd_graph][analysis]") {
     Cudd manager(2);
     BDD var0 = manager.bddVar(0);
@@ -386,10 +372,12 @@ TEST_CASE("CuddGraph - Node table markdown format", "[cudd_graph][analysis]") {
 
     // Validate markdown table alignment row (---) exists
     size_t dash_count = 0;
-    for (char c : result) {
-        if (c == '-')
+    std::count_if(result.begin(), result.end(), [&](char c) {
+        if (c == '-') {
             dash_count++;
-    }
+        }
+        return false;
+    });
     REQUIRE(dash_count >= 3);  // Markdown tables need separator dashes
 
     // Validate variables appear in markdown table

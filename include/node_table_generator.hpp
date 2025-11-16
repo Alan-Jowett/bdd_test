@@ -123,8 +123,9 @@ void generate_text_table(const Iterator& root_iterator, std::ostream& out,
     static_assert(NodeTableIterator<Iterator>,
                   "Iterator must satisfy NodeTableIterator concept for text table generation");
 
-    // Collect all nodes using DAG walker
-    auto nodes = dag_walker::collect_nodes_topological(root_iterator);
+    // Collect all nodes (and edges, unused here) using DAG walker
+    auto [nodes, edges] = dag_walker::collect_nodes_and_edges_topological(root_iterator);
+    (void)edges;
 
     // Reverse to achieve parents-before-children ordering with terminals at end
     // (matching legacy BDD function behavior)
@@ -207,8 +208,9 @@ void generate_markdown_table(const Iterator& root_iterator, std::ostream& out,
     static_assert(NodeTableIterator<Iterator>,
                   "Iterator must satisfy NodeTableIterator concept for Markdown table generation");
 
-    // Collect all nodes using DAG walker
-    auto nodes = dag_walker::collect_nodes_topological(root_iterator);
+    // Collect all nodes (and edges, unused here) using DAG walker
+    auto [nodes, edges] = dag_walker::collect_nodes_and_edges_topological(root_iterator);
+    (void)edges;
 
     // Reverse to achieve parents-before-children ordering with terminals at end
     // (matching legacy BDD function behavior)
@@ -292,8 +294,9 @@ void generate_csv_table(const Iterator& root_iterator, std::ostream& out,
     static_assert(NodeTableIterator<Iterator>,
                   "Iterator must satisfy NodeTableIterator concept for CSV table generation");
 
-    // Collect all nodes using DAG walker
-    auto nodes = dag_walker::collect_nodes_topological(root_iterator);
+    // Collect all nodes (and edges, unused here) using DAG walker
+    auto [nodes, edges] = dag_walker::collect_nodes_and_edges_topological(root_iterator);
+    (void)edges;
 
     // Create index mapping for child references
     std::unordered_map<const void*, int> node_to_index;

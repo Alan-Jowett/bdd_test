@@ -267,21 +267,6 @@ TEST_CASE("TeddyGraph - Mermaid generation for OR operation", "[teddy_graph][mer
     REQUIRE_THAT(result, ContainsSubstring("flowchart TD"));
 }
 
-TEST_CASE("TeddyGraph - Node collection topological order", "[teddy_graph][analysis]") {
-    using namespace teddy::ops;
-    teddy::bdd_manager manager(2, 1000);
-    auto var0 = manager.variable(0);
-    auto var1 = manager.variable(1);
-    auto and_result = manager.apply<AND>(var0, var1);
-
-    std::vector<std::string> var_names = {"a", "b"};
-
-    auto nodes = collect_teddy_nodes_topological(and_result, var_names);
-
-    // Should have at least terminal nodes (0, 1) plus variable nodes
-    REQUIRE(nodes.size() >= 2);
-}
-
 TEST_CASE("TeddyGraph - Node table text format", "[teddy_graph][analysis]") {
     using namespace teddy::ops;
     teddy::bdd_manager manager(2, 1000);

@@ -49,6 +49,7 @@
 
 #include "cudd_convert.hpp"
 #include "cudd_graph.hpp"
+#include "cudd_iterator.hpp"
 #include "dag_walker.hpp"
 #include "expression_adapter.hpp"
 #include "expression_graph.hpp"
@@ -56,6 +57,7 @@
 #include "node_table_generator.hpp"
 #include "teddy_convert.hpp"
 #include "teddy_graph.hpp"
+#include "teddy_iterator.hpp"
 
 // ============================================================================
 // Anonymous namespace for implementation details
@@ -400,15 +402,15 @@ int main(int argc, const char* argv[]) {
             combined_file << "## Analysis Summary\n\n";
             combined_file << "- **Variables**: " << sorted_variable_names.size() << "\n";
 
-            // Calculate BDD node count (from actual table size)
-            size_t node_count;
+            // Calculate BDD node count using efficient APIs / single-pass walker
+            size_t node_count = 0;
             if (using_cudd) {
-                auto cudd_nodes =
-                    collect_cudd_nodes_topological(*cudd_mgr_ptr, cudd_bdd, sorted_variable_names);
-                node_count = cudd_nodes.size();
+                cudd_iterator root_iter(*cudd_mgr_ptr, cudd_bdd.getNode(), &sorted_variable_names);
+                node_count = dag_walker::count_nodes_topological(root_iter);
             } else {
-                auto nodes_in_order = collect_teddy_nodes_topological(f, sorted_variable_names);
-                node_count = nodes_in_order.size();
+                // Use teddy_iterator with dag_walker count helper to avoid allocating vectors
+                teddy_iterator root_iter(f.unsafe_get_root(), &sorted_variable_names);
+                node_count = dag_walker::count_nodes_topological(root_iter);
             }
             combined_file << "- **BDD Nodes**: " << node_count << "\n";
             combined_file << "- **Expression**: " << original_expression << "\n\n";

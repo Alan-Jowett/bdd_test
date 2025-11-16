@@ -82,21 +82,6 @@ void write_cudd_to_mermaid(const Cudd& cudd_manager, const BDD& bdd,
                            const std::string& graph_title = "BDD");
 
 /**
- * @brief Collect CUDD BDD nodes in topological order using dag_walker
- *
- * Generic implementation that uses the dag_walker system to collect CUDD BDD nodes
- * in post-order (topological) traversal order. This uses the generic template
- * system for consistency with the other functions.
- *
- * @param cudd_manager CUDD manager containing the BDD
- * @param bdd CUDD BDD to traverse
- * @param variable_names Vector of variable names for labeling
- * @return Vector of CUDD node pointers in topological order (children before parents)
- */
-std::vector<DdNode*> collect_cudd_nodes_topological(const Cudd& cudd_manager, const BDD& bdd,
-                                                    const std::vector<std::string>& variable_names);
-
-/**
  * @brief Writes CUDD BDD node table to output stream using generic template
  *
  * This function generates a comprehensive table showing the structure of a CUDD BDD

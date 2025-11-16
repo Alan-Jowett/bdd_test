@@ -73,24 +73,6 @@ void write_cudd_to_mermaid(const Cudd& cudd_manager, const BDD& bdd,
     mermaid_graph::generate_mermaid_graph(root_iter, out, config);
 }
 
-std::vector<DdNode*> collect_cudd_nodes_topological(
-    const Cudd& cudd_manager, const BDD& bdd, const std::vector<std::string>& variable_names) {
-    // Create iterator for the root node
-    cudd_iterator root_iter(cudd_manager, bdd.getNode(), &variable_names);
-
-    // Collect nodes using DAG walker
-    std::vector<cudd_iterator> nodes_in_order = dag_walker::collect_nodes_topological(root_iter);
-
-    // Convert iterator vector to node pointer vector
-    std::vector<DdNode*> result;
-    result.reserve(nodes_in_order.size());
-
-    std::ranges::transform(nodes_in_order, std::back_inserter(result),
-                           [](const auto& node_iter) { return node_iter.get_node(); });
-
-    return result;
-}
-
 void write_cudd_nodes_to_stream(const Cudd& cudd_manager, const BDD& bdd,
                                 const std::vector<std::string>& variable_names, std::ostream& out,
                                 bool include_headers) {

@@ -69,6 +69,7 @@ class cudd_iterator {
      */
     std::vector<cudd_iterator> get_children() const {
         std::vector<cudd_iterator> children;
+        children.reserve(2);
 
         // Get the regular (non-complemented) physical node
         DdNode* regular_node = Cudd_Regular(node_);

@@ -18,8 +18,8 @@
 #define GRAPH_ITERATOR_CONCEPTS_HPP
 
 #include <concepts>
-#include <string>
-#include <vector>
+#include <ranges>
+#include <utility>
 
 /**
  * @file graph_iterator_concepts.hpp
@@ -29,6 +29,27 @@
  * along with specialized concepts for specific use cases like DOT generation,
  * Mermaid generation, node tables, and DAG walking.
  */
+
+/**
+ * @brief Concept requiring a children range
+ *
+ * Requires that `T` exposes a `get_children()` member that returns a
+ * C++20 range whose `range_value_t` is convertible to `T` (i.e. the
+ * range yields elements that are iterator/node-like objects of the same
+ * type).
+ *
+ * This accepts owned containers (for example `std::vector<T>` returned
+ * by value), borrowed views (`std::span<T>`, `std::ranges::subrange`, or
+ * other borrowed ranges) and range adaptors. If an implementation
+ * returns a view into internal storage, it is the implementer's
+ * responsibility to ensure the referred storage remains valid for the
+ * duration of use.
+ */
+template <typename T>
+concept ChildrenRange = requires(T t) {
+    requires std::ranges::range<decltype(t.get_children())>;
+    requires std::convertible_to<std::ranges::range_value_t<decltype(t.get_children())>, T>;
+};
 
 /**
  * @brief Base concept defining the core interface for all graph iterators
@@ -41,17 +62,13 @@
  * NodeTableIterator, DagWalkerIterator) build upon this base concept.
  */
 template <typename T>
-concept BaseGraphIterator = requires(T t) {
-    // Core traversal interface
-    { t.get_children() } -> std::convertible_to<std::vector<T>>;
+concept BaseGraphIterator = std::copyable<T> && ChildrenRange<T> && requires(T t) {
+    // Node identification
     { t.get_node_address() } -> std::convertible_to<const void*>;
 
     // Comparison operators for container operations
     { t == t } -> std::convertible_to<bool>;
     { t != t } -> std::convertible_to<bool>;
-
-    // Must be copyable for storage in containers and function parameters
-    requires std::copyable<T>;
 };
 
 #endif  // GRAPH_ITERATOR_CONCEPTS_HPP

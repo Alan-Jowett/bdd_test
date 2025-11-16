@@ -331,8 +331,8 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
         return graph_render_helpers::join_dot_properties(properties);
     };
 
-    // Use dag_walker to collect all unique nodes
-    auto unique_nodes = dag_walker::collect_nodes_topological(root_iterator);
+    // Collect nodes and edges in a single traversal to avoid double-walking
+    auto [unique_nodes, edges] = dag_walker::collect_nodes_and_edges_topological(root_iterator);
 
     if (config.use_bdd_format) {
         // BDD-specific grouped shape format
@@ -410,9 +410,8 @@ void generate_dot_graph(const Iterator& root_iterator, std::ostream& out,
         }
     }
 
-    // Use dag_walker to collect edges with appropriate configuration
+    // Use the edges collected above
     out << "\n";
-    auto edges = dag_walker::collect_edges_topological(root_iterator);
     std::vector<std::string> edge_lines;
     edge_lines.reserve(edges.size());
     for (const auto& edge : edges) {

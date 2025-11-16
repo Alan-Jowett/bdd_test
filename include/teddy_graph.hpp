@@ -80,20 +80,6 @@ void write_teddy_to_mermaid(const teddy::bdd_manager& manager,
                             const std::string& graph_title = "BDD");
 
 /**
- * @brief Collect TeDDy BDD nodes in topological order using dag_walker
- *
- * Generic implementation that uses the dag_walker system to collect BDD nodes
- * in post-order (topological) traversal order. This uses the generic template
- * system for consistency with the other functions.
- *
- * @param diagram BDD diagram to traverse
- * @param variable_names Vector of variable names for labeling
- * @return Vector of node pointers in topological order (children before parents)
- */
-std::vector<teddy::bdd_manager::diagram_t::node_t*> collect_teddy_nodes_topological(
-    teddy::bdd_manager::diagram_t diagram, const std::vector<std::string>& variable_names);
-
-/**
  * @brief Writes TeDDy BDD node table to output stream using generic template
  *
  * This function generates a comprehensive table showing the structure of a TeDDy BDD
