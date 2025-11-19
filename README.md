@@ -1,3 +1,7 @@
+# NOTE: This project is being retired in favor of [DagIR](https://github.com/Alan-Jowett/dagir) - Traverse external DAGs without copying and render them anywhere: DagIR builds a lightweight IR for DOT, Mermaid, or JSON — header-only, C++20, cross-platform.
+
+This repo is being made read-only and kept for historical sake.
+
 # BDD Expression Converter
 
 [![CI/CD Pipeline](https://github.com/Alan-Jowett/bdd_test/actions/workflows/ci.yml/badge.svg)](https://github.com/Alan-Jowett/bdd_test/actions/workflows/ci.yml)
